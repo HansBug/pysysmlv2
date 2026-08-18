@@ -1,0 +1,2617 @@
+"""Assemble the handwritten SysML source AST from ANTLR contexts.
+
+The generated parser recognizes the concrete syntax; this module owns the
+explicit, production-by-production mapping into :mod:`pysysmlv2.syntax.ast`.
+It is intentionally boring to read: every meaningful grammar alternative has
+an ``exitXXX`` callback, while one-child dispatch and epsilon rules are
+represented by an explicit pass-through or a small listener-local value.  No
+``exitEveryRule``, reflection-driven dataclass construction, source scanner,
+or generic opaque fallback is used for expressions, actions, states, or
+transitions.
+
+The listener creates a source AST only.  Names remain unresolved and derived
+semantic properties such as transition ``source``/``target`` are deferred to
+the future workspace/linker layer.  ``source_path`` and ``span`` are attached
+after each concrete node is constructed so grammar-required dataclass fields
+remain required while provenance can be omitted by callers constructing a
+node directly.
+
+.. list-table:: Listener roadmap
+   :header-rows: 1
+
+   * - Callback family
+     - Nodes assembled
+   * - Names/declarations
+     - Identification, qualified references, declarations, specializations.
+   * - Expressions
+     - Literals, recursive operators, calls, indexing, access, constructors,
+       metadata forms, and argument lists.
+   * - Actions
+     - Action bodies, state action variants, trigger parameters, and the
+       principal action-node statements.
+   * - States/transitions
+     - State bodies, entry/do/exit members, behavior members, transitions,
+       guards, effects, and succession targets.
+   * - Documents
+     - Packages, package-member visibility, comments, documentation, and the
+       root model.
+"""
+
+from __future__ import annotations
+
+from typing import Any, Dict, List, Optional, Sequence
+
+from antlr4.tree.Tree import ErrorNode, TerminalNode
+
+from .ast import (
+    AcceptActionUsage,
+    AcceptNode,
+    AcceptNodeDeclaration,
+    AcceptParameterPart,
+    ActionBody,
+    ActionBodyParameter,
+    ActionDefinition,
+    ActionNode,
+    ActionNodeMember,
+    ActionNodePrefix,
+    ActionNodeUsageDeclaration,
+    ActionTargetSuccession,
+    ActionTargetSuccessionMember,
+    ActionUsage,
+    ActionUsageDeclaration,
+    ActionUsageNode,
+    AllExpression,
+    ArgumentList,
+    ArrowExpression,
+    AssignmentActionUsage,
+    AssignmentNode,
+    AssignmentNodeDeclaration,
+    BehaviorUsageMember,
+    BehaviorUsageStateMember,
+    BinaryExpression,
+    BodyAccessExpression,
+    BodyExpression,
+    BooleanLiteral,
+    CastExpression,
+    CoalesceExpression,
+    Comment,
+    CommentExpression,
+    ConditionalExpression,
+    ConstructorExpression,
+    ControlNodePrefix,
+    DecisionNode,
+    DefaultTargetSuccession,
+    Definition,
+    DefinitionBody,
+    DefinitionBodyItem,
+    DefinitionDeclaration,
+    DoActionMember,
+    Documentation,
+    EffectBehaviorMember,
+    EmptyActionUsage,
+    EntryActionMember,
+    EntryTransitionMember,
+    ExhibitStateUsage,
+    ExitActionMember,
+    Expression,
+    FeatureAccessExpression,
+    FeatureChain,
+    FeatureReferenceExpression,
+    FeatureSpecialization,
+    FeatureSpecializationPart,
+    ForkNode,
+    ForLoopNode,
+    GuardedSuccession,
+    GuardedSuccessionMember,
+    GuardedTargetSuccession,
+    GuardExpressionMember,
+    Identification,
+    IfNode,
+    IndexExpression,
+    InfinityLiteral,
+    InitialNodeMember,
+    IntegerLiteral,
+    InvocationExpression,
+    JoinNode,
+    MergeNode,
+    MetadataAccessExpression,
+    MetadataCastExpression,
+    Model,
+    NamedArgument,
+    NodeParameter,
+    NullExpression,
+    OccurrenceDefinitionPrefix,
+    OccurrenceUsagePrefix,
+    Package,
+    PackageMember,
+    ParenthesizedExpression,
+    PartDefinition,
+    PartUsage,
+    PayloadFeature,
+    PayloadParameter,
+    PerformActionUsage,
+    PerformActionUsageDeclaration,
+    QualifiedReference,
+    RawElement,
+    RealLiteral,
+    RelationshipBody,
+    SendActionUsage,
+    SenderReceiverPart,
+    SendNode,
+    SendNodeDeclaration,
+    SendNodeUsageDeclaration,
+    SequenceExpression,
+    SourceElement,
+    SourceSpan,
+    SourceSuccession,
+    StateDefBody,
+    StateDefinition,
+    StatePerformActionUsage,
+    StateUsage,
+    StateUsageBody,
+    StringLiteral,
+    StructureUsageMember,
+    SubclassificationPart,
+    TargetSuccession,
+    TargetTransitionForm,
+    TargetTransitionUsage,
+    TargetTransitionUsageMember,
+    TerminateNode,
+    TransitionPerformActionUsage,
+    TransitionSuccession,
+    TransitionUsage,
+    TransitionUsageMember,
+    TriggerActionMember,
+    TriggerExpression,
+    TypeOperationExpression,
+    UnaryExpression,
+    Usage,
+    UsageDeclaration,
+    ValuePart,
+    WhileLoopNode,
+)
+from .generated.SysMLv2Parser import SysMLv2Parser
+from .generated.SysMLv2ParserListener import SysMLv2ParserListener
+
+
+class SysMLAstListener(SysMLv2ParserListener):
+    """Build explicit source-AST nodes while walking one parse tree.
+
+    :param source_text: Complete source text being walked.
+    :type source_text: str
+    :param source_path: Original path or URI, defaults to ``None``.
+    :type source_path: str, optional
+    :ivar source_text: Complete source text.
+    :vartype source_text: str
+    :ivar source_path: Original path or URI.
+    :vartype source_path: str, optional
+
+    Example::
+
+        >>> from antlr4 import CommonTokenStream, InputStream, ParseTreeWalker
+        >>> from pysysmlv2.syntax.generated.SysMLv2Lexer import SysMLv2Lexer
+        >>> from pysysmlv2.syntax.generated.SysMLv2Parser import SysMLv2Parser
+        >>> source = "package Demo { state def S; }"
+        >>> parser = SysMLv2Parser(CommonTokenStream(SysMLv2Lexer(InputStream(source))))
+        >>> tree = parser.rootNamespace()
+        >>> listener = SysMLAstListener(source)
+        >>> ParseTreeWalker().walk(listener, tree)
+        >>> isinstance(listener.node_for(tree), Model)
+        True
+    """
+
+    def __init__(self, source_text: str, source_path: Optional[str] = None) -> None:
+        super().__init__()
+        self.source_text = source_text
+        self.source_path = source_path
+        self.nodes: Dict[Any, SourceElement] = {}
+        self.values: Dict[Any, str] = {}
+        self.parts: Dict[Any, Any] = {}
+
+    # ------------------------------------------------------------------
+    # Provenance and listener-local values
+    # ------------------------------------------------------------------
+
+    def _text(self, ctx: Any) -> str:
+        """Return the exact source slice occupied by ``ctx``."""
+        if isinstance(ctx, TerminalNode):
+            return ctx.getText()
+        start_token = ctx.start
+        stop_token = ctx.stop
+        if start_token is not None and stop_token is not None:
+            start = start_token.start
+            stop = stop_token.stop
+            if start is not None and stop is not None and start >= 0 and stop >= start:
+                return self.source_text[start : stop + 1]
+        return ctx.getText()
+
+    def _span(self, ctx: Any) -> Optional[SourceSpan]:
+        """Return the source range occupied by ``ctx``."""
+        start_token = ctx.start
+        stop_token = ctx.stop
+        if start_token is None or stop_token is None:
+            return None
+        start = start_token.start
+        stop = stop_token.stop
+        if start is None or stop is None or start < 0 or stop < start:
+            return None
+        before_start = self.source_text[:start]
+        before_end = self.source_text[: stop + 1]
+        return SourceSpan(
+            before_start.count("\n") + 1,
+            start - (before_start.rfind("\n") + 1) + 1,
+            before_end.count("\n") + 1,
+            stop + 1 - (before_end.rfind("\n") + 1) + 1,
+            self.source_path,
+        )
+
+    def _store(self, ctx: Any, node: SourceElement) -> None:
+        """Store ``node`` and attach its source provenance explicitly."""
+        node.source_path = self.source_path
+        node.span = self._span(ctx)
+        self.nodes[ctx] = node
+
+    def _child(self, ctx: Any) -> Optional[SourceElement]:
+        """Return a previously assembled direct child, if present."""
+        if ctx is None:
+            return None
+        return self.nodes.get(ctx)
+
+    def _pass(self, ctx: Any, child_ctx: Any) -> None:
+        """Pass a typed child through a pure grammar dispatch rule."""
+        child = self._child(child_ctx)
+        if child is None:
+            raise ValueError("listener child production was not assembled")
+        self.nodes[ctx] = child
+
+    def _raw(self, ctx: Any) -> RawElement:
+        """Preserve an unsupported non-state/non-expression grammar element."""
+        return RawElement(self._text(ctx).strip())
+
+    def _raw_store(self, ctx: Any) -> None:
+        """Store a narrow compatibility fragment for an unrelated grammar rule."""
+        self._store(ctx, self._raw(ctx))
+
+    def _name_value(self, ctx: Any) -> str:
+        """Return a completed name token value."""
+        return self.values[ctx]
+
+    def _token_text(self, token: Any) -> str:
+        """Return one terminal token's source spelling."""
+        return token.getText() if token is not None else ""
+
+    def _member_prefix(self, ctx: Any) -> Optional[str]:
+        """Return an optional visibility indicator from ``memberPrefix``."""
+        text = self._text(ctx).strip()
+        return text or None
+
+    def _source_items(self, contexts: Sequence[Any]) -> List[SourceElement]:
+        """Return assembled source elements, rejecting missing children."""
+        items: List[SourceElement] = []
+        for context in contexts:
+            item = self._child(context)
+            if not isinstance(item, SourceElement):
+                raise ValueError("listener child production was not assembled")
+            items.append(item)
+        return items
+
+    def node_for(self, tree: Any) -> SourceElement:
+        """Return the AST node assembled for a walked parser context.
+
+        :param tree: Parser context previously visited by this listener.
+        :type tree: object
+        :return: Corresponding source AST node.
+        :rtype: :class:`pysysmlv2.syntax.ast.ASTNode`
+        :raises KeyError: If no explicit callback assembled ``tree``.
+
+        Example::
+
+            >>> listener = SysMLAstListener("")
+            >>> isinstance(listener.node_for, object)
+            True
+        """
+        return self.nodes[tree]
+
+    def visitTerminal(self, node: TerminalNode) -> None:
+        """Ignore terminals; production callbacks read their explicit fields."""
+        del node
+
+    def visitErrorNode(self, node: ErrorNode) -> None:
+        """Ignore recovered terminals; parser diagnostics own the error."""
+        del node
+
+    # ------------------------------------------------------------------
+    # Names, references, and declarations
+    # ------------------------------------------------------------------
+
+    def exitName(self, ctx: SysMLv2Parser.NameContext) -> None:
+        """Record the source spelling of one grammar ``name``."""
+        self.values[ctx] = self._text(ctx).strip()
+
+    def exitIdentification(self, ctx: SysMLv2Parser.IdentificationContext) -> None:
+        """Assemble optional short and declared names."""
+        names = [self._name_value(item) for item in ctx.name()]
+        self._store(
+            ctx,
+            Identification(
+                short_name=names[0] if len(names) == 2 else None,
+                declared_name=names[-1] if names else None,
+            ),
+        )
+
+    def exitQualifiedName(self, ctx: SysMLv2Parser.QualifiedNameContext) -> None:
+        """Assemble an unresolved qualified reference."""
+        self._store(
+            ctx,
+            QualifiedReference(
+                segments=[self._name_value(item) for item in ctx.name()],
+                is_absolute=ctx.DOLLAR() is not None,
+            ),
+        )
+
+    def exitFeatureReferenceExpression(
+        self, ctx: SysMLv2Parser.FeatureReferenceExpressionContext
+    ) -> None:
+        """Wrap a feature-reference production around its qualified name."""
+        reference = self._child(ctx.qualifiedName())
+        if not isinstance(reference, QualifiedReference):
+            raise ValueError("featureReferenceExpression requires qualifiedName")
+        self._store(ctx, FeatureReferenceExpression(reference))
+
+    def exitFeatureChainMember(self, ctx: SysMLv2Parser.FeatureChainMemberContext) -> None:
+        """Assemble ordered dotted qualified-name members."""
+        names = [self._child(item) for item in ctx.qualifiedName()]
+        self._store(
+            ctx,
+            FeatureChain(
+                qualified_names=[item for item in names if isinstance(item, QualifiedReference)]
+            ),
+        )
+
+    def exitTypeReference(self, ctx: SysMLv2Parser.TypeReferenceContext) -> None:
+        """Pass the single qualified name through the type-reference rule."""
+        self._pass(ctx, ctx.qualifiedName())
+
+    def exitOwnedSubclassification(self, ctx: SysMLv2Parser.OwnedSubclassificationContext) -> None:
+        """Pass one superclass reference through its grammar wrapper."""
+        self._pass(ctx, ctx.qualifiedName())
+
+    def exitSubclassificationPart(self, ctx: SysMLv2Parser.SubclassificationPartContext) -> None:
+        """Assemble the subclassification operator and ordered references."""
+        operator = ":>" if ctx.COLON_GT() is not None else "specializes"
+        references = [self._child(item) for item in ctx.ownedSubclassification()]
+        self._store(
+            ctx,
+            SubclassificationPart(
+                operator=operator,
+                supertype_references=[
+                    item for item in references if isinstance(item, QualifiedReference)
+                ],
+            ),
+        )
+
+    def exitFeatureSpecializationPart(
+        self, ctx: SysMLv2Parser.FeatureSpecializationPartContext
+    ) -> None:
+        """Assemble explicit feature specializations and multiplicity spelling."""
+        specializations = [self._child(item) for item in ctx.featureSpecialization()]
+        multiplicity = (
+            self._text(ctx.multiplicityPart()).strip() if ctx.multiplicityPart() else None
+        )
+        self._store(
+            ctx,
+            FeatureSpecializationPart(
+                specializations=[
+                    item for item in specializations if isinstance(item, FeatureSpecialization)
+                ],
+                multiplicity_text=multiplicity,
+            ),
+        )
+
+    def exitFeatureSpecialization(self, ctx: SysMLv2Parser.FeatureSpecializationContext) -> None:
+        """Pass one concrete specialization alternative through its dispatcher."""
+        child = (
+            ctx.typings()
+            or ctx.subsettings()
+            or ctx.references()
+            or ctx.crosses()
+            or ctx.redefinitions()
+        )
+        if child is None:
+            raise ValueError("featureSpecialization has no alternative")
+        self._pass(ctx, child)
+
+    def exitTypings(self, ctx: SysMLv2Parser.TypingsContext) -> None:
+        """Assemble a typing specialization without collapsing its references."""
+        child = ctx.typedBy()
+        references = []
+        if child is not None:
+            first_reference = self._child(child.featureTyping())
+            if first_reference is not None:
+                references.append(first_reference)
+        references.extend(self._child(item) for item in ctx.featureTyping())
+        operator = ":"
+        if child is not None and child.TYPED() is not None:
+            operator = "typed by"
+        elif child is not None and child.DEFINED() is not None:
+            operator = "defined by"
+        self._store(
+            ctx,
+            FeatureSpecialization(
+                operator=operator,
+                references=[item for item in references if isinstance(item, QualifiedReference)],
+            ),
+        )
+
+    def exitTypedBy(self, ctx: SysMLv2Parser.TypedByContext) -> None:
+        """Pass the nested feature-typing production."""
+        self._pass(ctx, ctx.featureTyping())
+
+    def exitFeatureTyping(self, ctx: SysMLv2Parser.FeatureTypingContext) -> None:
+        """Pass the concrete feature-typing alternative."""
+        child = ctx.ownedFeatureTyping() or ctx.conjugatedPortTyping()
+        if child is not None:
+            self._pass(ctx, child)
+        else:
+            self._raw_store(ctx)
+
+    def exitOwnedFeatureTyping(self, ctx: SysMLv2Parser.OwnedFeatureTypingContext) -> None:
+        """Pass an owned feature typing's first qualified reference."""
+        self._pass(ctx, ctx.qualifiedName(0))
+
+    def exitSubsettings(self, ctx: SysMLv2Parser.SubsettingsContext) -> None:
+        """Assemble a subsetting specialization."""
+        references = [self._child(ctx.subsets().ownedSubsetting())]
+        references.extend(self._child(item) for item in ctx.ownedSubsetting())
+        self._store(
+            ctx,
+            FeatureSpecialization(
+                operator=":>" if ctx.subsets().COLON_GT() is not None else "subsets",
+                references=[item for item in references if isinstance(item, QualifiedReference)],
+            ),
+        )
+
+    def exitSubsets(self, ctx: SysMLv2Parser.SubsetsContext) -> None:
+        """Pass the nested owned-subsetting reference."""
+        self._pass(ctx, ctx.ownedSubsetting())
+
+    def exitOwnedSubsetting(self, ctx: SysMLv2Parser.OwnedSubsettingContext) -> None:
+        """Pass one owned-subsetting qualified reference."""
+        self._pass(ctx, ctx.qualifiedName(0))
+
+    def exitReferences(self, ctx: SysMLv2Parser.ReferencesContext) -> None:
+        """Assemble a reference specialization."""
+        self._store(
+            ctx,
+            FeatureSpecialization(
+                operator="::>" if ctx.COLON_COLON_GT() is not None else "references",
+                references=[self._child(ctx.ownedReferenceSubsetting())],
+            ),
+        )
+
+    def exitOwnedReferenceSubsetting(
+        self, ctx: SysMLv2Parser.OwnedReferenceSubsettingContext
+    ) -> None:
+        """Assemble a dotted owned-reference chain as a qualified reference."""
+        names = [self._child(item) for item in ctx.qualifiedName()]
+        segments: List[str] = []
+        for item in names:
+            if isinstance(item, QualifiedReference):
+                segments.extend(item.segments)
+        self._store(ctx, QualifiedReference(segments=segments))
+
+    def exitCrosses(self, ctx: SysMLv2Parser.CrossesContext) -> None:
+        """Assemble a cross-subsetting specialization."""
+        self._store(
+            ctx,
+            FeatureSpecialization(
+                operator="=>" if ctx.FAT_ARROW() is not None else "crosses",
+                references=[self._child(ctx.ownedCrossSubsetting())],
+            ),
+        )
+
+    def exitOwnedCrossSubsetting(self, ctx: SysMLv2Parser.OwnedCrossSubsettingContext) -> None:
+        """Assemble an owned cross-subsetting qualified-name chain."""
+        names = [self._child(item) for item in ctx.qualifiedName()]
+        segments: List[str] = []
+        for item in names:
+            if isinstance(item, QualifiedReference):
+                segments.extend(item.segments)
+        self._store(ctx, QualifiedReference(segments=segments))
+
+    def exitRedefinitions(self, ctx: SysMLv2Parser.RedefinitionsContext) -> None:
+        """Assemble a redefinition specialization."""
+        references = [self._child(ctx.redefines().ownedRedefinition())]
+        references.extend(self._child(item) for item in ctx.ownedRedefinition())
+        self._store(
+            ctx,
+            FeatureSpecialization(
+                operator=":>>" if ctx.redefines().COLON_GT_GT() is not None else "redefines",
+                references=[item for item in references if isinstance(item, QualifiedReference)],
+            ),
+        )
+
+    def exitRedefines(self, ctx: SysMLv2Parser.RedefinesContext) -> None:
+        """Pass one owned-redefinition reference."""
+        self._pass(ctx, ctx.ownedRedefinition())
+
+    def exitOwnedRedefinition(self, ctx: SysMLv2Parser.OwnedRedefinitionContext) -> None:
+        """Assemble an owned-redefinition qualified-name chain."""
+        names = [self._child(item) for item in ctx.qualifiedName()]
+        segments: List[str] = []
+        for item in names:
+            if isinstance(item, QualifiedReference):
+                segments.extend(item.segments)
+        self._store(ctx, QualifiedReference(segments=segments))
+
+    def exitDefinitionDeclaration(self, ctx: SysMLv2Parser.DefinitionDeclarationContext) -> None:
+        """Assemble optional identification and subclassification fields."""
+        identification = self._child(ctx.identification()) if ctx.identification() else None
+        subclassification = (
+            self._child(ctx.subclassificationPart()) if ctx.subclassificationPart() else None
+        )
+        self._store(
+            ctx,
+            DefinitionDeclaration(
+                identification=identification
+                if isinstance(identification, Identification)
+                else None,
+                subclassification=(
+                    subclassification
+                    if isinstance(subclassification, SubclassificationPart)
+                    else None
+                ),
+            ),
+        )
+
+    def exitUsageDeclaration(self, ctx: SysMLv2Parser.UsageDeclarationContext) -> None:
+        """Assemble optional usage identification and specialization."""
+        identification = self._child(ctx.identification()) if ctx.identification() else None
+        specialization = (
+            self._child(ctx.featureSpecializationPart())
+            if ctx.featureSpecializationPart()
+            else None
+        )
+        self._store(
+            ctx,
+            UsageDeclaration(
+                identification=identification
+                if isinstance(identification, Identification)
+                else None,
+                specialization=(
+                    specialization
+                    if isinstance(specialization, FeatureSpecializationPart)
+                    else None
+                ),
+            ),
+        )
+
+    def exitOccurrenceDefinitionPrefix(
+        self, ctx: SysMLv2Parser.OccurrenceDefinitionPrefixContext
+    ) -> None:
+        """Assemble occurrence-definition prefix flags and extension text."""
+        basic = (
+            "abstract"
+            if ctx.basicDefinitionPrefix() and ctx.basicDefinitionPrefix().ABSTRACT()
+            else None
+        )
+        if ctx.basicDefinitionPrefix() and ctx.basicDefinitionPrefix().VARIATION():
+            basic = "variation"
+        self._store(
+            ctx,
+            OccurrenceDefinitionPrefix(
+                basic_definition_keyword=basic,
+                is_individual=ctx.INDIVIDUAL() is not None,
+                has_empty_multiplicity=ctx.emptyMultiplicityMember() is not None,
+                extension_keywords=[
+                    self._text(item).strip() for item in ctx.definitionExtensionKeyword()
+                ],
+            ),
+        )
+
+    def exitOccurrenceUsagePrefix(self, ctx: SysMLv2Parser.OccurrenceUsagePrefixContext) -> None:
+        """Assemble occurrence-usage prefix flags and extension text."""
+        ref = ctx.basicUsagePrefix()
+        direction = None
+        if ref and ref.refPrefix() and ref.refPrefix().featureDirection():
+            direction = self._text(ref.refPrefix().featureDirection()).strip()
+        self._store(
+            ctx,
+            OccurrenceUsagePrefix(
+                feature_direction=direction,
+                is_derived=bool(ref and ref.refPrefix() and ref.refPrefix().DERIVED()),
+                is_abstract=bool(ref and ref.refPrefix() and ref.refPrefix().ABSTRACT()),
+                is_variation=bool(ref and ref.refPrefix() and ref.refPrefix().VARIATION()),
+                is_constant=bool(ref and ref.refPrefix() and ref.refPrefix().CONSTANT()),
+                is_reference=bool(ref and ref.REF()),
+                is_individual=ctx.INDIVIDUAL() is not None,
+                portion_kind=self._text(ctx.portionKind()).strip() if ctx.portionKind() else None,
+                extension_keywords=[
+                    self._text(item).strip() for item in ctx.usageExtensionKeyword()
+                ],
+            ),
+        )
+
+    # ------------------------------------------------------------------
+    # Expressions and argument structure
+    # ------------------------------------------------------------------
+
+    def exitLiteralBoolean(self, ctx: SysMLv2Parser.LiteralBooleanContext) -> None:
+        """Assemble a boolean literal leaf."""
+        self._store(ctx, BooleanLiteral(self._text(ctx).strip()))
+
+    def exitLiteralString(self, ctx: SysMLv2Parser.LiteralStringContext) -> None:
+        """Assemble a quoted string literal leaf."""
+        self._store(ctx, StringLiteral(self._text(ctx).strip()))
+
+    def exitLiteralInteger(self, ctx: SysMLv2Parser.LiteralIntegerContext) -> None:
+        """Assemble an integer literal leaf."""
+        self._store(ctx, IntegerLiteral(self._text(ctx).strip()))
+
+    def exitLiteralReal(self, ctx: SysMLv2Parser.LiteralRealContext) -> None:
+        """Assemble a real literal leaf."""
+        self._store(ctx, RealLiteral(self._text(ctx).strip()))
+
+    def exitLiteralInfinity(self, ctx: SysMLv2Parser.LiteralInfinityContext) -> None:
+        """Assemble the ``*`` infinity literal leaf."""
+        self._store(ctx, InfinityLiteral())
+
+    def exitLiteralExpression(self, ctx: SysMLv2Parser.LiteralExpressionContext) -> None:
+        """Pass the selected literal alternative through its dispatcher."""
+        child = (
+            ctx.literalBoolean()
+            or ctx.literalString()
+            or ctx.literalInteger()
+            or ctx.literalReal()
+            or ctx.literalInfinity()
+        )
+        if child is None:
+            raise ValueError("literalExpression has no alternative")
+        self._pass(ctx, child)
+
+    def exitNullExpression(self, ctx: SysMLv2Parser.NullExpressionContext) -> None:
+        """Assemble ``null`` and empty-parenthesis expression alternatives."""
+        self._store(ctx, NullExpression(parenthesized=ctx.LPAREN() is not None))
+
+    def exitConstructorExpression(self, ctx: SysMLv2Parser.ConstructorExpressionContext) -> None:
+        """Assemble ``new`` with a type reference and explicit argument list."""
+        reference = self._child(ctx.qualifiedName())
+        arguments = self._child(ctx.argumentList())
+        if not isinstance(reference, QualifiedReference) or not isinstance(arguments, ArgumentList):
+            raise ValueError("constructorExpression requires qualifiedName and argumentList")
+        self._store(ctx, ConstructorExpression(reference, arguments))
+
+    def exitBodyExpression(self, ctx: SysMLv2Parser.BodyExpressionContext) -> None:
+        """Assemble a brace-delimited function body from its item list."""
+        items = self.parts.get(ctx.functionBodyPart(), [])
+        self._store(ctx, BodyExpression(items=items))
+
+    def exitFunctionBodyPart(self, ctx: SysMLv2Parser.FunctionBodyPartContext) -> None:
+        """Collect function-body items and an optional result expression."""
+        contexts = [
+            *ctx.definitionBodyItem(),
+            *ctx.typeBodyElement(),
+            *ctx.returnFeatureMember(),
+        ]
+        items = [self._child(item) for item in contexts]
+        if ctx.resultExpressionMember():
+            items.append(self._child(ctx.resultExpressionMember()))
+        self.parts[ctx] = [item for item in items if isinstance(item, SourceElement)]
+
+    def exitBaseExpression(self, ctx: SysMLv2Parser.BaseExpressionContext) -> None:
+        """Assemble the concrete base-expression alternatives."""
+        if ctx.nullExpression():
+            self._pass(ctx, ctx.nullExpression())
+            return
+        if ctx.REGULAR_COMMENT():
+            self._store(ctx, CommentExpression(self._text(ctx).strip()))
+            return
+        if ctx.literalExpression():
+            self._pass(ctx, ctx.literalExpression())
+            return
+        if ctx.constructorExpression():
+            self._pass(ctx, ctx.constructorExpression())
+            return
+        if ctx.bodyExpression():
+            self._pass(ctx, ctx.bodyExpression())
+            return
+        if ctx.AS():
+            reference = self._child(ctx.typeReference())
+            if not isinstance(reference, QualifiedReference):
+                raise ValueError("metadata cast requires typeReference")
+            self._store(ctx, MetadataCastExpression(reference))
+            return
+        reference = self._child(ctx.qualifiedName())
+        if isinstance(reference, QualifiedReference):
+            if ctx.argumentList():
+                arguments = self._child(ctx.argumentList())
+                if not isinstance(arguments, ArgumentList):
+                    raise ValueError("invocation requires argumentList")
+                self._store(
+                    ctx, InvocationExpression(FeatureReferenceExpression(reference), arguments)
+                )
+                return
+            if ctx.METADATA():
+                self._store(ctx, MetadataAccessExpression(reference))
+                return
+            self._store(ctx, FeatureReferenceExpression(reference))
+            return
+        if ctx.LPAREN():
+            sequence = (
+                self._child(ctx.sequenceExpressionList()) if ctx.sequenceExpressionList() else None
+            )
+            self._store(
+                ctx,
+                ParenthesizedExpression(
+                    sequence=sequence if isinstance(sequence, SequenceExpression) else None
+                ),
+            )
+            return
+        raise ValueError("baseExpression has no assembled alternative")
+
+    def exitSequenceExpressionList(self, ctx: SysMLv2Parser.SequenceExpressionListContext) -> None:
+        """Assemble ordered comma-separated expressions."""
+        expressions = [self._child(item) for item in ctx.ownedExpression()]
+        if not all(isinstance(item, Expression) for item in expressions):
+            raise ValueError("ownedExpression child was not assembled as Expression")
+        self._store(
+            ctx,
+            SequenceExpression(
+                elements=[item for item in expressions if isinstance(item, Expression)]
+            ),
+        )
+
+    def exitPositionalArgumentList(self, ctx: SysMLv2Parser.PositionalArgumentListContext) -> None:
+        """Collect positional arguments without creating a wrapper node."""
+        self.parts[ctx] = [
+            item
+            for item in (self._child(expr) for expr in ctx.ownedExpression())
+            if isinstance(item, Expression)
+        ]
+
+    def exitNamedArgument(self, ctx: SysMLv2Parser.NamedArgumentContext) -> None:
+        """Assemble one named argument."""
+        name = self._child(ctx.qualifiedName())
+        expression = self._child(ctx.ownedExpression())
+        if not isinstance(name, QualifiedReference) or not isinstance(expression, Expression):
+            raise ValueError("namedArgument requires qualifiedName and ownedExpression")
+        self._store(ctx, NamedArgument(name, expression))
+
+    def exitNamedArgumentList(self, ctx: SysMLv2Parser.NamedArgumentListContext) -> None:
+        """Collect named arguments without retaining a redundant list wrapper."""
+        self.parts[ctx] = [
+            item
+            for item in (self._child(arg) for arg in ctx.namedArgument())
+            if isinstance(item, NamedArgument)
+        ]
+
+    def exitArgumentList(self, ctx: SysMLv2Parser.ArgumentListContext) -> None:
+        """Assemble positional or named arguments with their grammar choice."""
+        positional: List[Expression] = []
+        named: List[NamedArgument] = []
+        if ctx.positionalArgumentList():
+            positional = self.parts.get(ctx.positionalArgumentList(), [])
+        elif ctx.namedArgumentList():
+            named = self.parts.get(ctx.namedArgumentList(), [])
+        self._store(ctx, ArgumentList(positional_arguments=positional, named_arguments=named))
+
+    def exitArgumentMember(self, ctx: SysMLv2Parser.ArgumentMemberContext) -> None:
+        """Pass an argument expression through its semantic-free wrapper."""
+        self._pass(ctx, ctx.ownedExpression())
+
+    def exitArgumentExpressionMember(
+        self, ctx: SysMLv2Parser.ArgumentExpressionMemberContext
+    ) -> None:
+        """Pass a trigger argument expression through its wrapper."""
+        self._pass(ctx, ctx.ownedExpression())
+
+    def _binary_operator(self, ctx: Any) -> Optional[str]:
+        """Return the explicit binary operator token selected by ``ctx``."""
+        if ctx.IMPLIES() is not None:
+            return "implies"
+        if ctx.OR() is not None:
+            return "or"
+        if ctx.AND() is not None:
+            return "and"
+        if ctx.XOR() is not None:
+            return "xor"
+        if ctx.PIPE() is not None:
+            return "|"
+        if ctx.AMP() is not None:
+            return "&"
+        if ctx.EQ_EQ() is not None:
+            return "=="
+        if ctx.BANG_EQ() is not None:
+            return "!="
+        if ctx.EQ_EQ_EQ() is not None:
+            return "==="
+        if ctx.BANG_EQ_EQ() is not None:
+            return "!=="
+        if ctx.LT() is not None:
+            return "<"
+        if ctx.GT() is not None:
+            return ">"
+        if ctx.LE() is not None:
+            return "<="
+        if ctx.GE() is not None:
+            return ">="
+        if ctx.DOT_DOT() is not None:
+            return ".."
+        if ctx.PLUS() is not None:
+            return "+"
+        if ctx.MINUS() is not None:
+            return "-"
+        if ctx.STAR() is not None:
+            return "*"
+        if ctx.SLASH() is not None:
+            return "/"
+        if ctx.PERCENT() is not None:
+            return "%"
+        if ctx.STAR_STAR() is not None:
+            return "**"
+        if ctx.CARET() is not None:
+            return "^"
+        if ctx.QUESTION_QUESTION() is not None:
+            return "??"
+        if ctx.ISTYPE() is not None:
+            return "istype"
+        if ctx.HASTYPE() is not None:
+            return "hastype"
+        if ctx.AT_SIGN() is not None:
+            return "@"
+        if ctx.AS() is not None:
+            return "as"
+        if ctx.AT_AT() is not None:
+            return "@@"
+        if ctx.META() is not None:
+            return "meta"
+        return None
+
+    def exitOwnedExpression(self, ctx: SysMLv2Parser.OwnedExpressionContext) -> None:
+        """Assemble every concrete recursive ``ownedExpression`` alternative."""
+        expressions = [self._child(item) for item in ctx.ownedExpression()]
+        if ctx.IF():
+            if len(expressions) != 3:
+                raise ValueError("conditional expression requires three operands")
+            self._store(ctx, ConditionalExpression(expressions[0], expressions[1], expressions[2]))
+            return
+        if ctx.QUESTION_QUESTION():
+            self._store(ctx, CoalesceExpression(expressions[0], expressions[1]))
+            return
+        operator = self._binary_operator(ctx)
+        if operator is not None and len(expressions) == 2:
+            if operator == "??":
+                self._store(ctx, CoalesceExpression(expressions[0], expressions[1]))
+            elif operator in {"istype", "hastype", "@", "@@", "as", "meta"}:
+                reference = self._child(ctx.typeReference())
+                if not isinstance(reference, QualifiedReference):
+                    raise ValueError("type operation requires typeReference")
+                if operator == "as":
+                    self._store(ctx, CastExpression(expressions[0], reference))
+                else:
+                    self._store(ctx, TypeOperationExpression(operator, reference, expressions[0]))
+            else:
+                self._store(ctx, BinaryExpression(expressions[0], operator, expressions[1]))
+            return
+        if ctx.PLUS() or ctx.MINUS() or ctx.TILDE() or ctx.NOT():
+            if len(expressions) != 1:
+                raise ValueError("unary expression requires one operand")
+            token = "+" if ctx.PLUS() else "-" if ctx.MINUS() else "~" if ctx.TILDE() else "not "
+            self._store(ctx, UnaryExpression(token, expressions[0]))
+            return
+        if expressions and (
+            ctx.ISTYPE()
+            or ctx.HASTYPE()
+            or (ctx.AT_SIGN() and ctx.typeReference())
+            or ctx.AT_AT()
+            or ctx.META()
+        ):
+            reference = self._child(ctx.typeReference())
+            if not isinstance(reference, QualifiedReference):
+                raise ValueError("infix type operation requires typeReference")
+            operator = (
+                "istype"
+                if ctx.ISTYPE()
+                else "hastype"
+                if ctx.HASTYPE()
+                else "@"
+                if ctx.AT_SIGN()
+                else "@@"
+                if ctx.AT_AT()
+                else "meta"
+            )
+            self._store(ctx, TypeOperationExpression(operator, reference, expressions[0]))
+            return
+        if ctx.AT_SIGN() or ctx.AT_AT():
+            reference = self._child(ctx.typeReference())
+            if not isinstance(reference, QualifiedReference):
+                raise ValueError("prefix type operation requires typeReference")
+            self._store(ctx, TypeOperationExpression("@" if ctx.AT_SIGN() else "@@", reference))
+            return
+        if ctx.AS() and len(expressions) == 1:
+            reference = self._child(ctx.typeReference())
+            if not isinstance(reference, QualifiedReference):
+                raise ValueError("cast requires typeReference")
+            self._store(ctx, CastExpression(expressions[0], reference))
+            return
+        if ctx.LBRACK():
+            sequence = (
+                self._child(ctx.sequenceExpressionList()) if ctx.sequenceExpressionList() else None
+            )
+            self._store(
+                ctx,
+                IndexExpression(
+                    expressions[0],
+                    sequence if isinstance(sequence, SequenceExpression) else None,
+                ),
+            )
+            return
+        if ctx.HASH():
+            sequence = (
+                self._child(ctx.sequenceExpressionList()) if ctx.sequenceExpressionList() else None
+            )
+            args = ArgumentList(
+                positional_arguments=(
+                    sequence.elements if isinstance(sequence, SequenceExpression) else []
+                )
+            )
+            self._store(ctx, InvocationExpression(expressions[0], args))
+            return
+        if ctx.argumentList():
+            arguments = self._child(ctx.argumentList())
+            if not isinstance(arguments, ArgumentList):
+                raise ValueError("invocation requires argumentList")
+            self._store(ctx, InvocationExpression(expressions[0], arguments))
+            return
+        if ctx.DOT() and ctx.qualifiedName():
+            member = self._child(ctx.qualifiedName())
+            if not isinstance(member, QualifiedReference):
+                raise ValueError("feature access requires qualifiedName")
+            self._store(ctx, FeatureAccessExpression(expressions[0], member))
+            return
+        if ctx.DOT_QUESTION():
+            body = self._child(ctx.bodyExpression())
+            if not isinstance(body, BodyExpression):
+                raise ValueError("safe body access requires bodyExpression")
+            self._store(ctx, BodyAccessExpression(expressions[0], body))
+            return
+        if ctx.ARROW():
+            member = self._child(ctx.qualifiedName())
+            result_ctx = ctx.bodyExpression() or ctx.argumentList()
+            result = self._child(result_ctx)
+            if not isinstance(member, QualifiedReference) or not isinstance(result, SourceElement):
+                raise ValueError("arrow expression requires member and result")
+            self._store(ctx, ArrowExpression(expressions[0], member, result))
+            return
+        if ctx.ALL():
+            reference = self._child(ctx.typeReference())
+            if not isinstance(reference, QualifiedReference):
+                raise ValueError("all expression requires typeReference")
+            self._store(ctx, AllExpression(reference))
+            return
+        if ctx.baseExpression():
+            self._pass(ctx, ctx.baseExpression())
+            return
+        raise ValueError("ownedExpression alternative was not assembled")
+
+    # ------------------------------------------------------------------
+    # Values, action bodies, and action parameters
+    # ------------------------------------------------------------------
+
+    def exitFeatureValue(self, ctx: SysMLv2Parser.FeatureValueContext) -> None:
+        """Assemble a value operator and structured expression."""
+        expression = self._child(ctx.ownedExpression())
+        if not isinstance(expression, Expression):
+            raise ValueError("featureValue requires ownedExpression")
+        operator = "="
+        if ctx.COLON_EQ() is not None:
+            operator = ":="
+        elif ctx.DEFAULT() is not None:
+            operator = "default"
+            if ctx.EQ() is not None:
+                operator += " ="
+            elif ctx.COLON_EQ() is not None:
+                operator += " :="
+        self._store(ctx, ValuePart(operator, expression))
+
+    def exitValuePart(self, ctx: SysMLv2Parser.ValuePartContext) -> None:
+        """Pass the structured feature value through its wrapper."""
+        self._pass(ctx, ctx.featureValue())
+
+    def exitActionUsageDeclaration(self, ctx: SysMLv2Parser.ActionUsageDeclarationContext) -> None:
+        """Assemble optional usage declaration and value fields."""
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        value = self._child(ctx.valuePart()) if ctx.valuePart() else None
+        self._store(
+            ctx,
+            ActionUsageDeclaration(
+                usage_declaration=declaration
+                if isinstance(declaration, UsageDeclaration)
+                else None,
+                value_part=value if isinstance(value, ValuePart) else None,
+            ),
+        )
+
+    def exitPerformActionUsageDeclaration(
+        self, ctx: SysMLv2Parser.PerformActionUsageDeclarationContext
+    ) -> None:
+        """Assemble the two concrete perform-declaration alternatives."""
+        reference = (
+            self._child(ctx.ownedReferenceSubsetting()) if ctx.ownedReferenceSubsetting() else None
+        )
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        specialization = (
+            self._child(ctx.featureSpecializationPart())
+            if ctx.featureSpecializationPart()
+            else None
+        )
+        value = self._child(ctx.valuePart()) if ctx.valuePart() else None
+        self._store(
+            ctx,
+            PerformActionUsageDeclaration(
+                referenced_feature=reference if isinstance(reference, QualifiedReference) else None,
+                action_usage_declaration=declaration
+                if isinstance(declaration, UsageDeclaration)
+                else None,
+                specialization=(
+                    specialization
+                    if isinstance(specialization, FeatureSpecializationPart)
+                    else None
+                ),
+                value_part=value if isinstance(value, ValuePart) else None,
+            ),
+        )
+
+    def exitActionBody(self, ctx: SysMLv2Parser.ActionBodyContext) -> None:
+        """Assemble a semicolon or ordered action-body statement list."""
+        if ctx.SEMI() is not None:
+            self._store(ctx, ActionBody(declaration_only=True))
+            return
+        self._store(ctx, ActionBody(items=self._source_items(ctx.actionBodyItem())))
+
+    def exitActionBodyItem(self, ctx: SysMLv2Parser.ActionBodyItemContext) -> None:
+        """Pass or assemble one action-body alternative without text collapse."""
+        if ctx.nonBehaviorBodyItem():
+            self._pass(ctx, ctx.nonBehaviorBodyItem())
+            return
+        if ctx.initialNodeMember():
+            self._pass(ctx, ctx.initialNodeMember())
+            return
+        if ctx.actionBehaviorMember():
+            self._pass(ctx, ctx.actionBehaviorMember())
+            return
+        if ctx.guardedSuccessionMember():
+            self._pass(ctx, ctx.guardedSuccessionMember())
+            return
+        raise ValueError("actionBodyItem alternative was not assembled")
+
+    def exitControlNodePrefix(self, ctx: SysMLv2Parser.ControlNodePrefixContext) -> None:
+        """Assemble the narrower prefix used by control nodes."""
+        ref = ctx.refPrefix()
+        direction = None
+        if ref is not None and ref.featureDirection() is not None:
+            direction = self._text(ref.featureDirection()).strip()
+        self._store(
+            ctx,
+            ControlNodePrefix(
+                feature_direction=direction,
+                is_derived=bool(ref and ref.DERIVED()),
+                is_abstract=bool(ref and ref.ABSTRACT()),
+                is_variation=bool(ref and ref.VARIATION()),
+                is_constant=bool(ref and ref.CONSTANT()),
+                is_individual=ctx.INDIVIDUAL() is not None,
+                portion_kind=self._text(ctx.portionKind()).strip() if ctx.portionKind() else None,
+                extension_keywords=[
+                    self._text(item).strip() for item in ctx.usageExtensionKeyword()
+                ],
+            ),
+        )
+
+    def exitActionNodePrefix(self, ctx: SysMLv2Parser.ActionNodePrefixContext) -> None:
+        """Assemble an action-node prefix and optional action declaration."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        declaration = (
+            self._child(ctx.actionNodeUsageDeclaration())
+            if ctx.actionNodeUsageDeclaration()
+            else None
+        )
+        if not isinstance(prefix, OccurrenceUsagePrefix):
+            raise ValueError("actionNodePrefix requires occurrenceUsagePrefix")
+        if declaration is not None and not isinstance(declaration, ActionNodeUsageDeclaration):
+            raise ValueError("actionNodePrefix action declaration was not assembled")
+        self._store(
+            ctx,
+            ActionNodePrefix(
+                occurrence_usage_prefix=prefix,
+                action_node_usage_declaration=declaration,
+            ),
+        )
+
+    def exitControlNode(self, ctx: SysMLv2Parser.ControlNodeContext) -> None:
+        """Pass one concrete control-node alternative."""
+        child = ctx.mergeNode() or ctx.decisionNode() or ctx.joinNode() or ctx.forkNode()
+        if child is None:
+            raise ValueError("controlNode has no alternative")
+        self._pass(ctx, child)
+
+    def exitMergeNode(self, ctx: SysMLv2Parser.MergeNodeContext) -> None:
+        """Assemble a merge node with its optional declaration and body."""
+        prefix = self._child(ctx.controlNodePrefix())
+        body = self._child(ctx.actionBody())
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        if not isinstance(prefix, ControlNodePrefix) or not isinstance(body, ActionBody):
+            raise ValueError("mergeNode has incomplete required fields")
+        if declaration is not None and not isinstance(declaration, UsageDeclaration):
+            raise ValueError("mergeNode declaration was not assembled")
+        self._store(ctx, MergeNode(prefix, body, declaration))
+
+    def exitDecisionNode(self, ctx: SysMLv2Parser.DecisionNodeContext) -> None:
+        """Assemble a decision node with its optional declaration and body."""
+        prefix = self._child(ctx.controlNodePrefix())
+        body = self._child(ctx.actionBody())
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        if not isinstance(prefix, ControlNodePrefix) or not isinstance(body, ActionBody):
+            raise ValueError("decisionNode has incomplete required fields")
+        if declaration is not None and not isinstance(declaration, UsageDeclaration):
+            raise ValueError("decisionNode declaration was not assembled")
+        self._store(ctx, DecisionNode(prefix, body, declaration))
+
+    def exitJoinNode(self, ctx: SysMLv2Parser.JoinNodeContext) -> None:
+        """Assemble a join node with its optional declaration and body."""
+        prefix = self._child(ctx.controlNodePrefix())
+        body = self._child(ctx.actionBody())
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        if not isinstance(prefix, ControlNodePrefix) or not isinstance(body, ActionBody):
+            raise ValueError("joinNode has incomplete required fields")
+        if declaration is not None and not isinstance(declaration, UsageDeclaration):
+            raise ValueError("joinNode declaration was not assembled")
+        self._store(ctx, JoinNode(prefix, body, declaration))
+
+    def exitForkNode(self, ctx: SysMLv2Parser.ForkNodeContext) -> None:
+        """Assemble a fork node with its optional declaration and body."""
+        prefix = self._child(ctx.controlNodePrefix())
+        body = self._child(ctx.actionBody())
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        if not isinstance(prefix, ControlNodePrefix) or not isinstance(body, ActionBody):
+            raise ValueError("forkNode has incomplete required fields")
+        if declaration is not None and not isinstance(declaration, UsageDeclaration):
+            raise ValueError("forkNode declaration was not assembled")
+        self._store(ctx, ForkNode(prefix, body, declaration))
+
+    def exitAcceptNode(self, ctx: SysMLv2Parser.AcceptNodeContext) -> None:
+        """Assemble a complete accept action node."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        declaration = self._child(ctx.acceptNodeDeclaration())
+        body = self._child(ctx.actionBody())
+        if not isinstance(prefix, OccurrenceUsagePrefix):
+            raise ValueError("acceptNode requires occurrenceUsagePrefix")
+        if not isinstance(declaration, AcceptNodeDeclaration) or not isinstance(body, ActionBody):
+            raise ValueError("acceptNode has incomplete required fields")
+        self._store(ctx, AcceptNode(prefix, declaration, body))
+
+    def exitSendNode(self, ctx: SysMLv2Parser.SendNodeContext) -> None:
+        """Assemble a complete send action node and its declaration choice."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        action_node_declaration = (
+            self._child(ctx.actionNodeUsageDeclaration())
+            if ctx.actionNodeUsageDeclaration()
+            else None
+        )
+        action_usage_declaration = (
+            self._child(ctx.actionUsageDeclaration()) if ctx.actionUsageDeclaration() else None
+        )
+        parameter = self._child(ctx.nodeParameterMember()) if ctx.nodeParameterMember() else None
+        sender = self._child(ctx.senderReceiverPart()) if ctx.senderReceiverPart() else None
+        if not isinstance(prefix, OccurrenceUsagePrefix):
+            raise ValueError("sendNode requires occurrenceUsagePrefix")
+        if action_node_declaration is not None and not isinstance(
+            action_node_declaration, ActionNodeUsageDeclaration
+        ):
+            raise ValueError("sendNode action declaration was not assembled")
+        if action_usage_declaration is not None and not isinstance(
+            action_usage_declaration, ActionUsageDeclaration
+        ):
+            raise ValueError("sendNode usage declaration was not assembled")
+        if ctx.nodeParameterMember() is not None and not isinstance(parameter, NodeParameter):
+            raise ValueError("sendNode parameter was not assembled")
+        if sender is not None and not isinstance(sender, SenderReceiverPart):
+            raise ValueError("sendNode sender/receiver part was not assembled")
+        body = self._child(ctx.actionBody())
+        if not isinstance(body, ActionBody):
+            raise ValueError("sendNode body was not assembled")
+        self._store(
+            ctx,
+            SendNode(
+                occurrence_usage_prefix=prefix,
+                declaration=SendNodeUsageDeclaration(
+                    send_parameter=parameter if isinstance(parameter, NodeParameter) else None,
+                    action_node_usage_declaration=(
+                        action_node_declaration
+                        if isinstance(action_node_declaration, ActionNodeUsageDeclaration)
+                        else None
+                    ),
+                    action_usage_declaration=(
+                        action_usage_declaration
+                        if isinstance(action_usage_declaration, ActionUsageDeclaration)
+                        else None
+                    ),
+                    sender_receiver_part=sender if isinstance(sender, SenderReceiverPart) else None,
+                    has_empty_parameter=ctx.emptyParameterMember() is not None,
+                ),
+                action_body=body,
+            ),
+        )
+
+    def exitAssignmentNode(self, ctx: SysMLv2Parser.AssignmentNodeContext) -> None:
+        """Assemble a complete assignment action node."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        declaration = self._child(ctx.assignmentNodeDeclaration())
+        body = self._child(ctx.actionBody())
+        if not isinstance(prefix, OccurrenceUsagePrefix):
+            raise ValueError("assignmentNode requires occurrenceUsagePrefix")
+        if not isinstance(declaration, AssignmentNodeDeclaration) or not isinstance(
+            body, ActionBody
+        ):
+            raise ValueError("assignmentNode has incomplete required fields")
+        self._store(ctx, AssignmentNode(prefix, declaration, body))
+
+    def exitTerminateNode(self, ctx: SysMLv2Parser.TerminateNodeContext) -> None:
+        """Assemble a terminate node with optional parameter and declaration."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        declaration = (
+            self._child(ctx.actionNodeUsageDeclaration())
+            if ctx.actionNodeUsageDeclaration()
+            else None
+        )
+        parameter = self._child(ctx.nodeParameterMember()) if ctx.nodeParameterMember() else None
+        body = self._child(ctx.actionBody())
+        if not isinstance(prefix, OccurrenceUsagePrefix) or not isinstance(body, ActionBody):
+            raise ValueError("terminateNode has incomplete required fields")
+        if declaration is not None and not isinstance(declaration, ActionNodeUsageDeclaration):
+            raise ValueError("terminateNode declaration was not assembled")
+        if parameter is not None and not isinstance(parameter, NodeParameter):
+            raise ValueError("terminateNode parameter was not assembled")
+        self._store(
+            ctx,
+            TerminateNode(
+                occurrence_usage_prefix=prefix,
+                action_body=body,
+                action_node_usage_declaration=declaration,
+                node_parameter=parameter,
+            ),
+        )
+
+    def exitExpressionParameterMember(
+        self, ctx: SysMLv2Parser.ExpressionParameterMemberContext
+    ) -> None:
+        """Pass an expression through the action-node parameter wrapper."""
+        self._pass(ctx, ctx.ownedExpression())
+
+    def exitActionBodyParameterMember(
+        self, ctx: SysMLv2Parser.ActionBodyParameterMemberContext
+    ) -> None:
+        """Pass a structured action body through its member wrapper."""
+        self._pass(ctx, ctx.actionBodyParameter())
+
+    def exitActionBodyParameter(self, ctx: SysMLv2Parser.ActionBodyParameterContext) -> None:
+        """Assemble a brace-delimited action body used by control flow."""
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        if declaration is not None and not isinstance(declaration, UsageDeclaration):
+            raise ValueError("actionBodyParameter declaration was not assembled")
+        self._store(
+            ctx,
+            ActionBodyParameter(
+                items=self._source_items(ctx.actionBodyItem()),
+                action_declaration=declaration,
+            ),
+        )
+
+    def exitIfNodeParameterMember(self, ctx: SysMLv2Parser.IfNodeParameterMemberContext) -> None:
+        """Pass a nested if node through the else-branch wrapper."""
+        self._pass(ctx, ctx.ifNode())
+
+    def exitIfNode(self, ctx: SysMLv2Parser.IfNodeContext) -> None:
+        """Assemble an if node and its optional else branch."""
+        prefix = self._child(ctx.actionNodePrefix())
+        condition = self._child(ctx.expressionParameterMember())
+        bodies = [self._child(item) for item in ctx.actionBodyParameterMember()]
+        nested = self._child(ctx.ifNodeParameterMember()) if ctx.ifNodeParameterMember() else None
+        if not isinstance(prefix, ActionNodePrefix) or not isinstance(condition, Expression):
+            raise ValueError("ifNode has incomplete condition or prefix")
+        if not bodies or not isinstance(bodies[0], ActionBodyParameter):
+            raise ValueError("ifNode requires then action body")
+        else_body = nested if isinstance(nested, IfNode) else None
+        if len(bodies) > 1:
+            if not isinstance(bodies[1], ActionBodyParameter):
+                raise ValueError("ifNode else action body was not assembled")
+            else_body = bodies[1]
+        self._store(ctx, IfNode(prefix, condition, bodies[0], else_body))
+
+    def exitWhileLoopNode(self, ctx: SysMLv2Parser.WhileLoopNodeContext) -> None:
+        """Assemble while and empty-loop forms with optional until guard."""
+        prefix = self._child(ctx.actionNodePrefix())
+        expression_contexts = ctx.expressionParameterMember()
+        condition = None
+        until = None
+        if ctx.WHILE() is not None:
+            condition = self._child(expression_contexts[0]) if expression_contexts else None
+            if ctx.UNTIL() is not None and len(expression_contexts) > 1:
+                until = self._child(expression_contexts[1])
+        elif ctx.UNTIL() is not None and expression_contexts:
+            until = self._child(expression_contexts[0])
+        body = self._child(ctx.actionBodyParameterMember())
+        if not isinstance(prefix, ActionNodePrefix) or not isinstance(body, ActionBodyParameter):
+            raise ValueError("whileLoopNode has incomplete required fields")
+        if condition is not None and not isinstance(condition, Expression):
+            raise ValueError("whileLoopNode condition was not assembled")
+        if until is not None and not isinstance(until, Expression):
+            raise ValueError("whileLoopNode until condition was not assembled")
+        self._store(
+            ctx,
+            WhileLoopNode(
+                action_node_prefix=prefix,
+                loop_kind="while" if ctx.WHILE() is not None else "loop",
+                body=body,
+                condition=condition,
+                until_condition=until,
+            ),
+        )
+
+    def exitForVariableDeclarationMember(
+        self, ctx: SysMLv2Parser.ForVariableDeclarationMemberContext
+    ) -> None:
+        """Pass an optional for-loop variable declaration."""
+        if ctx.usageDeclaration() is None:
+            self.parts[ctx] = None
+            return
+        declaration = self._child(ctx.usageDeclaration())
+        if not isinstance(declaration, UsageDeclaration):
+            raise ValueError("for variable declaration was not assembled")
+        self.parts[ctx] = declaration
+
+    def exitForLoopNode(self, ctx: SysMLv2Parser.ForLoopNodeContext) -> None:
+        """Assemble a for-loop node with structured collection expression."""
+        prefix = self._child(ctx.actionNodePrefix())
+        variable = self.parts.get(ctx.forVariableDeclarationMember())
+        collection = self._child(ctx.nodeParameterMember())
+        body = self._child(ctx.actionBodyParameterMember())
+        if not isinstance(prefix, ActionNodePrefix) or not isinstance(collection, NodeParameter):
+            raise ValueError("forLoopNode has incomplete prefix or collection")
+        if not isinstance(body, ActionBodyParameter):
+            raise ValueError("forLoopNode body was not assembled")
+        if variable is not None and not isinstance(variable, UsageDeclaration):
+            raise ValueError("forLoopNode variable declaration was not assembled")
+        self._store(
+            ctx,
+            ForLoopNode(
+                action_node_prefix=prefix,
+                collection=collection,
+                body=body,
+                variable_declaration=variable,
+            ),
+        )
+
+    def exitActionBehaviorMember(self, ctx: SysMLv2Parser.ActionBehaviorMemberContext) -> None:
+        """Pass action-node or behavior-usage alternatives."""
+        child = ctx.actionNodeMember() or ctx.behaviorUsageMember()
+        if child is None:
+            raise ValueError("actionBehaviorMember has no alternative")
+        self._pass(ctx, child)
+
+    def exitActionNodeMember(self, ctx: SysMLv2Parser.ActionNodeMemberContext) -> None:
+        """Assemble an action-node statement with its member prefix."""
+        child = self._child(ctx.actionNode())
+        if not isinstance(child, ActionNode):
+            raise ValueError("actionNodeMember requires actionNode")
+        self._store(
+            ctx,
+            ActionNodeMember(
+                action_node=child,
+                member_prefix=self._member_prefix(ctx.memberPrefix()),
+            ),
+        )
+
+    def exitActionNode(self, ctx: SysMLv2Parser.ActionNodeContext) -> None:
+        """Pass one concrete action-node statement alternative."""
+        child = (
+            ctx.controlNode()
+            or ctx.sendNode()
+            or ctx.acceptNode()
+            or ctx.assignmentNode()
+            or ctx.terminateNode()
+            or ctx.ifNode()
+            or ctx.whileLoopNode()
+            or ctx.forLoopNode()
+        )
+        if child is None:
+            raise ValueError("actionNode has no alternative")
+        self._pass(ctx, child)
+
+    def exitRelationshipBody(self, ctx: SysMLv2Parser.RelationshipBodyContext) -> None:
+        """Preserve relationship-body syntax as an explicit non-state node."""
+        self._store(ctx, RelationshipBody(self._text(ctx).strip()))
+
+    def exitInitialNodeMember(self, ctx: SysMLv2Parser.InitialNodeMemberContext) -> None:
+        """Assemble an action body's initial ``first`` node member."""
+        target = self._child(ctx.qualifiedName())
+        body = self._child(ctx.relationshipBody())
+        if not isinstance(target, QualifiedReference) or not isinstance(body, RelationshipBody):
+            raise ValueError("initialNodeMember has incomplete required fields")
+        self._store(
+            ctx,
+            InitialNodeMember(
+                target=target,
+                relationship_body=body,
+                member_prefix=self._member_prefix(ctx.memberPrefix()),
+            ),
+        )
+
+    def exitTargetSuccession(self, ctx: SysMLv2Parser.TargetSuccessionContext) -> None:
+        """Assemble an ordinary source-end to target succession."""
+        connector = self._child(ctx.connectorEndMember())
+        if not isinstance(connector, QualifiedReference):
+            raise ValueError("targetSuccession requires connector-end reference")
+        self._store(
+            ctx,
+            TargetSuccession(
+                target=TransitionSuccession(connector),
+                source_end_text=self._text(ctx.sourceEndMember()).strip()
+                if ctx.sourceEndMember()
+                else None,
+            ),
+        )
+
+    def exitGuardedTargetSuccession(
+        self, ctx: SysMLv2Parser.GuardedTargetSuccessionContext
+    ) -> None:
+        """Assemble a guarded target succession."""
+        guard = self._child(ctx.guardExpressionMember())
+        target = self._child(ctx.transitionSuccessionMember())
+        if not isinstance(guard, GuardExpressionMember) or not isinstance(
+            target, TransitionSuccession
+        ):
+            raise ValueError("guardedTargetSuccession has incomplete required fields")
+        self._store(ctx, GuardedTargetSuccession(guard=guard, target=target))
+
+    def exitDefaultTargetSuccession(
+        self, ctx: SysMLv2Parser.DefaultTargetSuccessionContext
+    ) -> None:
+        """Assemble an ``else`` target succession."""
+        target = self._child(ctx.transitionSuccessionMember())
+        if not isinstance(target, TransitionSuccession):
+            raise ValueError("defaultTargetSuccession requires transition succession")
+        self._store(ctx, DefaultTargetSuccession(target=target))
+
+    def exitActionTargetSuccession(self, ctx: SysMLv2Parser.ActionTargetSuccessionContext) -> None:
+        """Assemble a target succession and its generic usage body."""
+        succession_ctx = (
+            ctx.targetSuccession() or ctx.guardedTargetSuccession() or ctx.defaultTargetSuccession()
+        )
+        succession = self._child(succession_ctx)
+        body = self._child(ctx.usageBody())
+        if not isinstance(body, DefinitionBody):
+            raise ValueError("actionTargetSuccession requires usage body")
+        if not isinstance(
+            succession,
+            (TargetSuccession, GuardedTargetSuccession, DefaultTargetSuccession),
+        ):
+            raise ValueError("actionTargetSuccession has no assembled succession")
+        self._store(ctx, ActionTargetSuccession(succession=succession, body=body))
+
+    def exitActionTargetSuccessionMember(
+        self, ctx: SysMLv2Parser.ActionTargetSuccessionMemberContext
+    ) -> None:
+        """Assemble an action target succession with member visibility."""
+        succession = self._child(ctx.actionTargetSuccession())
+        if not isinstance(succession, ActionTargetSuccession):
+            raise ValueError("actionTargetSuccessionMember requires succession")
+        self._store(
+            ctx,
+            ActionTargetSuccessionMember(
+                target_succession=succession,
+                member_prefix=self._member_prefix(ctx.memberPrefix()),
+            ),
+        )
+
+    def exitGuardedSuccession(self, ctx: SysMLv2Parser.GuardedSuccessionContext) -> None:
+        """Assemble an action-body guarded succession."""
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        source = self._child(ctx.featureChainMember())
+        guard = self._child(ctx.guardExpressionMember())
+        target = self._child(ctx.transitionSuccessionMember())
+        body = self._child(ctx.usageBody())
+        if not isinstance(source, FeatureChain) or not isinstance(guard, GuardExpressionMember):
+            raise ValueError("guardedSuccession requires source and guard")
+        if not isinstance(target, TransitionSuccession) or not isinstance(body, DefinitionBody):
+            raise ValueError("guardedSuccession has incomplete target or body")
+        if declaration is not None and not isinstance(declaration, UsageDeclaration):
+            raise ValueError("guardedSuccession declaration was not assembled")
+        self._store(
+            ctx,
+            GuardedSuccession(
+                source=source,
+                guard=guard,
+                target=target,
+                body=body,
+                usage_declaration=declaration,
+                has_succession_keyword=ctx.SUCCESSION() is not None,
+            ),
+        )
+
+    def exitGuardedSuccessionMember(
+        self, ctx: SysMLv2Parser.GuardedSuccessionMemberContext
+    ) -> None:
+        """Assemble a guarded succession member with visibility."""
+        succession = self._child(ctx.guardedSuccession())
+        if not isinstance(succession, GuardedSuccession):
+            raise ValueError("guardedSuccessionMember requires succession")
+        self._store(
+            ctx,
+            GuardedSuccessionMember(
+                succession=succession,
+                member_prefix=self._member_prefix(ctx.memberPrefix()),
+            ),
+        )
+
+    def exitStateActionUsage(self, ctx: SysMLv2Parser.StateActionUsageContext) -> None:
+        """Pass the explicit state action variant or empty action."""
+        if ctx.emptyActionUsage_():
+            self._store(ctx, EmptyActionUsage())
+            return
+        child = (
+            ctx.statePerformActionUsage()
+            or ctx.stateAcceptActionUsage()
+            or ctx.stateSendActionUsage()
+            or ctx.stateAssignmentActionUsage()
+        )
+        if child is None:
+            raise ValueError("stateActionUsage has no alternative")
+        self._pass(ctx, child)
+
+    def exitStatePerformActionUsage(
+        self, ctx: SysMLv2Parser.StatePerformActionUsageContext
+    ) -> None:
+        """Assemble a state perform action declaration and body."""
+        declaration = self._child(ctx.performActionUsageDeclaration())
+        body = self._child(ctx.actionBody())
+        if not isinstance(declaration, PerformActionUsageDeclaration) or not isinstance(
+            body, ActionBody
+        ):
+            raise ValueError("state perform action requires declaration and body")
+        self._store(ctx, StatePerformActionUsage(declaration=declaration, body=body))
+
+    def exitStateAcceptActionUsage(self, ctx: SysMLv2Parser.StateAcceptActionUsageContext) -> None:
+        """Assemble a state accept action declaration and body."""
+        declaration = self._child(ctx.acceptNodeDeclaration())
+        body = self._child(ctx.actionBody())
+        if not isinstance(declaration, AcceptNodeDeclaration) or not isinstance(body, ActionBody):
+            raise ValueError("state accept action requires declaration and body")
+        self._store(ctx, AcceptActionUsage(declaration=declaration, body=body))
+
+    def exitStateSendActionUsage(self, ctx: SysMLv2Parser.StateSendActionUsageContext) -> None:
+        """Assemble a state send action declaration and body."""
+        declaration = self._child(ctx.sendNodeDeclaration())
+        body = self._child(ctx.actionBody())
+        if not isinstance(declaration, SendNodeDeclaration) or not isinstance(body, ActionBody):
+            raise ValueError("state send action requires declaration and body")
+        self._store(ctx, SendActionUsage(declaration=declaration, body=body))
+
+    def exitStateAssignmentActionUsage(
+        self, ctx: SysMLv2Parser.StateAssignmentActionUsageContext
+    ) -> None:
+        """Assemble a state assignment action declaration and body."""
+        declaration = self._child(ctx.assignmentNodeDeclaration())
+        body = self._child(ctx.actionBody())
+        if not isinstance(declaration, AssignmentNodeDeclaration) or not isinstance(
+            body, ActionBody
+        ):
+            raise ValueError("state assignment action requires declaration and body")
+        self._store(ctx, AssignmentActionUsage(declaration=declaration, body=body))
+
+    def exitPayloadParameter(self, ctx: SysMLv2Parser.PayloadParameterContext) -> None:
+        """Assemble payload feature or trigger-value alternatives."""
+        feature = self._child(ctx.payloadFeature()) if ctx.payloadFeature() else None
+        identification = self._child(ctx.identification()) if ctx.identification() else None
+        specialization = (
+            self._child(ctx.payloadFeatureSpecializationPart())
+            if ctx.payloadFeatureSpecializationPart()
+            else None
+        )
+        trigger = self._child(ctx.triggerValuePart()) if ctx.triggerValuePart() else None
+        self._store(
+            ctx,
+            PayloadParameter(
+                payload_feature=feature if isinstance(feature, PayloadFeature) else None,
+                identification=identification
+                if isinstance(identification, Identification)
+                else None,
+                specialization=(
+                    specialization
+                    if isinstance(specialization, FeatureSpecializationPart)
+                    else None
+                ),
+                trigger_expression=trigger if isinstance(trigger, Expression) else None,
+            ),
+        )
+
+    def exitPayloadParameterMember(self, ctx: SysMLv2Parser.PayloadParameterMemberContext) -> None:
+        """Pass payload parameter through its wrapper."""
+        self._pass(ctx, ctx.payloadParameter())
+
+    def exitPayloadFeatureMember(self, ctx: SysMLv2Parser.PayloadFeatureMemberContext) -> None:
+        """Pass payload feature through its one-child grammar wrapper."""
+        self._pass(ctx, ctx.payloadFeature())
+
+    def exitPayloadFeature(self, ctx: SysMLv2Parser.PayloadFeatureContext) -> None:
+        """Assemble every structured ``payloadFeature`` alternative."""
+        owned_typing = self._child(ctx.ownedFeatureTyping()) if ctx.ownedFeatureTyping() else None
+        identification = self._child(ctx.identification()) if ctx.identification() else None
+        specialization = (
+            self._child(ctx.payloadFeatureSpecializationPart())
+            if ctx.payloadFeatureSpecializationPart()
+            else None
+        )
+        value = self._child(ctx.valuePart()) if ctx.valuePart() else None
+        multiplicity = (
+            self._text(ctx.ownedMultiplicity()).strip() if ctx.ownedMultiplicity() else None
+        )
+        if (
+            not isinstance(owned_typing, QualifiedReference)
+            and not isinstance(identification, Identification)
+            and not isinstance(specialization, FeatureSpecializationPart)
+            and not multiplicity
+        ):
+            raise ValueError("payloadFeature has no assembled alternative")
+        self._store(
+            ctx,
+            PayloadFeature(
+                identification=identification
+                if isinstance(identification, Identification)
+                else None,
+                specialization=specialization
+                if isinstance(specialization, FeatureSpecializationPart)
+                else None,
+                value_part=value if isinstance(value, ValuePart) else None,
+                feature_reference=owned_typing
+                if isinstance(owned_typing, QualifiedReference)
+                else None,
+                multiplicity_text=multiplicity,
+            ),
+        )
+
+    def exitPayloadFeatureSpecializationPart(
+        self, ctx: SysMLv2Parser.PayloadFeatureSpecializationPartContext
+    ) -> None:
+        """Preserve payload specialization structure as a feature part."""
+        specializations = [self._child(item) for item in ctx.featureSpecialization()]
+        multiplicity = (
+            self._text(ctx.multiplicityPart()).strip() if ctx.multiplicityPart() else None
+        )
+        self._store(
+            ctx,
+            FeatureSpecializationPart(
+                specializations=[
+                    item for item in specializations if isinstance(item, FeatureSpecialization)
+                ],
+                multiplicity_text=multiplicity,
+            ),
+        )
+
+    def exitNodeParameter(self, ctx: SysMLv2Parser.NodeParameterContext) -> None:
+        """Assemble one node parameter from its feature binding expression."""
+        expression = self._child(ctx.featureBinding())
+        if not isinstance(expression, Expression):
+            raise ValueError("nodeParameter requires an Expression")
+        self._store(ctx, NodeParameter(expression))
+
+    def exitFeatureBinding(self, ctx: SysMLv2Parser.FeatureBindingContext) -> None:
+        """Pass a bound expression through its grammar wrapper."""
+        self._pass(ctx, ctx.ownedExpression())
+
+    def exitNodeParameterMember(self, ctx: SysMLv2Parser.NodeParameterMemberContext) -> None:
+        """Pass node parameter through its wrapper."""
+        self._pass(ctx, ctx.nodeParameter())
+
+    def exitAcceptParameterPart(self, ctx: SysMLv2Parser.AcceptParameterPartContext) -> None:
+        """Assemble payload and optional ``via`` node parameter."""
+        payload = self._child(ctx.payloadParameterMember())
+        via = self._child(ctx.nodeParameterMember()) if ctx.nodeParameterMember() else None
+        if not isinstance(payload, PayloadParameter):
+            raise ValueError("acceptParameterPart requires payloadParameter")
+        if ctx.nodeParameterMember() is not None and not isinstance(via, NodeParameter):
+            raise ValueError("acceptParameterPart via requires nodeParameter")
+        self._store(
+            ctx,
+            AcceptParameterPart(
+                payload=payload,
+                via_parameter=via,
+            ),
+        )
+
+    def exitTriggerExpression(self, ctx: SysMLv2Parser.TriggerExpressionContext) -> None:
+        """Assemble ``at``, ``after`` and ``when`` trigger expressions."""
+        argument = self._child(ctx.argumentMember() or ctx.argumentExpressionMember())
+        if not isinstance(argument, Expression):
+            raise ValueError("triggerExpression requires an Expression argument")
+        operator = "at" if ctx.AT() is not None else "after" if ctx.AFTER() is not None else "when"
+        self._store(ctx, TriggerExpression(operator, argument))
+
+    def exitTriggerValuePart(self, ctx: SysMLv2Parser.TriggerValuePartContext) -> None:
+        """Pass trigger feature value through its one-child wrapper."""
+        self._pass(ctx, ctx.triggerFeatureValue())
+
+    def exitTriggerFeatureValue(self, ctx: SysMLv2Parser.TriggerFeatureValueContext) -> None:
+        """Pass trigger expression through its one-child wrapper."""
+        self._pass(ctx, ctx.triggerExpression())
+
+    def exitAcceptNodeDeclaration(self, ctx: SysMLv2Parser.AcceptNodeDeclarationContext) -> None:
+        """Assemble an accept declaration's optional action usage and payload."""
+        action_decl = (
+            self._child(ctx.actionNodeUsageDeclaration())
+            if ctx.actionNodeUsageDeclaration()
+            else None
+        )
+        params = self._child(ctx.acceptParameterPart())
+        if not isinstance(params, AcceptParameterPart):
+            raise ValueError("acceptNodeDeclaration requires acceptParameterPart")
+        self._store(
+            ctx,
+            AcceptNodeDeclaration(
+                accept_parameter_part=params,
+                action_node_usage_declaration=action_decl
+                if isinstance(action_decl, ActionNodeUsageDeclaration)
+                else None,
+            ),
+        )
+
+    def exitActionNodeUsageDeclaration(
+        self, ctx: SysMLv2Parser.ActionNodeUsageDeclarationContext
+    ) -> None:
+        """Assemble an optional action-node usage declaration."""
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        self._store(
+            ctx,
+            ActionNodeUsageDeclaration(
+                usage_declaration=declaration
+                if isinstance(declaration, UsageDeclaration)
+                else None,
+            ),
+        )
+
+    def exitSenderReceiverPart(self, ctx: SysMLv2Parser.SenderReceiverPartContext) -> None:
+        """Assemble explicit sender/receiver node parameters."""
+        parameters = [self._child(item) for item in ctx.nodeParameterMember()]
+        self._store(
+            ctx,
+            SenderReceiverPart(
+                via_parameter=parameters[0]
+                if parameters and isinstance(parameters[0], NodeParameter) and ctx.VIA()
+                else None,
+                to_parameter=parameters[-1]
+                if parameters and isinstance(parameters[-1], NodeParameter) and ctx.TO()
+                else None,
+                has_empty_parameter=ctx.emptyParameterMember() is not None,
+            ),
+        )
+
+    def exitSendNodeDeclaration(self, ctx: SysMLv2Parser.SendNodeDeclarationContext) -> None:
+        """Assemble a send declaration and its optional routing fields."""
+        action_decl = (
+            self._child(ctx.actionNodeUsageDeclaration())
+            if ctx.actionNodeUsageDeclaration()
+            else None
+        )
+        parameter = self._child(ctx.nodeParameterMember()) if ctx.nodeParameterMember() else None
+        if not isinstance(parameter, NodeParameter):
+            raise ValueError("sendNodeDeclaration requires nodeParameter")
+        if action_decl is not None and not isinstance(action_decl, ActionNodeUsageDeclaration):
+            raise ValueError("sendNodeDeclaration action declaration was not assembled")
+        sender = self._child(ctx.senderReceiverPart()) if ctx.senderReceiverPart() else None
+        if sender is not None and not isinstance(sender, SenderReceiverPart):
+            raise ValueError("sendNodeDeclaration sender/receiver was not assembled")
+        self._store(
+            ctx,
+            SendNodeDeclaration(
+                send_parameter=parameter,
+                action_node_usage_declaration=action_decl,
+                sender_receiver_part=sender,
+            ),
+        )
+
+    def exitAssignmentNodeDeclaration(
+        self, ctx: SysMLv2Parser.AssignmentNodeDeclarationContext
+    ) -> None:
+        """Preserve assignment target and value fields for node assembly."""
+        target = self._child(ctx.featureChainMember())
+        value = self._child(ctx.nodeParameterMember())
+        action_decl = (
+            self._child(ctx.actionNodeUsageDeclaration())
+            if ctx.actionNodeUsageDeclaration()
+            else None
+        )
+        if not isinstance(target, FeatureChain) or not isinstance(value, NodeParameter):
+            raise ValueError("assignmentNodeDeclaration requires target and value")
+        self._store(
+            ctx,
+            AssignmentNodeDeclaration(
+                target=target,
+                value=value,
+                action_node_usage_declaration=action_decl
+                if isinstance(action_decl, ActionNodeUsageDeclaration)
+                else None,
+            ),
+        )
+
+    def exitActionUsage(self, ctx: SysMLv2Parser.ActionUsageContext) -> None:
+        """Assemble a top-level ``action`` usage."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        declaration = self._child(ctx.actionUsageDeclaration())
+        body = self._child(ctx.actionBody())
+        if (
+            not isinstance(prefix, OccurrenceUsagePrefix)
+            or not isinstance(declaration, ActionUsageDeclaration)
+            or not isinstance(body, ActionBody)
+        ):
+            raise ValueError("actionUsage has incomplete required fields")
+        self._store(
+            ctx,
+            ActionUsage(
+                occurrence_usage_prefix=prefix,
+                declaration=declaration,
+                body=body,
+            ),
+        )
+
+    def exitPerformActionUsage(self, ctx: SysMLv2Parser.PerformActionUsageContext) -> None:
+        """Assemble a top-level ``perform`` usage."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        declaration = self._child(ctx.performActionUsageDeclaration())
+        body = self._child(ctx.actionBody())
+        if (
+            not isinstance(prefix, OccurrenceUsagePrefix)
+            or not isinstance(declaration, PerformActionUsageDeclaration)
+            or not isinstance(body, ActionBody)
+        ):
+            raise ValueError("performActionUsage has incomplete required fields")
+        self._store(
+            ctx,
+            PerformActionUsage(
+                occurrence_usage_prefix=prefix,
+                declaration=declaration,
+                body=body,
+            ),
+        )
+
+    def exitActionDefinition(self, ctx: SysMLv2Parser.ActionDefinitionContext) -> None:
+        """Assemble an ``action def`` and its structured action body."""
+        prefix = self._child(ctx.occurrenceDefinitionPrefix())
+        declaration = self._child(ctx.definitionDeclaration())
+        body = self._child(ctx.actionBody())
+        if (
+            not isinstance(prefix, OccurrenceDefinitionPrefix)
+            or not isinstance(declaration, DefinitionDeclaration)
+            or not isinstance(body, ActionBody)
+        ):
+            raise ValueError("actionDefinition has incomplete required fields")
+        self._store(ctx, ActionDefinition(prefix, declaration, body))
+
+    # ------------------------------------------------------------------
+    # State and transition productions
+    # ------------------------------------------------------------------
+
+    def exitEntryActionMember(self, ctx: SysMLv2Parser.EntryActionMemberContext) -> None:
+        """Assemble an entry action and any attached entry transitions."""
+        action = self._child(ctx.stateActionUsage())
+        if not isinstance(action, ActionUsageNode):
+            raise ValueError("entryActionMember requires stateActionUsage")
+        self._store(
+            ctx,
+            EntryActionMember(
+                state_action_usage=action,
+                member_prefix=self._member_prefix(ctx.memberPrefix()),
+            ),
+        )
+
+    def exitDoActionMember(self, ctx: SysMLv2Parser.DoActionMemberContext) -> None:
+        """Assemble a do action member."""
+        action = self._child(ctx.stateActionUsage())
+        if not isinstance(action, ActionUsageNode):
+            raise ValueError("doActionMember requires stateActionUsage")
+        self._store(ctx, DoActionMember(action, self._member_prefix(ctx.memberPrefix())))
+
+    def exitExitActionMember(self, ctx: SysMLv2Parser.ExitActionMemberContext) -> None:
+        """Assemble an exit action member."""
+        action = self._child(ctx.stateActionUsage())
+        if not isinstance(action, ActionUsageNode):
+            raise ValueError("exitActionMember requires stateActionUsage")
+        self._store(ctx, ExitActionMember(action, self._member_prefix(ctx.memberPrefix())))
+
+    def exitEntryTransitionMember(self, ctx: SysMLv2Parser.EntryTransitionMemberContext) -> None:
+        """Assemble a guarded or ordinary entry transition member."""
+        guard = None
+        succession = None
+        if ctx.guardedTargetSuccession():
+            guarded = ctx.guardedTargetSuccession()
+            guard = self._child(guarded.guardExpressionMember())
+            succession = self._child(guarded.transitionSuccessionMember())
+        else:
+            succession = self._child(ctx.transitionSuccessionMember())
+        if not isinstance(succession, TransitionSuccession):
+            raise ValueError("entryTransitionMember requires transitionSuccession")
+        self._store(
+            ctx,
+            EntryTransitionMember(
+                target=succession,
+                member_prefix=self._member_prefix(ctx.memberPrefix()),
+                guard=guard if isinstance(guard, Expression) else None,
+            ),
+        )
+
+    def exitTriggerAction(self, ctx: SysMLv2Parser.TriggerActionContext) -> None:
+        """Pass the accept parameter part through the trigger wrapper."""
+        self._pass(ctx, ctx.acceptParameterPart())
+
+    def exitTriggerActionMember(self, ctx: SysMLv2Parser.TriggerActionMemberContext) -> None:
+        """Assemble the concrete ``accept`` trigger member."""
+        trigger = self._child(ctx.triggerAction())
+        if not isinstance(trigger, AcceptParameterPart):
+            raise ValueError("triggerActionMember requires acceptParameterPart")
+        self._store(ctx, TriggerActionMember(trigger))
+
+    def exitGuardExpressionMember(self, ctx: SysMLv2Parser.GuardExpressionMemberContext) -> None:
+        """Assemble a guard around the structured owned expression."""
+        expression = self._child(ctx.ownedExpression())
+        if not isinstance(expression, Expression):
+            raise ValueError("guardExpressionMember requires ownedExpression")
+        self._store(ctx, GuardExpressionMember(expression))
+
+    def exitEffectBehaviorMember(self, ctx: SysMLv2Parser.EffectBehaviorMemberContext) -> None:
+        """Assemble an effect around its concrete action usage alternative."""
+        effect = self._child(ctx.effectBehaviorUsage())
+        if not isinstance(effect, ActionUsageNode):
+            raise ValueError("effectBehaviorMember requires effectBehaviorUsage")
+        self._store(ctx, EffectBehaviorMember(effect))
+
+    def exitEffectBehaviorUsage(self, ctx: SysMLv2Parser.EffectBehaviorUsageContext) -> None:
+        """Pass the selected transition effect action variant."""
+        child = (
+            ctx.emptyActionUsage_()
+            or ctx.transitionPerformActionUsage()
+            or ctx.transitionAcceptActionUsage()
+            or ctx.transitionSendActionUsage()
+            or ctx.transitionAssignmentActionUsage()
+        )
+        if child is None:
+            raise ValueError("effectBehaviorUsage has no alternative")
+        if ctx.emptyActionUsage_():
+            self._store(ctx, EmptyActionUsage())
+        else:
+            self._pass(ctx, child)
+
+    def exitTransitionPerformActionUsage(
+        self, ctx: SysMLv2Parser.TransitionPerformActionUsageContext
+    ) -> None:
+        """Assemble a transition perform effect and optional action body."""
+        declaration = self._child(ctx.performActionUsageDeclaration())
+        if not isinstance(declaration, PerformActionUsageDeclaration):
+            raise ValueError("transitionPerformActionUsage requires declaration")
+        body = ActionBody(items=self._source_items(ctx.actionBodyItem())) if ctx.LBRACE() else None
+        self._store(ctx, TransitionPerformActionUsage(declaration=declaration, body=body))
+
+    def exitTransitionAcceptActionUsage(
+        self, ctx: SysMLv2Parser.TransitionAcceptActionUsageContext
+    ) -> None:
+        """Assemble a transition accept effect and optional action body."""
+        declaration = self._child(ctx.acceptNodeDeclaration())
+        if not isinstance(declaration, AcceptNodeDeclaration):
+            raise ValueError("transitionAcceptActionUsage requires declaration")
+        body = ActionBody(items=self._source_items(ctx.actionBodyItem())) if ctx.LBRACE() else None
+        self._store(ctx, AcceptActionUsage(declaration=declaration, body=body))
+
+    def exitTransitionSendActionUsage(
+        self, ctx: SysMLv2Parser.TransitionSendActionUsageContext
+    ) -> None:
+        """Assemble a transition send effect and optional action body."""
+        declaration = self._child(ctx.sendNodeDeclaration())
+        if not isinstance(declaration, SendNodeDeclaration):
+            raise ValueError("transitionSendActionUsage requires declaration")
+        body = ActionBody(items=self._source_items(ctx.actionBodyItem())) if ctx.LBRACE() else None
+        self._store(ctx, SendActionUsage(declaration=declaration, body=body))
+
+    def exitTransitionAssignmentActionUsage(
+        self, ctx: SysMLv2Parser.TransitionAssignmentActionUsageContext
+    ) -> None:
+        """Assemble a transition assignment effect and optional action body."""
+        declaration = self._child(ctx.assignmentNodeDeclaration())
+        if not isinstance(declaration, AssignmentNodeDeclaration):
+            raise ValueError("transitionAssignmentActionUsage requires declaration")
+        body = ActionBody(items=self._source_items(ctx.actionBodyItem())) if ctx.LBRACE() else None
+        self._store(ctx, AssignmentActionUsage(declaration=declaration, body=body))
+
+    def exitTransitionSuccession(self, ctx: SysMLv2Parser.TransitionSuccessionContext) -> None:
+        """Assemble the target connector-end reference."""
+        connector = self._child(ctx.connectorEndMember())
+        if not isinstance(connector, QualifiedReference):
+            raise ValueError("transitionSuccession requires connectorEndMember")
+        self._store(ctx, TransitionSuccession(connector))
+
+    def exitConnectorEndMember(self, ctx: SysMLv2Parser.ConnectorEndMemberContext) -> None:
+        """Pass connector-end syntax through its one-child wrapper."""
+        self._pass(ctx, ctx.connectorEnd())
+
+    def exitConnectorEnd(self, ctx: SysMLv2Parser.ConnectorEndContext) -> None:
+        """Preserve the owned reference at a connector end."""
+        reference = self._child(ctx.ownedReferenceSubsetting())
+        if not isinstance(reference, QualifiedReference):
+            raise ValueError("connectorEnd requires ownedReferenceSubsetting")
+        self._pass(ctx, ctx.ownedReferenceSubsetting())
+
+    def exitTransitionSuccessionMember(
+        self, ctx: SysMLv2Parser.TransitionSuccessionMemberContext
+    ) -> None:
+        """Pass the semantic transition succession through its wrapper."""
+        self._pass(ctx, ctx.transitionSuccession())
+
+    def exitTransitionUsage(self, ctx: SysMLv2Parser.TransitionUsageContext) -> None:
+        """Assemble a complete transition usage from concrete grammar fields."""
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        source = self._child(ctx.featureChainMember())
+        succession = self._child(ctx.transitionSuccessionMember())
+        body = self._child(ctx.actionBody())
+        trigger = self._child(ctx.triggerActionMember()) if ctx.triggerActionMember() else None
+        guard = self._child(ctx.guardExpressionMember()) if ctx.guardExpressionMember() else None
+        effect = self._child(ctx.effectBehaviorMember()) if ctx.effectBehaviorMember() else None
+        if (
+            not isinstance(source, FeatureChain)
+            or not isinstance(succession, TransitionSuccession)
+            or not isinstance(body, ActionBody)
+        ):
+            raise ValueError("transitionUsage has incomplete required fields")
+        self._store(
+            ctx,
+            TransitionUsage(
+                source_feature_chain=source,
+                transition_succession_member=succession,
+                action_body=body,
+                usage_declaration=declaration
+                if isinstance(declaration, UsageDeclaration)
+                else None,
+                is_first=ctx.FIRST() is not None,
+                input_parameter_count=len(ctx.emptyParameterMember()),
+                trigger_action_member=trigger if isinstance(trigger, TriggerActionMember) else None,
+                guard_expression_member=guard if isinstance(guard, GuardExpressionMember) else None,
+                effect_behavior_member=effect if isinstance(effect, EffectBehaviorMember) else None,
+            ),
+        )
+
+    def exitTransitionUsageMember(self, ctx: SysMLv2Parser.TransitionUsageMemberContext) -> None:
+        """Preserve a transition member's visibility prefix beside the child."""
+        child = self._child(ctx.transitionUsage())
+        if not isinstance(child, TransitionUsage):
+            raise ValueError("transitionUsageMember requires transitionUsage")
+        self._store(ctx, TransitionUsageMember(child, self._member_prefix(ctx.memberPrefix())))
+
+    def exitTargetTransitionUsage(self, ctx: SysMLv2Parser.TargetTransitionUsageContext) -> None:
+        """Assemble abbreviated target-transition alternatives."""
+        succession = self._child(ctx.transitionSuccessionMember())
+        body = self._child(ctx.actionBody())
+        if not isinstance(succession, TransitionSuccession) or not isinstance(body, ActionBody):
+            raise ValueError("targetTransitionUsage has incomplete required fields")
+        trigger = self._child(ctx.triggerActionMember()) if ctx.triggerActionMember() else None
+        guard = self._child(ctx.guardExpressionMember()) if ctx.guardExpressionMember() else None
+        effect = self._child(ctx.effectBehaviorMember()) if ctx.effectBehaviorMember() else None
+        form = TargetTransitionForm.BARE
+        if ctx.TRANSITION():
+            form = TargetTransitionForm.TRANSITION
+        elif trigger is not None:
+            form = TargetTransitionForm.TRIGGER
+        elif guard is not None:
+            form = TargetTransitionForm.GUARD
+        self._store(
+            ctx,
+            TargetTransitionUsage(
+                transition_succession_member=succession,
+                action_body=body,
+                form=form,
+                input_parameter_count=len(ctx.emptyParameterMember()),
+                trigger_action_member=trigger if isinstance(trigger, TriggerActionMember) else None,
+                guard_expression_member=guard if isinstance(guard, GuardExpressionMember) else None,
+                effect_behavior_member=effect if isinstance(effect, EffectBehaviorMember) else None,
+            ),
+        )
+
+    def exitTargetTransitionUsageMember(
+        self, ctx: SysMLv2Parser.TargetTransitionUsageMemberContext
+    ) -> None:
+        """Preserve a target-transition member visibility prefix."""
+        child = self._child(ctx.targetTransitionUsage())
+        if not isinstance(child, TargetTransitionUsage):
+            raise ValueError("targetTransitionUsageMember requires targetTransitionUsage")
+        self._store(
+            ctx, TargetTransitionUsageMember(child, self._member_prefix(ctx.memberPrefix()))
+        )
+
+    def exitBehaviorUsageElement(self, ctx: SysMLv2Parser.BehaviorUsageElementContext) -> None:
+        """Pass state/exhibit behavior alternatives or retain unrelated behavior syntax."""
+        child = (
+            ctx.actionUsage()
+            or ctx.stateUsage()
+            or ctx.performActionUsage()
+            or ctx.exhibitStateUsage()
+        )
+        if child is not None:
+            self._pass(ctx, child)
+        else:
+            self._raw_store(ctx)
+
+    def exitBehaviorUsageMember(self, ctx: SysMLv2Parser.BehaviorUsageMemberContext) -> None:
+        """Assemble an optional source succession and behavior usage member."""
+        behavior = self._child(ctx.behaviorUsageElement())
+        if not isinstance(behavior, SourceElement):
+            raise ValueError("behaviorUsageMember requires behaviorUsageElement")
+        self._store(
+            ctx,
+            BehaviorUsageMember(
+                behavior_usage=behavior,
+                member_prefix=self._member_prefix(ctx.memberPrefix()),
+            ),
+        )
+
+    def exitSourceSuccessionMember(self, ctx: SysMLv2Parser.SourceSuccessionMemberContext) -> None:
+        """Retain a source-succession marker for its enclosing member."""
+        self._store(ctx, SourceSuccession())
+
+    def exitSourceSuccession(self, ctx: SysMLv2Parser.SourceSuccessionContext) -> None:
+        """Retain the epsilon source succession marker."""
+        self._store(ctx, SourceSuccession())
+
+    def exitStateBodyItem(self, ctx: SysMLv2Parser.StateBodyItemContext) -> None:
+        """Assemble state-body alternatives without a redundant item wrapper."""
+        if ctx.nonBehaviorBodyItem():
+            self._pass(ctx, ctx.nonBehaviorBodyItem())
+            return
+        if ctx.transitionUsageMember():
+            self._pass(ctx, ctx.transitionUsageMember())
+            return
+        if ctx.entryActionMember():
+            entry = self._child(ctx.entryActionMember())
+            if not isinstance(entry, EntryActionMember):
+                raise ValueError("entry state-body member is incomplete")
+            transitions = [self._child(item) for item in ctx.entryTransitionMember()]
+            entry.entry_transition_members = [
+                item for item in transitions if isinstance(item, EntryTransitionMember)
+            ]
+            self.nodes[ctx] = entry
+            return
+        if ctx.doActionMember():
+            self._pass(ctx, ctx.doActionMember())
+            return
+        if ctx.exitActionMember():
+            self._pass(ctx, ctx.exitActionMember())
+            return
+        behavior = self._child(ctx.behaviorUsageMember()) if ctx.behaviorUsageMember() else None
+        if not isinstance(behavior, BehaviorUsageMember):
+            raise ValueError("stateBodyItem behavior alternative is incomplete")
+        source = self._child(ctx.sourceSuccessionMember()) if ctx.sourceSuccessionMember() else None
+        targets = [self._child(item) for item in ctx.targetTransitionUsageMember()]
+        self._store(
+            ctx,
+            BehaviorUsageStateMember(
+                behavior_usage_member=behavior,
+                source_succession=source if isinstance(source, SourceSuccession) else None,
+                target_transition_members=[
+                    item for item in targets if isinstance(item, TargetTransitionUsageMember)
+                ],
+            ),
+        )
+
+    def _state_body(self, ctx: Any) -> SourceElement:
+        """Build either a state-definition or state-usage body explicitly."""
+        members = [self._child(item) for item in ctx.stateBodyItem()]
+        values = [item for item in members if isinstance(item, SourceElement)]
+        if isinstance(ctx, SysMLv2Parser.StateDefBodyContext):
+            return StateDefBody(
+                is_parallel=ctx.PARALLEL() is not None,
+                is_declaration_only=ctx.SEMI() is not None,
+                state_body_members=values,
+            )
+        return StateUsageBody(
+            is_parallel=ctx.PARALLEL() is not None,
+            is_declaration_only=ctx.SEMI() is not None,
+            state_body_members=values,
+        )
+
+    def exitStateDefBody(self, ctx: SysMLv2Parser.StateDefBodyContext) -> None:
+        """Assemble a state-definition body."""
+        self._store(ctx, self._state_body(ctx))
+
+    def exitStateUsageBody(self, ctx: SysMLv2Parser.StateUsageBodyContext) -> None:
+        """Assemble a state-usage body."""
+        self._store(ctx, self._state_body(ctx))
+
+    def exitStateDefinition(self, ctx: SysMLv2Parser.StateDefinitionContext) -> None:
+        """Assemble ``state def`` with explicit prefix, declaration, and body."""
+        prefix = self._child(ctx.occurrenceDefinitionPrefix())
+        declaration = self._child(ctx.definitionDeclaration())
+        body = self._child(ctx.stateDefBody())
+        if (
+            not isinstance(prefix, OccurrenceDefinitionPrefix)
+            or not isinstance(declaration, DefinitionDeclaration)
+            or not isinstance(body, StateDefBody)
+        ):
+            raise ValueError("stateDefinition has incomplete required fields")
+        self._store(ctx, StateDefinition(prefix, declaration, body))
+
+    def exitStateUsage(self, ctx: SysMLv2Parser.StateUsageContext) -> None:
+        """Assemble ``state`` usage with explicit declaration and body."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        declaration = self._child(ctx.actionUsageDeclaration())
+        body = self._child(ctx.stateUsageBody())
+        if (
+            not isinstance(prefix, OccurrenceUsagePrefix)
+            or not isinstance(declaration, ActionUsageDeclaration)
+            or not isinstance(body, StateUsageBody)
+        ):
+            raise ValueError("stateUsage has incomplete required fields")
+        self._store(ctx, StateUsage(prefix, declaration, body))
+
+    def exitExhibitStateUsage(self, ctx: SysMLv2Parser.ExhibitStateUsageContext) -> None:
+        """Assemble an exhibit-state usage and its selected declaration form."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        reference = (
+            self._child(ctx.ownedReferenceSubsetting()) if ctx.ownedReferenceSubsetting() else None
+        )
+        specialization = (
+            self._child(ctx.featureSpecializationPart())
+            if ctx.featureSpecializationPart()
+            else None
+        )
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        value = self._child(ctx.valuePart()) if ctx.valuePart() else None
+        body = self._child(ctx.stateUsageBody())
+        if not isinstance(prefix, OccurrenceUsagePrefix) or not isinstance(body, StateUsageBody):
+            raise ValueError("exhibitStateUsage has incomplete required fields")
+        self._store(
+            ctx,
+            ExhibitStateUsage(
+                occurrence_usage_prefix=prefix,
+                owned_reference_subsetting=reference
+                if isinstance(reference, QualifiedReference)
+                else None,
+                feature_specialization_part=specialization
+                if isinstance(specialization, FeatureSpecializationPart)
+                else None,
+                state_usage_declaration=declaration
+                if isinstance(declaration, UsageDeclaration)
+                else None,
+                value_part=value if isinstance(value, ValuePart) else None,
+                state_usage_body=body,
+            ),
+        )
+
+    # ------------------------------------------------------------------
+    # Generic definition/usage containment
+    # ------------------------------------------------------------------
+
+    def exitUsageBody(self, ctx: SysMLv2Parser.UsageBodyContext) -> None:
+        """Pass a generic usage body through to its definition body."""
+        self._pass(ctx, ctx.definitionBody())
+
+    def exitDefinitionBodyItemContent(
+        self, ctx: SysMLv2Parser.DefinitionBodyItemContentContext
+    ) -> None:
+        """Pass the selected generic definition-body content alternative."""
+        child = (
+            ctx.definitionElement() or ctx.nonOccurrenceUsageElement() or ctx.variantUsageElement()
+        )
+        if child is None:
+            self._raw_store(ctx)
+            return
+        self._pass(ctx, child)
+
+    def exitDefinitionBodyItem(self, ctx: SysMLv2Parser.DefinitionBodyItemContext) -> None:
+        """Assemble a generic body item with its owned source/visibility fields."""
+        if ctx.importRule():
+            self._raw_store(ctx.importRule())
+            self._store(
+                ctx,
+                DefinitionBodyItem(
+                    element=self._child(ctx.importRule()),
+                    member_prefix=None,
+                    source_succession=None,
+                ),
+            )
+            return
+        source = self._child(ctx.sourceSuccessionMember()) if ctx.sourceSuccessionMember() else None
+        member_prefix = self._member_prefix(ctx.memberPrefix()) if ctx.memberPrefix() else None
+        child_ctx = (
+            ctx.definitionBodyItemContent()
+            or ctx.endOccurrenceUsageElement()
+            or ctx.occurrenceUsageElement()
+        )
+        child = self._child(child_ctx)
+        if not isinstance(child, SourceElement):
+            raise ValueError("definitionBodyItem has no assembled element")
+        self._store(
+            ctx,
+            DefinitionBodyItem(
+                element=child,
+                member_prefix=member_prefix,
+                source_succession=source if isinstance(source, SourceSuccession) else None,
+            ),
+        )
+
+    def exitDefinitionBody(self, ctx: SysMLv2Parser.DefinitionBodyContext) -> None:
+        """Assemble a generic definition body and preserve ordered members."""
+        if ctx.SEMI():
+            self._store(ctx, DefinitionBody(declaration_only=True))
+            return
+        items = [self._child(item) for item in ctx.definitionBodyItem()]
+        if not all(isinstance(item, DefinitionBodyItem) for item in items):
+            raise ValueError("definitionBody contains an unassembled item")
+        self._store(
+            ctx,
+            DefinitionBody(items=[item for item in items if isinstance(item, DefinitionBodyItem)]),
+        )
+
+    def exitDefinition(self, ctx: SysMLv2Parser.DefinitionContext) -> None:
+        """Assemble a generic definition declaration and body."""
+        declaration = self._child(ctx.definitionDeclaration())
+        body = self._child(ctx.definitionBody())
+        if not isinstance(declaration, DefinitionDeclaration) or not isinstance(
+            body, DefinitionBody
+        ):
+            raise ValueError("definition has incomplete required fields")
+        self._store(ctx, Definition(declaration=declaration, body=body))
+
+    def exitPartDefinition(self, ctx: SysMLv2Parser.PartDefinitionContext) -> None:
+        """Assemble a structured ``part def``."""
+        prefix = self._child(ctx.occurrenceDefinitionPrefix())
+        definition = self._child(ctx.definition())
+        if not isinstance(prefix, OccurrenceDefinitionPrefix) or not isinstance(
+            definition, Definition
+        ):
+            raise ValueError("partDefinition has incomplete required fields")
+        self._store(ctx, PartDefinition(prefix, definition))
+
+    def exitUsage(self, ctx: SysMLv2Parser.UsageContext) -> None:
+        """Assemble a generic usage declaration and completion body."""
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        completion = self._child(ctx.usageCompletion())
+        if not isinstance(completion, Usage):
+            raise ValueError("usage completion was not assembled")
+        self._store(
+            ctx,
+            Usage(
+                body=completion.body,
+                declaration=declaration
+                if isinstance(declaration, UsageDeclaration)
+                else completion.declaration,
+                value_part=completion.value_part,
+            ),
+        )
+
+    def exitUsageCompletion(self, ctx: SysMLv2Parser.UsageCompletionContext) -> None:
+        """Assemble generic usage value and body before the outer declaration."""
+        value = self._child(ctx.valuePart()) if ctx.valuePart() else None
+        body = self._child(ctx.usageBody())
+        if not isinstance(body, DefinitionBody):
+            raise ValueError("usageCompletion requires definition body")
+        self._store(
+            ctx,
+            Usage(
+                body=body,
+                value_part=value if isinstance(value, ValuePart) else None,
+            ),
+        )
+
+    def exitPartUsage(self, ctx: SysMLv2Parser.PartUsageContext) -> None:
+        """Assemble a structured ``part`` usage."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        usage = self._child(ctx.usage())
+        if not isinstance(prefix, OccurrenceUsagePrefix) or not isinstance(usage, Usage):
+            raise ValueError("partUsage has incomplete required fields")
+        self._store(ctx, PartUsage(prefix, usage))
+
+    def exitStructureUsageElement(self, ctx: SysMLv2Parser.StructureUsageElementContext) -> None:
+        """Pass structured part usage or retain unrelated structure syntax."""
+        child = ctx.partUsage()
+        if child is not None:
+            self._pass(ctx, child)
+            return
+        self._raw_store(ctx)
+
+    def exitStructureUsageMember(self, ctx: SysMLv2Parser.StructureUsageMemberContext) -> None:
+        """Assemble a structural usage member with source succession."""
+        child = self._child(ctx.structureUsageElement())
+        source = self._child(ctx.sourceSuccessionMember()) if ctx.sourceSuccessionMember() else None
+        if not isinstance(child, SourceElement):
+            raise ValueError("structureUsageMember requires structureUsageElement")
+        self._store(
+            ctx,
+            StructureUsageMember(
+                structure_usage=child,
+                member_prefix=self._member_prefix(ctx.memberPrefix()),
+                source_succession=source if isinstance(source, SourceSuccession) else None,
+            ),
+        )
+
+    # ------------------------------------------------------------------
+    # Package/document containment
+    # ------------------------------------------------------------------
+
+    def exitPackageDeclaration(self, ctx: SysMLv2Parser.PackageDeclarationContext) -> None:
+        """Pass package identification through the keyword wrapper."""
+        if ctx.identification():
+            self._pass(ctx, ctx.identification())
+        else:
+            self.parts[ctx] = None
+
+    def exitComment(self, ctx: SysMLv2Parser.CommentContext) -> None:
+        """Assemble model-owned comment syntax and regular-comment text."""
+        identification = self._child(ctx.identification()) if ctx.identification() else None
+        locale = self._text(ctx.DOUBLE_STRING()).strip() if ctx.DOUBLE_STRING() else None
+        self._store(
+            ctx,
+            Comment(
+                declaration=identification if isinstance(identification, Identification) else None,
+                locale=locale,
+                body=self._text(ctx.REGULAR_COMMENT()).strip(),
+            ),
+        )
+
+    def exitDocumentation(self, ctx: SysMLv2Parser.DocumentationContext) -> None:
+        """Assemble model-owned documentation syntax."""
+        identification = self._child(ctx.identification()) if ctx.identification() else None
+        locale = self._text(ctx.DOUBLE_STRING()).strip() if ctx.DOUBLE_STRING() else None
+        self._store(
+            ctx,
+            Documentation(
+                identification=identification
+                if isinstance(identification, Identification)
+                else None,
+                locale=locale,
+                body=self._text(ctx.REGULAR_COMMENT()).strip(),
+            ),
+        )
+
+    def exitAnnotatingElement(self, ctx: SysMLv2Parser.AnnotatingElementContext) -> None:
+        """Pass comment/documentation annotations or retain unrelated metadata."""
+        child = ctx.comment() or ctx.documentation()
+        if child is not None:
+            self._pass(ctx, child)
+        else:
+            self._raw_store(ctx)
+
+    def exitDefinitionElement(self, ctx: SysMLv2Parser.DefinitionElementContext) -> None:
+        """Pass state/package definitions and preserve unrelated definitions."""
+        child = (
+            ctx.stateDefinition()
+            or ctx.partDefinition()
+            or ctx.actionDefinition()
+            or ctx.package()
+            or ctx.libraryPackage()
+            or ctx.annotatingElement()
+        )
+        if child is not None:
+            self._pass(ctx, child)
+        else:
+            self._raw_store(ctx)
+
+    def exitUsageElement(self, ctx: SysMLv2Parser.UsageElementContext) -> None:
+        """Pass occurrence/behavior state usage alternatives."""
+        child = ctx.occurrenceUsageElement() or ctx.nonOccurrenceUsageElement()
+        if child is None:
+            raise ValueError("usageElement has no alternative")
+        self._pass(ctx, child)
+
+    def exitOccurrenceUsageElement(self, ctx: SysMLv2Parser.OccurrenceUsageElementContext) -> None:
+        """Pass behavior usages and retain unrelated occurrence syntax."""
+        child = ctx.structureUsageElement() or ctx.behaviorUsageElement()
+        if child is not None:
+            self._pass(ctx, child)
+        else:
+            self._raw_store(ctx)
+
+    def exitDefinitionMember(self, ctx: SysMLv2Parser.DefinitionMemberContext) -> None:
+        """Assemble a nested definition member and preserve visibility."""
+        child = self._child(ctx.definitionElement())
+        if not isinstance(child, SourceElement):
+            raise ValueError("definitionMember requires definitionElement")
+        self._store(
+            ctx,
+            DefinitionBodyItem(
+                element=child,
+                member_prefix=self._member_prefix(ctx.memberPrefix()),
+            ),
+        )
+
+    def exitNonBehaviorBodyItem(self, ctx: SysMLv2Parser.NonBehaviorBodyItemContext) -> None:
+        """Pass nested definitions or preserve non-state body syntax."""
+        if ctx.definitionMember():
+            self._pass(ctx, ctx.definitionMember())
+        elif ctx.structureUsageMember():
+            self._pass(ctx, ctx.structureUsageMember())
+        else:
+            self._raw_store(ctx)
+
+    def exitPackageMember(self, ctx: SysMLv2Parser.PackageMemberContext) -> None:
+        """Assemble a package member without mutating its child node."""
+        child_ctx = ctx.definitionElement() or ctx.usageElement()
+        child = self._child(child_ctx)
+        if not isinstance(child, SourceElement):
+            raise ValueError("packageMember has no assembled element")
+        self._store(
+            ctx,
+            PackageMember(element=child, member_prefix=self._member_prefix(ctx.memberPrefix())),
+        )
+
+    def exitPackageBodyElement(self, ctx: SysMLv2Parser.PackageBodyElementContext) -> None:
+        """Pass package members or retain unrelated package syntax."""
+        child = (
+            ctx.packageMember()
+            or ctx.elementFilterMember()
+            or ctx.aliasMember()
+            or ctx.importRule()
+        )
+        if child is None:
+            raise ValueError("packageBodyElement has no alternative")
+        if ctx.packageMember():
+            self._pass(ctx, child)
+        else:
+            self._raw_store(ctx)
+
+    def exitPackageBody(self, ctx: SysMLv2Parser.PackageBodyContext) -> None:
+        """Collect ordered package members in a listener-local body record."""
+        if ctx.SEMI():
+            self.parts[ctx] = (True, [])
+        else:
+            self.parts[ctx] = (
+                False,
+                [
+                    self._child(item)
+                    for item in ctx.packageBodyElement()
+                    if isinstance(self._child(item), SourceElement)
+                ],
+            )
+
+    def _build_package(self, ctx: Any, is_library: bool) -> None:
+        """Build one package variant from its declaration and local body record."""
+        declaration_ctx = ctx.packageDeclaration()
+        identification = (
+            self._child(declaration_ctx)
+            if declaration_ctx and declaration_ctx.identification()
+            else None
+        )
+        body_decl_only, members = self.parts.get(ctx.packageBody(), (False, []))
+        self._store(
+            ctx,
+            Package(
+                identification=identification
+                if isinstance(identification, Identification)
+                else None,
+                members=[item for item in members if isinstance(item, SourceElement)],
+                is_library=is_library,
+                is_standard=bool(is_library and ctx.STANDARD() is not None),
+                declaration_only=body_decl_only,
+                prefix_metadata=[self._text(item).strip() for item in ctx.prefixMetadataMember()],
+            ),
+        )
+
+    def exitPackage(self, ctx: SysMLv2Parser.PackageContext) -> None:
+        """Build an ordinary package."""
+        self._build_package(ctx, False)
+
+    def exitLibraryPackage(self, ctx: SysMLv2Parser.LibraryPackageContext) -> None:
+        """Build a library package and preserve its standard marker."""
+        self._build_package(ctx, True)
+
+    def exitRootNamespace(self, ctx: SysMLv2Parser.RootNamespaceContext) -> None:
+        """Build the ordered root model from package-body elements."""
+        members = [self._child(item) for item in ctx.packageBodyElement()]
+        self._store(
+            ctx, Model(members=[item for item in members if isinstance(item, SourceElement)])
+        )
+
+
+__all__ = ["SysMLAstListener"]

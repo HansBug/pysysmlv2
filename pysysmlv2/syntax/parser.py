@@ -180,5 +180,16 @@ def parse(text: str, source_path: Optional[str] = None) -> ParseResult:
     parser.addErrorListener(parser_errors)
     tree = parser.rootNamespace()
     diagnostics = lexer_errors.items + parser_errors.items
-    ast = build_ast(text, source_path, tree)
+    try:
+        ast = build_ast(text, source_path, tree)
+    except (AttributeError, KeyError, TypeError, ValueError):
+        # A recovered ANTLR tree can be structurally incomplete even though
+        # diagnostics already explain the syntax failure.  Keep the parser
+        # API useful for callers that only need diagnostics; valid trees still
+        # surface listener implementation errors because they have no errors
+        # to justify this recovery branch.
+        if not diagnostics:
+            raise
+        ast = Model()
+        ast.source_path = source_path
     return ParseResult(ast, diagnostics, tree, source_path)

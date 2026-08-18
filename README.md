@@ -6,7 +6,7 @@ The project deliberately separates syntax AST responsibilities from workspace an
 
 ## Status
 
-This is the initial `0.1.0` foundation release. The ANTLR parser, diagnostics, source AST, canonical AST export, Click CLI, generated API documentation, and cross-platform test/build scaffolding are in place. Full SysML/KerML semantic linking and symbol resolution remain staged work and are tracked in the project issue plan.
+This is the initial `0.1.0` foundation release. The ANTLR parser, diagnostics, handwritten source AST, canonical AST export, Click CLI, generated API documentation, and cross-platform test/build scaffolding are in place. The current handwritten AST slice models packages, documentation, states, state subactions, and transitions; full SysML/KerML semantic linking and symbol resolution remain staged work and are tracked in the project issue plan.
 
 ## Install
 
@@ -54,7 +54,7 @@ make package
 make package_check
 ```
 
-The generated directory `pysysmlv2/syntax/generated/` is never edited by hand. Change the pinned submodule or an outer generator/patch tool and rerun `make antlr_update`; generation formats the committed Python artifacts with Ruff, while normal Ruff and coverage checks exclude this generated tree. `make unittest RANGE_DIR=syntax` runs the syntax test subtree and emits `coverage.xml` plus terminal `term-missing` coverage by default; `make unittest RANGE_DIR=workspace` runs the corresponding source subtree.
+Only `pysysmlv2/syntax/generated/` is generated and must never be edited by hand. Change the pinned grammar submodule and rerun `make antlr_update`; the generated parser artifacts are Ruff-formatted, while the handwritten AST and listener remain ordinary linted and covered source. Public AST nodes have explicit snake_case fields and node-owned round-trip renderers. `make unittest RANGE_DIR=syntax` runs the syntax test subtree and emits `coverage.xml` plus terminal `term-missing` coverage by default; `make unittest RANGE_DIR=workspace` runs the corresponding source subtree.
 
 ## Documentation
 
