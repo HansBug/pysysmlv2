@@ -114,8 +114,6 @@ docs_check:
 	$(MAKE) -C "$(DOC_DIR)" check
 
 package:
-	rm -rf build
-	rm -f dist/*.whl dist/*.tar.gz
 	$(PYTHON) -m build --sdist --wheel --outdir dist
 
 package_check:
