@@ -4,6 +4,13 @@ SRC_DIR := pysysmlv2
 TEST_DIR := test
 RANGE_DIR ?= .
 
+RANGE_TEST_DIR := $(TEST_DIR)/$(RANGE_DIR)
+RANGE_SRC_DIR := $(SRC_DIR)/$(RANGE_DIR)
+COV_TYPES ?= xml term-missing
+MIN_COVERAGE ?=
+WORKERS ?=
+COV_REPORT_ARGS := $(foreach type,$(COV_TYPES),--cov-report=$(type))
+
 .PHONY: help install install-dev antlr_update antlr_build antlr_check rst_auto rst_auto_check unittest doctest test format format_check lint docs docs_en docs_zh docs_check package package_check clean
 
 help:
@@ -36,12 +43,14 @@ help:
 	@echo "  make docs_check                  Build both languages with warnings as errors"
 	@echo ""
 	@echo "Testing and quality:"
-	@echo "  make unittest                    Run source-mirrored unit tests with coverage"
+	@echo "  make unittest                    Run unit tests with XML and term-missing coverage"
+	@echo "  make test                        Alias for make unittest"
 	@echo "  make unittest RANGE_DIR=syntax   Run only the syntax test subtree"
-	@echo "  make unittest RANGE_DIR=syntax/parser.py"
-	@echo "                                  Run the test mirrored from one source file"
+	@echo "  make unittest COV_TYPES='xml term-missing'"
+	@echo "                                  Select coverage report types"
+	@echo "  make unittest MIN_COVERAGE=80   Enforce a minimum coverage percentage"
+	@echo "  make unittest WORKERS=4         Pass -n 4 to pytest-xdist when installed"
 	@echo "  make doctest                     Run all public docstring examples"
-	@echo "  make test                        Run the complete pytest test tree"
 	@echo "  make format                     Format service-owned Python files with Ruff"
 	@echo "  make format_check                Check Python formatting without changing files"
 	@echo "  make lint                        Run Ruff lint and import ordering checks"
@@ -70,10 +79,13 @@ rst_auto_check:
 	$(PYTHON) -m tools.auto_rst_top_index --check
 
 unittest:
-	$(PYTHON) -m tools.test_scope --range "$(RANGE_DIR)"
+	UNITTEST=1 $(PYTHON) -m pytest "$(RANGE_TEST_DIR)" -s -v -m unit \
+		--junitxml=junit.xml -o junit_family=legacy \
+		$(COV_REPORT_ARGS) --cov="$(RANGE_SRC_DIR)" \
+		$(if $(MIN_COVERAGE),--cov-fail-under=$(MIN_COVERAGE),) \
+		$(if $(WORKERS),-n $(WORKERS),)
 
-test:
-	$(PYTHON) -m pytest test
+test: unittest
 
 doctest:
 	$(PYTHON) -m pytest --doctest-modules pysysmlv2 tools \

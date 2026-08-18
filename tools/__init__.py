@@ -1,8 +1,9 @@
 """Build, documentation, and repository verification tools.
 
 The modules in this package are maintainer-facing command-line tools rather
-than runtime APIs. They keep generated ANTLR artifacts, API RST pages, package
-metadata, and source-mirrored test selection reproducible.
+than runtime APIs. They keep generated ANTLR artifacts, API RST pages, and
+package metadata reproducible; the Makefile invokes pytest directly for
+source-mirrored unit-test scopes.
 
 .. list-table:: Tool roadmap
    :header-rows: 1
@@ -17,6 +18,4 @@ metadata, and source-mirrored test selection reproducible.
      - Verify generated artifacts are reproducible and tracked.
    * - :mod:`tools.auto_rst`
      - Generate API RST pages from package modules.
-   * - :mod:`tools.test_scope`
-     - Map source paths to mirrored unit-test paths.
 """

@@ -94,6 +94,15 @@ jobs:
       - name: Run full test target
         run: make test
 
+      - name: Upload Python coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          flags: python
+          name: pysysmlv2-python
+          fail_ci_if_error: false
+
       - name: Check generated API documentation
         run: make rst_auto_check
 
