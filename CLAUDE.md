@@ -7,7 +7,7 @@
 ## Repository Boundaries
 
 - `pysysmlv2/syntax/generated/` is generated-only. Never edit it by hand; update the pinned grammar submodule or an outer generator/patch tool and run `make antlr_update`.
-- `upstream/sysml-v2-grammar` is a pinned git submodule. Record its commit and grammar version in generated `manifest.json`.
+- `upstream/sysml-v2-grammar` is a pinned git submodule and the source of the copied G4 files.
 - `pysysmlv2/syntax/generated/` is excluded from Ruff and coverage metrics. The `make antlr_build` recipe runs Ruff formatting explicitly after generation so the committed parser artifacts remain readable without becoming hand-maintained source.
 - AST nodes own syntax structure, model-level documentation/comments, and `source_path`/`span`; workspace and semantic layers own deeper identity and symbol-trace relationships.
 - `str(ast_node)` must emit parseable SysML v2 text. Trivia-preserving source formatting is a formatter concern, not an AST concern.

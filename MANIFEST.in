@@ -1,4 +1,4 @@
 include README.md LICENSE NOTICE VERSION
-recursive-include pysysmlv2/syntax/generated *.g4 *.py *.tokens *.interp *.json
+recursive-include pysysmlv2/syntax/generated *.g4 *.py *.tokens *.interp
 recursive-include docs/source *.rst *.py *.md
 recursive-exclude upstream *

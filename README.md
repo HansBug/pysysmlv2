@@ -70,7 +70,7 @@ make docs
 
 ## Grammar provenance
 
-The checked-in grammar is generated from [daltskin/sysml-v2-grammar](https://github.com/daltskin/sysml-v2-grammar), pinned as a git submodule and currently aligned with grammar release `v2026.05.0` and OMG release `2026-05`. The generated manifest records the source commit, grammar hashes, and ANTLR tool checksum.
+The checked-in grammar is generated from [daltskin/sysml-v2-grammar](https://github.com/daltskin/sysml-v2-grammar), pinned as a git submodule. The generated G4 files and ANTLR runtime artifacts are refreshed by `make antlr_update`.
 
 ## License
 
