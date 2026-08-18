@@ -1,7 +1,7 @@
 target-version = "py37"
 line-length = 100
 force-exclude = true
-# Generated ANTLR modules are formatted by ``tools.antlr_build`` after each
+# Generated ANTLR modules are formatted by ``make antlr_build`` after each
 # build, but remain outside normal source formatting and linting checks.
 extend-exclude = [
     "upstream/**",

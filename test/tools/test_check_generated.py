@@ -2,7 +2,6 @@
 
 import json
 import subprocess
-import sys
 
 import pytest
 
@@ -58,7 +57,10 @@ def test_check_uses_current_interpreter_and_runs_all_verifiers(monkeypatch):
 
     check_generated.check()
 
-    assert command == [[sys.executable, "-m", "tools.antlr_update"], str(check_generated.ROOT)]
+    assert command == [
+        [check_generated.os.environ.get("MAKE", "make"), "antlr_update"],
+        str(check_generated.ROOT),
+    ]
     assert calls == [
         "_check_agents_link",
         "_check_generated_files",

@@ -10,10 +10,6 @@ source-mirrored unit-test scopes.
 
    * - Module
      - Responsibility
-   * - :mod:`tools.antlr_update`
-     - Copy pinned upstream grammars and invoke generation.
-   * - :mod:`tools.antlr_build`
-     - Run the pinned ANTLR tool and write the manifest.
    * - :mod:`tools.check_generated`
      - Verify generated artifacts are reproducible and tracked.
    * - :mod:`tools.auto_rst`
