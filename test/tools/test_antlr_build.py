@@ -28,6 +28,20 @@ def test_ensure_antlr_jar_accepts_the_pinned_checksum(tmp_path, monkeypatch):
     assert antlr_build.ensure_antlr_jar() == jar
 
 
+def test_upstream_metadata_reads_the_submodule_configuration(tmp_path, monkeypatch):
+    config = tmp_path / "config.json"
+    config.write_text(
+        json.dumps({"grammar_version": "2099.01.2", "release_tag": "2099-01"}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(antlr_build, "UPSTREAM_CONFIG", config)
+
+    assert antlr_build._upstream_metadata() == {
+        "grammar_version": "2099.01.2",
+        "release_tag": "2099-01",
+    }
+
+
 def test_git_metadata_falls_back_when_upstream_is_not_a_git_checkout(monkeypatch):
     def missing(*args, **kwargs):
         raise antlr_build.subprocess.CalledProcessError(1, args[0])
@@ -36,7 +50,7 @@ def test_git_metadata_falls_back_when_upstream_is_not_a_git_checkout(monkeypatch
 
     assert antlr_build._git_metadata() == {
         "source_commit": "unknown",
-        "source_tag": "unknown",
+        "source_tag": "v" + antlr_build._upstream_metadata()["grammar_version"],
     }
 
 
@@ -80,6 +94,9 @@ def test_build_writes_generated_files_and_manifest(tmp_path, monkeypatch):
     assert (generated / "__init__.py").is_file()
     manifest = json.loads((generated / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["source_commit"] == "abc"
+    upstream_metadata = antlr_build._upstream_metadata()
+    assert manifest["grammar_version"] == upstream_metadata["grammar_version"]
+    assert manifest["omg_release"] == upstream_metadata["release_tag"]
     assert manifest["source_grammar_sha256"] == {
         "lexer": antlr_build._sha256(generated / "SysMLv2Lexer.g4"),
         "parser": antlr_build._sha256(generated / "SysMLv2Parser.g4"),
