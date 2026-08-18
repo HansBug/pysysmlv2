@@ -28,6 +28,11 @@ for path in ROOT.glob("requirements-*.txt"):
     if match:
         extra_requirements[match.group(1)] = _requirements(path.name)
 
+# Keep the natural ``docs`` extra name while retaining the pyfcstm-style
+# ``requirements-doc.txt`` filename.
+if "doc" in extra_requirements:
+    extra_requirements["docs"] = extra_requirements["doc"]
+
 package_data = {
     "pysysmlv2.syntax.generated": ["*.g4", "*.py", "*.tokens", "*.interp", "*.json"],
 }

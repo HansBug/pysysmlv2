@@ -53,15 +53,12 @@ def check() -> None:
 
         $ make package_check
     """
-    from setuptools import Distribution
-
     namespace = {}
     exec((ROOT / "pysysmlv2" / "config" / "meta.py").read_text(encoding="utf-8"), namespace)
     if namespace["__VERSION__"] != (ROOT / "VERSION").read_text(encoding="utf-8").strip():
         raise SystemExit("VERSION and package metadata disagree")
     if not (ROOT / "pysysmlv2" / "syntax" / "generated" / "SysMLv2Parser.py").is_file():
         raise SystemExit("generated parser is missing")
-    Distribution()
 
 
 if __name__ == "__main__":  # pragma: no cover
