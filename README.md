@@ -54,7 +54,7 @@ make package
 make package_check
 ```
 
-The generated directory `pysysmlv2/syntax/generated/` is never edited by hand. Change the pinned submodule or an outer generator/patch tool and rerun `make antlr_update`. `make unittest RANGE_DIR=syntax` runs the syntax test subtree and emits `coverage.xml` plus terminal `term-missing` coverage by default; `make unittest RANGE_DIR=workspace` runs the corresponding source subtree.
+The generated directory `pysysmlv2/syntax/generated/` is never edited by hand. Change the pinned submodule or an outer generator/patch tool and rerun `make antlr_update`; generation formats the committed Python artifacts with Ruff, while normal Ruff and coverage checks exclude this generated tree. `make unittest RANGE_DIR=syntax` runs the syntax test subtree and emits `coverage.xml` plus terminal `term-missing` coverage by default; `make unittest RANGE_DIR=workspace` runs the corresponding source subtree.
 
 ## Documentation
 

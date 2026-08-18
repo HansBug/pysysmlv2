@@ -114,10 +114,12 @@ docs_check:
 	$(MAKE) -C "$(DOC_DIR)" check
 
 package:
+	rm -rf build
+	rm -f dist/*.whl dist/*.tar.gz
 	$(PYTHON) -m build --sdist --wheel --outdir dist
 
 package_check:
 	$(PYTHON) -m tools.package_check
 
 clean:
-	$(PYTHON) -m tools.package_check --clean
+	rm -rf build dist *.egg-info

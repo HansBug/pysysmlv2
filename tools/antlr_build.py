@@ -24,6 +24,7 @@ import hashlib
 import json
 import shutil
 import subprocess
+import sys
 import urllib.request
 from pathlib import Path
 from typing import Dict
@@ -176,6 +177,22 @@ def build() -> None:
         if path.is_file() and path.suffix in {".py", ".tokens", ".interp"}:
             shutil.copy2(str(path), str(GENERATED / path.name))
     _write_generated_init()
+
+    # ANTLR output is machine-owned and excluded from normal Ruff checks, but
+    # it is still committed and shipped. Format it explicitly after generation
+    # so diffs remain readable without making generated code part of lint scope.
+    generated_python = sorted(GENERATED.glob("*.py"))
+    subprocess.check_call(
+        [
+            sys.executable,
+            "-m",
+            "ruff",
+            "format",
+            "--no-force-exclude",
+            *(str(path) for path in generated_python),
+        ],
+        cwd=str(ROOT),
+    )
 
     upstream_metadata = _upstream_metadata()
     metadata = {

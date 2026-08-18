@@ -94,6 +94,13 @@ def test_build_writes_generated_files_and_manifest(tmp_path, monkeypatch):
     antlr_build.build()
 
     assert calls[0][0][0:2] == ["java", "-jar"]
+    assert calls[1][0][0:4] == [
+        antlr_build.sys.executable,
+        "-m",
+        "ruff",
+        "format",
+    ]
+    assert "--no-force-exclude" in calls[1][0]
     assert calls[0][1] == str(antlr_build.ROOT)
     assert not (generated / "old.py").exists()
     assert (generated / "__init__.py").is_file()

@@ -8,6 +8,7 @@
 
 - `pysysmlv2/syntax/generated/` is generated-only. Never edit it by hand; update the pinned grammar submodule or an outer generator/patch tool and run `make antlr_update`.
 - `upstream/sysml-v2-grammar` is a pinned git submodule. Record its commit and grammar version in generated `manifest.json`.
+- `pysysmlv2/syntax/generated/` is excluded from Ruff and coverage metrics. `tools.antlr_build` runs Ruff formatting explicitly after generation so the committed parser artifacts remain readable without becoming hand-maintained source.
 - AST nodes own syntax structure, model-level documentation/comments, and `source_path`/`span`; workspace and semantic layers own deeper identity and symbol-trace relationships.
 - `str(ast_node)` must emit parseable SysML v2 text. Trivia-preserving source formatting is a formatter concern, not an AST concern.
 - `test/` mirrors source module paths for unit tests: `foo/bar.py` maps to `test/foo/test_bar.py`; `make unittest RANGE_DIR=...` directly invokes pytest against the mirrored test subtree and emits `coverage.xml` plus terminal `term-missing` coverage by default.
