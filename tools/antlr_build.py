@@ -121,6 +121,16 @@ def _write_generated_init() -> None:
     )
 
 
+def _antlr_input(path: Path) -> str:
+    """Return a stable ANTLR input spelling for a repository-owned path."""
+    try:
+        return path.relative_to(ROOT).as_posix()
+    except ValueError:
+        # Tests and downstream tooling may redirect ``GENERATED`` outside the
+        # repository; retain a usable absolute path for those callers.
+        return str(path)
+
+
 def build() -> None:
     """Generate parser modules and write reproducibility metadata.
 
@@ -153,9 +163,10 @@ def build() -> None:
             "-Xexact-output-dir",
             "-o",
             str(temp),
-            str(lexer),
-            str(parser),
-        ]
+            _antlr_input(lexer),
+            _antlr_input(parser),
+        ],
+        cwd=str(ROOT),
     )
 
     for path in GENERATED.iterdir():

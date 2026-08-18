@@ -85,11 +85,16 @@ def test_build_writes_generated_files_and_manifest(tmp_path, monkeypatch):
         lambda: {"source_commit": "abc", "source_tag": "v1"},
     )
     calls = []
-    monkeypatch.setattr(antlr_build.subprocess, "check_call", lambda command: calls.append(command))
+    monkeypatch.setattr(
+        antlr_build.subprocess,
+        "check_call",
+        lambda command, cwd: calls.append((command, cwd)),
+    )
 
     antlr_build.build()
 
-    assert calls[0][0:2] == ["java", "-jar"]
+    assert calls[0][0][0:2] == ["java", "-jar"]
+    assert calls[0][1] == str(antlr_build.ROOT)
     assert not (generated / "old.py").exists()
     assert (generated / "__init__.py").is_file()
     manifest = json.loads((generated / "manifest.json").read_text(encoding="utf-8"))

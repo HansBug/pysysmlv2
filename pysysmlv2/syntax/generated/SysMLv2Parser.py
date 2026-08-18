@@ -1,4 +1,4 @@
-# Generated from /home/zhangshaoang/oo-projects/pysysmlv2/pysysmlv2/syntax/generated/SysMLv2Parser.g4 by ANTLR 4.13.2
+# Generated from pysysmlv2/syntax/generated/SysMLv2Parser.g4 by ANTLR 4.13.2
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO
