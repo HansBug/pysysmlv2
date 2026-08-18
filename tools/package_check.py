@@ -1,0 +1,74 @@
+"""Clean package artifacts and validate package metadata.
+
+This tool keeps source-tree package checks independent of shell syntax. It
+validates the canonical version and generated parser presence, while package
+building itself remains delegated to ``python -m build`` through the Makefile.
+
+.. list-table:: Package-check roadmap
+   :header-rows: 1
+
+   * - Symbol
+     - Responsibility
+   * - :func:`clean`
+     - Remove local build and distribution output.
+   * - :func:`check`
+     - Verify version metadata and generated package data.
+"""
+
+from __future__ import annotations
+
+import argparse
+import shutil
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def clean() -> None:
+    """Remove local Python build output without shell-specific commands.
+
+    :return: ``None`` after ignored build directories are removed.
+    :rtype: None
+
+    Example::
+
+        $ python -m tools.package_check --clean
+    """
+    for name in ("build", "dist"):
+        path = ROOT / name
+        if path.exists():
+            shutil.rmtree(str(path))
+    for path in ROOT.glob("*.egg-info"):
+        shutil.rmtree(str(path))
+
+
+def check() -> None:
+    """Check setup metadata and required generated package data.
+
+    :return: ``None`` when package invariants hold.
+    :rtype: None
+    :raises SystemExit: If version metadata or generated parser files disagree.
+
+    Example::
+
+        $ make package_check
+    """
+    from setuptools import Distribution
+
+    namespace = {}
+    exec((ROOT / "pysysmlv2" / "config" / "meta.py").read_text(encoding="utf-8"), namespace)
+    if namespace["__VERSION__"] != (ROOT / "VERSION").read_text(encoding="utf-8").strip():
+        raise SystemExit("VERSION and package metadata disagree")
+    if not (ROOT / "pysysmlv2" / "syntax" / "generated" / "SysMLv2Parser.py").is_file():
+        raise SystemExit("generated parser is missing")
+    Distribution()
+
+
+if __name__ == "__main__":  # pragma: no cover
+    cli = argparse.ArgumentParser()
+    cli.add_argument("--clean", action="store_true")
+    options = cli.parse_args()
+    if options.clean:
+        clean()
+    else:
+        check()

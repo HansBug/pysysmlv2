@@ -1,0 +1,14 @@
+target-version = "py37"
+line-length = 100
+force-exclude = true
+extend-exclude = [
+    "upstream/**",
+    "pysysmlv2/syntax/generated/**",
+]
+
+[lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
+
+[lint.per-file-ignores]
+"pysysmlv2/syntax/generated/*.py" = ["E", "F", "W", "I"]

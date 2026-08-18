@@ -1,0 +1,138 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Exercise every supported CPython release on Linux.
+          - os: ubuntu-22.04
+            python-version: "3.7"
+          - os: ubuntu-22.04
+            python-version: "3.8"
+          - os: ubuntu-22.04
+            python-version: "3.9"
+          - os: ubuntu-22.04
+            python-version: "3.10"
+          - os: ubuntu-22.04
+            python-version: "3.11"
+          - os: ubuntu-22.04
+            python-version: "3.12"
+          - os: ubuntu-22.04
+            python-version: "3.13"
+          - os: ubuntu-22.04
+            python-version: "3.14"
+          # Keep representative coverage on the two other supported hosts.
+          - os: windows-latest
+            python-version: "3.9"
+          - os: windows-latest
+            python-version: "3.12"
+          - os: windows-latest
+            python-version: "3.14"
+          - os: macos-latest
+            python-version: "3.9"
+          - os: macos-latest
+            python-version: "3.12"
+          - os: macos-latest
+            python-version: "3.14"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install test dependencies
+        run: python -m pip install -e ".[test]"
+
+      - name: Run test suite
+        run: python -m pytest test
+
+  quality:
+    name: Quality and generated checks
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install development dependencies
+        run: python -m pip install -e ".[dev,test,docs,tooling]"
+
+      - name: Check formatting
+        run: make format_check
+
+      - name: Run linter
+        run: make lint
+
+      - name: Run scoped unit-test harness
+        run: make unittest
+
+      - name: Run full test target
+        run: make test
+
+      - name: Check generated API documentation
+        run: make rst_auto_check
+
+      - name: Check generated ANTLR artifacts
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Verify generated grammar artifacts
+        run: make antlr_check
+
+  docs-and-package:
+    name: Documentation and package smoke
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install documentation and package dependencies
+        run: python -m pip install -e ".[dev,test,docs,tooling]"
+
+      - name: Build documentation with warnings as errors
+        run: make docs_check
+
+      - name: Build source and wheel distributions
+        run: make package
+
+      - name: Validate package metadata and generated data
+        run: make package_check
+
+      - name: Smoke test the wheel installation
+        shell: bash
+        run: |
+          python -m venv "$RUNNER_TEMP/package-smoke"
+          "$RUNNER_TEMP/package-smoke/bin/python" -m pip install dist/*.whl
+          "$RUNNER_TEMP/package-smoke/bin/python" -c "import pysysmlv2; print(pysysmlv2.__version__)"

@@ -1,0 +1,129 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.pyre/
+.pytype/
+.ruff_cache/
+.hypothesis/
+.tox/
+.nox/
+
+# Coverage, test, and benchmark output
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+junit.xml
+.benchmarks/
+
+# Python environments and packaging
+.venv/
+venv/
+env/
+ENV/
+.python-version
+pip-wheel-metadata/
+build/
+dist/
+sdist/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+var/
+wheels/
+share/python-wheels/
+*.egg
+*.egg-info/
+*.manifest
+*.spec
+
+# Sphinx and generated documentation output
+docs/build/
+docs/_build/
+.doctrees/
+
+# ANTLR and Java tool output
+.antlr/
+*.class
+*.jar
+hs_err_pid*
+replay_pid*
+
+# Generic temporary files and logs
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+.cache/
+tools/.cache/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon\r
+._*
+.DocumentRevisions-V100/
+.fseventsd/
+.Spotlight-V100/
+.TemporaryItems/
+.Trashes/
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux desktop and filesystem metadata
+.directory
+.Trash-*
+.nfs*
+
+# Visual Studio Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Vim, Emacs, and other editors
+Session.vim
+.netrwhist
+tags
+TAGS
+.#*
+\#*\#
+
+# Local environment configuration
+.env
+.env.*
+!.env.example
+
+# Node tooling sometimes used by documentation/editor integrations
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

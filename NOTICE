@@ -1,0 +1,3 @@
+pysysmlv2 includes a generated ANTLR4 grammar derived from the SysML v2
+specification grammar. See upstream/sysml-v2-grammar and its license notices
+for the upstream grammar provenance and applicable attribution.
