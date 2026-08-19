@@ -1,0 +1,1537 @@
+"""Direct listener conformance tests for every supported syntax family.
+
+The parser tests exercise complete documents.  This module deliberately uses
+the public local grammar-entry API as well, so each handwritten listener
+alternative is visited in isolation and its concrete AST can be round-tripped
+without relying on an upstream checkout or an external fixture.
+"""
+
+import pytest
+
+from pysysmlv2 import parse, parse_as_ast_node
+from pysysmlv2.syntax import ast
+from pysysmlv2.syntax.ast import (
+    ActionNode,
+    ActionNodeUsageDeclaration,
+    AllExpression,
+    ArgumentList,
+    BinaryExpression,
+    BodyExpression,
+    BooleanLiteral,
+    BracketExpression,
+    CastExpression,
+    CoalesceExpression,
+    Comment,
+    ConjugatedPortTyping,
+    ConstructorExpression,
+    Documentation,
+    FeatureChainExpression,
+    FeatureReferenceExpression,
+    FunctionOperationExpression,
+    IndexExpression,
+    InfinityLiteral,
+    IntegerLiteral,
+    InvocationExpression,
+    MetadataAccessExpression,
+    MetadataCastExpression,
+    NullExpression,
+    OccurrenceUsagePrefix,
+    OwnedFeatureTyping,
+    ParenthesizedExpression,
+    QualifiedReference,
+    RealLiteral,
+    RelationshipBody,
+    ResultExpressionMember,
+    SelectExpression,
+    StringLiteral,
+    TypeOperationExpression,
+    UnaryExpression,
+    ValuePart,
+)
+from pysysmlv2.syntax.listener import SysMLAstListener
+
+pytestmark = pytest.mark.unit
+
+
+class _FakeToken:
+    """Minimal token double for listener-local defensive context tests."""
+
+    def __init__(self, text="", token_index=0):
+        self.text = text
+        self.tokenIndex = token_index
+        self.start = None
+        self.stop = None
+
+    def getText(self):
+        """Return the token spelling expected by an ANTLR terminal."""
+        return self.text
+
+
+class _FakeContext:
+    """Small context-shaped object used only to exercise impossible branches."""
+
+    def __init__(self, text="", **values):
+        self._context_text = text
+        self.start = values.pop("start", None)
+        self.stop = values.pop("stop", None)
+        self._context_values = values
+
+    def getText(self):
+        """Return the supplied source spelling for listener text helpers."""
+        return self._context_text
+
+    def __getattr__(self, name):
+        value = self._context_values.get(name)
+        if callable(value):
+            return value
+        return lambda: value
+
+
+def _fake_listener(*pairs, **children):
+    """Return a listener whose child map contains ``context -> AST`` entries."""
+    listener = SysMLAstListener("")
+    listener.nodes.update(dict(pairs))
+    listener.nodes.update(children)
+    return listener
+
+
+def _error(callback, context, *pairs, **children):
+    """Assert that ``callback`` rejects an incomplete parser context."""
+    with pytest.raises((ValueError, TypeError, AttributeError)):
+        getattr(_fake_listener(*pairs, **children), callback)(context)
+
+
+def _node(source, entry="ownedExpression"):
+    """Parse one small child node for direct listener context tests."""
+    return parse_as_ast_node(source, grammar_node=entry)
+
+
+def test_listener_provenance_and_dispatch_guards():
+    """Cover listener helper guards and the recovered-terminal callback."""
+    listener = SysMLAstListener("")
+    assert listener._token_text(None) == ""
+    with pytest.raises(ValueError):
+        listener._pass(_FakeContext(), _FakeContext())
+    with pytest.raises(ValueError):
+        listener._dotted_reference(_FakeContext(qualifiedName=[]))
+    with pytest.raises(ValueError):
+        listener._dotted_node(_FakeContext(qualifiedName=[]))
+    with pytest.raises(ValueError):
+        listener._source_items([_FakeContext()])
+    assert listener._span(_FakeContext(start=_FakeToken(), stop=_FakeToken())) is None
+    listener.visitErrorNode(object())
+
+
+def test_listener_declared_typing_and_nonfeature_dispatch_contexts():
+    """Exercise the explicit non-feature and declared-typing mappings."""
+    listener = _fake_listener()
+    owned = _node("A.B", "featureTyping")
+    feature_typing = _FakeContext()
+    listener.nodes[feature_typing] = owned
+    non_feature_element = _FakeContext(featureTyping=feature_typing)
+    listener.nodes[non_feature_element] = owned
+    member_element = _FakeContext(nonFeatureElement=non_feature_element)
+    listener.nodes[member_element] = owned
+
+    listener.exitNonFeatureElement(non_feature_element)
+    listener.exitMemberElement(member_element)
+    non_feature_member = _FakeContext(memberElement=member_element, memberPrefix=_FakeContext())
+    listener.exitNonFeatureMember(non_feature_member)
+
+    # The dispatcher callbacks also have an intentional no-op path when the
+    # parser selected an unsupported alternative.
+    listener.exitNonFeatureElement(_FakeContext(featureTyping=None))
+    listener.exitMemberElement(_FakeContext(nonFeatureElement=None))
+    listener.exitNonFeatureMember(_FakeContext(memberElement=None))
+
+    type_body = _FakeContext(nonFeatureMember=non_feature_member)
+    listener.nodes[non_feature_member] = listener.node_for(non_feature_member)
+    listener.exitTypeBodyElement(type_body)
+    listener.exitTypeBodyElement(
+        _FakeContext(nonFeatureMember=None, featureMember=None, aliasMember=None, importRule=None)
+    )
+    listener.exitTypeFeatureMember(_FakeContext())
+    listener.exitOwnedFeatureMember(_FakeContext())
+    _error("exitFeatureMember", _FakeContext())
+    _error("exitFeatureReferenceExpression", _FakeContext(qualifiedName=None))
+    _error("exitNonFeatureChainPrimaryExpression", _FakeContext(IDENTIFIER=None))
+
+
+def test_listener_specialization_and_declared_feature_typing_contexts():
+    """Cover explicit specialization operators and declared feature typing."""
+    _error("exitFeatureSpecialization", _FakeContext())
+    _error("exitConjugatedPortTyping", _FakeContext(qualifiedName=None))
+    _error("exitGeneralType", _FakeContext(qualifiedName=[]))
+    _error("exitFeatureTyping", _FakeContext())
+
+    owned_ctx = _FakeContext()
+    owned = _node("A.B", "featureTyping")
+    typed_by_ctx = _FakeContext(featureTyping=owned_ctx, TYPED=_FakeToken())
+    listener = _fake_listener((owned_ctx, owned))
+    listener.exitTypings(_FakeContext(typedBy=typed_by_ctx, featureTyping=[]))
+
+    defined_by_ctx = _FakeContext(featureTyping=owned_ctx, DEFINED=_FakeToken())
+    listener.exitTypings(_FakeContext(typedBy=defined_by_ctx, featureTyping=[]))
+    listener.exitTypings(_FakeContext(typedBy=typed_by_ctx, featureTyping=[owned_ctx]))
+    listener.exitTypings(_FakeContext(typedBy=None, featureTyping=[]))
+
+    typed_feature = _FakeContext()
+    general_type = _FakeContext()
+    body = _FakeContext()
+    relationship = RelationshipBody(";")
+    listener = _fake_listener(
+        (typed_feature, _node("feature", "qualifiedName")),
+        (general_type, _node("Type", "qualifiedName")),
+        (body, relationship),
+    )
+    listener.exitFeatureTyping(
+        _FakeContext(
+            identification=None,
+            qualifiedName=typed_feature,
+            generalType=general_type,
+            relationshipBody=body,
+            ownedFeatureTyping=None,
+            conjugatedPortTyping=None,
+            COLON=_FakeToken(),
+            SPECIALIZATION=None,
+        )
+    )
+    _error(
+        "exitFeatureTyping",
+        _FakeContext(
+            identification=None,
+            qualifiedName=typed_feature,
+            generalType=general_type,
+            relationshipBody=body,
+            ownedFeatureTyping=None,
+            conjugatedPortTyping=None,
+        ),
+    )
+
+
+def test_listener_expression_context_guards_and_optional_forms():
+    """Cover expression alternatives that valid source cannot reach alone."""
+    listener = _fake_listener()
+    _error("exitLiteralExpression", _FakeContext())
+    _error("exitConstructorExpression", _FakeContext(qualifiedName=None, argumentList=None))
+    _error("exitFunctionBodyPart", _FakeContext(resultExpressionMember=_FakeContext()))
+    _error("exitResultExpressionMember", _FakeContext(ownedExpression=_FakeContext()))
+    _error("exitReturnFeatureMember", _FakeContext(featureElement=_FakeContext()))
+    _error("exitSequenceExpressionList", _FakeContext(ownedExpression=[_FakeContext()]))
+    _error("exitNamedArgument", _FakeContext(qualifiedName=None, ownedExpression=None))
+    _error("exitArgumentExpressionMember", _FakeContext(ownedExpression=_FakeContext()))
+    _error("exitFeatureValue", _FakeContext(ownedExpression=None))
+    _error("exitValuePart", _FakeContext(featureValue=None))
+
+    listener.exitBaseExpression(_FakeContext(REGULAR_COMMENT=_FakeToken("/* note */")))
+    body_context = _FakeContext()
+    listener.nodes[body_context] = _node("{ }", "bodyExpression")
+    listener.exitBaseExpression(_FakeContext(bodyExpression=body_context))
+    _error("exitBaseExpression", _FakeContext(AS=_FakeToken(), typeReference=None))
+
+    reference_context = _FakeContext()
+    argument_context = _FakeContext()
+    listener = _fake_listener((reference_context, _node("A", "qualifiedName")))
+    _error(
+        "exitBaseExpression",
+        _FakeContext(
+            qualifiedName=reference_context,
+            argumentList=argument_context,
+            nullExpression=None,
+            literalExpression=None,
+            constructorExpression=None,
+            bodyExpression=None,
+        ),
+        (reference_context, _node("A", "qualifiedName")),
+    )
+    metadata_context = _FakeContext()
+    listener.nodes[metadata_context] = _node("A", "qualifiedName")
+    listener.exitBaseExpression(
+        _FakeContext(
+            qualifiedName=metadata_context,
+            METADATA=_FakeToken(),
+            nullExpression=None,
+            literalExpression=None,
+            constructorExpression=None,
+            bodyExpression=None,
+        )
+    )
+    _error("exitBaseExpression", _FakeContext())
+
+    operators = _fake_listener()
+    assert operators._binary_operator(_FakeContext(QUESTION_QUESTION=_FakeToken())) == "??"
+
+    expr_a = _node("A")
+    expr_b = _node("B")
+    expr_c = _node("C")
+    first = _FakeContext()
+    second = _FakeContext()
+    third = _FakeContext()
+    listener = _fake_listener((first, expr_a), (second, expr_b), (third, expr_c))
+    listener.exitOwnedExpression(
+        _FakeContext(IF=_FakeToken(), ownedExpression=[first, second, third])
+    )
+
+    toggle_calls = [0]
+
+    def toggle_question_mark():
+        toggle_calls[0] += 1
+        return None if toggle_calls[0] == 1 else _FakeToken()
+
+    left = _FakeContext()
+    right = _FakeContext()
+    listener = _fake_listener((left, expr_a), (right, expr_b))
+    listener.exitOwnedExpression(
+        _FakeContext(
+            QUESTION_QUESTION=toggle_question_mark,
+            ownedExpression=[left, right],
+        )
+    )
+
+    type_context = _FakeContext()
+    listener.nodes[type_context] = _node("T", "qualifiedName")
+    listener.exitOwnedExpression(
+        _FakeContext(
+            ISTYPE=_FakeToken(),
+            typeReference=type_context,
+            ownedExpression=[left, right],
+        )
+    )
+    listener.exitOwnedExpression(
+        _FakeContext(
+            AS=_FakeToken(),
+            typeReference=type_context,
+            ownedExpression=[left, right],
+        )
+    )
+    _error("exitOwnedExpression", _FakeContext(PLUS=_FakeToken(), ownedExpression=[]))
+    _error(
+        "exitOwnedExpression",
+        _FakeContext(ISTYPE=_FakeToken(), ownedExpression=[left], typeReference=None),
+    )
+    _error("exitOwnedExpression", _FakeContext(AT_SIGN=_FakeToken(), typeReference=None))
+    _error(
+        "exitOwnedExpression",
+        _FakeContext(AS=_FakeToken(), ownedExpression=[left], typeReference=None),
+    )
+    _error("exitOwnedExpression", _FakeContext(ARROW=_FakeToken(), ownedExpression=[left]))
+    arrow_member = _FakeContext()
+    _error(
+        "exitOwnedExpression",
+        _FakeContext(ARROW=_FakeToken(), qualifiedName=arrow_member, ownedExpression=[left]),
+    )
+    arrow_result = _FakeContext()
+    _error(
+        "exitOwnedExpression",
+        _FakeContext(
+            ARROW=_FakeToken(),
+            qualifiedName=type_context,
+            argumentList=arrow_result,
+            ownedExpression=[left],
+        ),
+        (type_context, _node("T", "qualifiedName")),
+    )
+    _error(
+        "exitOwnedExpression",
+        _FakeContext(argumentList=argument_context, ownedExpression=[left]),
+    )
+    _error(
+        "exitOwnedExpression",
+        _FakeContext(DOT=_FakeToken(), qualifiedName=arrow_member, ownedExpression=[left]),
+    )
+    _error(
+        "exitOwnedExpression",
+        _FakeContext(
+            DOT_QUESTION=_FakeToken(), bodyExpression=arrow_result, ownedExpression=[left]
+        ),
+    )
+    _error("exitOwnedExpression", _FakeContext(ALL=_FakeToken(), typeReference=None))
+    _error("exitOwnedExpression", _FakeContext())
+
+    for token_name in ("PLUS", "MINUS", "TILDE", "NOT"):
+        _error(
+            "exitOwnedExpression",
+            _FakeContext(**{token_name: _FakeToken(), "ownedExpression": []}),
+        )
+
+
+def test_listener_expression_normal_callbacks_and_operator_tokens():
+    """Cover successful listener branches for body, metadata, and operators."""
+    listener = _fake_listener()
+    type_child = _FakeContext()
+    listener.nodes[type_child] = _node("T", "qualifiedName")
+    body_child = _FakeContext()
+    listener.nodes[body_child] = BodyExpression()
+    listener.exitBaseExpression(_FakeContext(bodyExpression=body_child))
+    listener.exitBaseExpression(_FakeContext(AS=_FakeToken(), typeReference=type_child))
+    argument_child = _FakeContext()
+    listener.nodes[argument_child] = ArgumentList()
+    ref_child = _FakeContext()
+    listener.nodes[ref_child] = _node("A", "qualifiedName")
+    listener.exitBaseExpression(_FakeContext(qualifiedName=ref_child, argumentList=argument_child))
+    listener.exitBaseExpression(_FakeContext(qualifiedName=ref_child, METADATA=_FakeToken()))
+
+    expr_child = _FakeContext()
+    listener.nodes[expr_child] = _node("A")
+    prefix = _FakeContext()
+    result_context = _FakeContext()
+    listener.nodes[result_context] = ResultExpressionMember(_node("A"))
+    listener.exitResultExpressionMember(
+        _FakeContext(ownedExpression=expr_child, memberPrefix=prefix)
+    )
+    listener.exitFunctionBodyPart(
+        _FakeContext(
+            resultExpressionMember=result_context,
+            definitionBodyItem=[],
+            typeBodyElement=[],
+            returnFeatureMember=[],
+        )
+    )
+    _error(
+        "exitFunctionBodyPart",
+        _FakeContext(
+            resultExpressionMember=result_context,
+            definitionBodyItem=[],
+            typeBodyElement=[],
+            returnFeatureMember=[],
+        ),
+        (result_context, _node("A")),
+    )
+    raw_context = _FakeContext()
+    listener.exitFeatureElement(raw_context)
+    listener.nodes[raw_context] = listener.node_for(raw_context)
+    listener.exitReturnFeatureMember(_FakeContext(featureElement=raw_context, memberPrefix=prefix))
+
+    for name in (
+        "IMPLIES",
+        "EQ_EQ_EQ",
+        "BANG_EQ_EQ",
+        "PERCENT",
+        "QUESTION_QUESTION",
+        "HASTYPE",
+        "AT_AT",
+    ):
+        assert listener._binary_operator(_FakeContext(**{name: _FakeToken()})) is not None
+
+    left_context = _FakeContext()
+    right_context = _FakeContext()
+    listener = _fake_listener(
+        (left_context, _node("A")),
+        (right_context, _node("B")),
+        (type_child, _node("T", "qualifiedName")),
+        (ref_child, _node("f", "qualifiedName")),
+        (argument_child, ArgumentList()),
+        (body_child, BodyExpression()),
+    )
+    listener.exitOwnedExpression(
+        _FakeContext(
+            ISTYPE=_FakeToken(),
+            typeReference=type_child,
+            ownedExpression=[left_context, right_context],
+        )
+    )
+    listener.exitOwnedExpression(
+        _FakeContext(
+            AS=_FakeToken(),
+            typeReference=type_child,
+            ownedExpression=[left_context, right_context],
+        )
+    )
+    listener.exitOwnedExpression(
+        _FakeContext(
+            ARROW=_FakeToken(),
+            qualifiedName=ref_child,
+            argumentList=argument_child,
+            ownedExpression=[left_context],
+        )
+    )
+    listener.exitOwnedExpression(
+        _FakeContext(
+            argumentList=argument_child,
+            ownedExpression=[left_context],
+        )
+    )
+    listener.exitOwnedExpression(
+        _FakeContext(
+            DOT=_FakeToken(),
+            qualifiedName=ref_child,
+            ownedExpression=[left_context],
+        )
+    )
+    listener.exitOwnedExpression(
+        _FakeContext(
+            DOT_QUESTION=_FakeToken(),
+            bodyExpression=body_child,
+            ownedExpression=[left_context],
+        )
+    )
+    listener.exitOwnedExpression(
+        _FakeContext(ALL=_FakeToken(), typeReference=type_child, ownedExpression=[])
+    )
+
+    default_expression = _FakeContext()
+    listener.nodes[default_expression] = _node("A")
+    listener.exitFeatureValue(
+        _FakeContext(
+            ownedExpression=default_expression,
+            DEFAULT=_FakeToken(),
+            COLON_EQ=_FakeToken(),
+        )
+    )
+
+
+def test_listener_action_and_succession_validation_paths():
+    """Exercise action-node, succession, and state-action callback guards."""
+    error_callbacks = [
+        "exitActionBodyItem",
+        "exitActionNodePrefix",
+        "exitControlNode",
+        "exitMergeNode",
+        "exitDecisionNode",
+        "exitJoinNode",
+        "exitForkNode",
+        "exitAcceptNode",
+        "exitSendNode",
+        "exitAssignmentNode",
+        "exitTerminateNode",
+        "exitActionBodyParameter",
+        "exitIfNode",
+        "exitWhileLoopNode",
+        "exitForLoopNode",
+        "exitActionBehaviorMember",
+        "exitActionNodeMember",
+        "exitActionNode",
+        "exitInitialNodeMember",
+        "exitTargetSuccession",
+        "exitGuardedTargetSuccession",
+        "exitDefaultTargetSuccession",
+        "exitActionTargetSuccession",
+        "exitActionTargetSuccessionMember",
+        "exitGuardedSuccession",
+        "exitGuardedSuccessionMember",
+        "exitStateActionUsage",
+        "exitStatePerformActionUsage",
+        "exitStateAcceptActionUsage",
+        "exitStateSendActionUsage",
+        "exitStateAssignmentActionUsage",
+        "exitPayloadFeature",
+        "exitNodeParameter",
+        "exitAcceptParameterPart",
+        "exitTriggerExpression",
+        "exitAcceptNodeDeclaration",
+        "exitSendNodeDeclaration",
+        "exitAssignmentNodeDeclaration",
+        "exitActionUsage",
+        "exitPerformActionUsage",
+        "exitActionDefinition",
+        "exitEntryActionMember",
+        "exitDoActionMember",
+        "exitExitActionMember",
+        "exitEntryTransitionMember",
+        "exitTriggerActionMember",
+        "exitGuardExpressionMember",
+        "exitEffectBehaviorMember",
+        "exitEffectBehaviorUsage",
+        "exitTransitionPerformActionUsage",
+        "exitTransitionAcceptActionUsage",
+        "exitTransitionSendActionUsage",
+        "exitTransitionAssignmentActionUsage",
+        "exitTransitionSuccession",
+        "exitConnectorEnd",
+        "exitTransitionUsage",
+        "exitTransitionUsageMember",
+        "exitTargetTransitionUsage",
+        "exitTargetTransitionUsageMember",
+        "exitBehaviorUsageMember",
+        "exitStateBodyItem",
+        "exitStateDefinition",
+        "exitStateUsage",
+        "exitExhibitStateUsage",
+    ]
+    for callback in error_callbacks:
+        _error(callback, _FakeContext())
+
+    # Prefix and dispatcher successful branches are kept explicit in the test.
+    ref_prefix = _FakeContext(featureDirection=_FakeContext("in"))
+    prefix = _FakeContext(refPrefix=ref_prefix, usageExtensionKeyword=[])
+    listener = SysMLAstListener("in")
+    listener.exitControlNodePrefix(prefix)
+    usage_prefix_context = _FakeContext()
+    listener.nodes[usage_prefix_context] = OccurrenceUsagePrefix()
+    action_decl_context = _FakeContext()
+    listener.nodes[action_decl_context] = ActionNodeUsageDeclaration()
+    listener.exitActionNodePrefix(
+        _FakeContext(
+            occurrenceUsagePrefix=usage_prefix_context,
+            actionNodeUsageDeclaration=action_decl_context,
+        )
+    )
+    child_context = _FakeContext()
+    listener.nodes[child_context] = _node("A", "qualifiedName")
+    listener.exitActionBehaviorMember(_FakeContext(actionNodeMember=child_context))
+    listener.exitActionNode(_FakeContext(controlNode=child_context))
+
+
+@pytest.mark.parametrize(
+    ("source", "node_type"),
+    [
+        ("true", BooleanLiteral),
+        ('"text"', StringLiteral),
+        ("1", IntegerLiteral),
+        ("1.5", RealLiteral),
+        ("*", InfinityLiteral),
+        ("null", NullExpression),
+        ("()", NullExpression),
+        ("A", FeatureReferenceExpression),
+        ("A()", InvocationExpression),
+        ("A.metadata", MetadataAccessExpression),
+        ("new A()", ConstructorExpression),
+        ("{ }", BodyExpression),
+        ("(as T)", MetadataCastExpression),
+        ("(A, B)", ParenthesizedExpression),
+        ("+A", UnaryExpression),
+        ("-A", UnaryExpression),
+        ("~A", UnaryExpression),
+        ("not A", UnaryExpression),
+        ("A and B", BinaryExpression),
+        ("A or B", BinaryExpression),
+        ("A implies B", BinaryExpression),
+        ("A xor B", BinaryExpression),
+        ("A | B", BinaryExpression),
+        ("A & B", BinaryExpression),
+        ("A == B", BinaryExpression),
+        ("A != B", BinaryExpression),
+        ("A === B", BinaryExpression),
+        ("A !== B", BinaryExpression),
+        ("A < B", BinaryExpression),
+        ("A > B", BinaryExpression),
+        ("A <= B", BinaryExpression),
+        ("A >= B", BinaryExpression),
+        ("A .. B", BinaryExpression),
+        ("A + B", BinaryExpression),
+        ("A - B", BinaryExpression),
+        ("A * B", BinaryExpression),
+        ("A / B", BinaryExpression),
+        ("A % B", BinaryExpression),
+        ("A ** B", BinaryExpression),
+        ("A ^ B", BinaryExpression),
+        ("A ?? B", CoalesceExpression),
+        ("A istype T", TypeOperationExpression),
+        ("A hastype T", TypeOperationExpression),
+        ("A @ T", TypeOperationExpression),
+        ("A as T", CastExpression),
+        ("A @@ T", TypeOperationExpression),
+        ("A meta T", TypeOperationExpression),
+        ("@T", TypeOperationExpression),
+        ("@@T", TypeOperationExpression),
+        ("A[B]", BracketExpression),
+        ("A#(B)", IndexExpression),
+        ("A.B", FeatureChainExpression),
+        ("A.?{ }", SelectExpression),
+        ("A -> f()", FunctionOperationExpression),
+        ("A -> f { }", FunctionOperationExpression),
+        ("all T", AllExpression),
+    ],
+)
+def test_owned_expression_alternatives_round_trip(source, node_type):
+    """Visit each precedence-climbing expression alternative explicitly."""
+    node = parse_as_ast_node(source, grammar_node="ownedExpression")
+    assert isinstance(node, node_type)
+    assert parse_as_ast_node(str(node), grammar_node="ownedExpression") == node
+
+
+@pytest.mark.parametrize(
+    ("source", "entry", "node_type"),
+    [
+        ("()", "argumentList", ArgumentList),
+        ("(A, B)", "argumentList", ArgumentList),
+        ("(x = A, y = B)", "argumentList", ArgumentList),
+        ("~T", "featureTyping", ConjugatedPortTyping),
+        ("A.B", "featureTyping", OwnedFeatureTyping),
+        ("A", "qualifiedName", QualifiedReference),
+        ("A::B", "qualifiedName", QualifiedReference),
+        ("= A", "featureValue", ValuePart),
+        (":= A", "featureValue", ValuePart),
+        ("default = A", "featureValue", ValuePart),
+        ("default := A", "featureValue", ValuePart),
+        ("comment /* text */", "comment", Comment),
+        ("comment about A, B /* text */", "comment", Comment),
+        ("doc /* text */", "documentation", Documentation),
+    ],
+)
+def test_listener_local_entries_round_trip(source, entry, node_type):
+    """Exercise argument, declaration, value, and model-owned text callbacks."""
+    node = parse_as_ast_node(source, grammar_node=entry)
+    assert isinstance(node, node_type)
+    assert parse_as_ast_node(str(node), grammar_node=entry) == node
+
+
+def test_feature_value_keeps_default_colon_equals_operator():
+    """Retain the distinct ``default :=`` concrete value operator."""
+    node = parse_as_ast_node("default := A", grammar_node="featureValue")
+    assert node.operator == "default :="
+    assert str(node) == "default := A"
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "package Demo { action A; }",
+        "package Demo { action A { } }",
+        "package Demo { action A { merge m; decide d; join j; fork f; } }",
+        "package Demo { action A { accept E; accept E { } } }",
+        "package Demo { action A { send x; send x via channel; send x to target; send new M() via channel; } }",
+        "package Demo { action A { assign x := y; assign a.b := y; } }",
+        "package Demo { action A { terminate; terminate x; } }",
+        "package Demo { action A { if x { } else { } if x { } else if y { } } }",
+        "package Demo { action A { while x { } while x { } until done; loop { } } }",
+        "package Demo { action A { for i in xs { } for i : Integer in xs { } } }",
+        "action def A { first B then C; }",
+        "action def A { first B; then C; }",
+        "action def A { first B if x then C; }",
+        "action def A { succession S first B if x then C; }",
+        "action def A { while x { } until y; }",
+        "action def A { for i : T in xs { } }",
+        "action def A { accept E via p; accept after t; accept when x; }",
+        "action def A { send x to y; send x via y to z; }",
+        "action def A { assign a.b := x; }",
+        "action def A { if x { } else if y { } }",
+        "package Demo { state def S { entry; if x then B; do action A; exit; } }",
+        "package Demo { state def S { transition T first A accept E if x then B; } }",
+        "package Demo { state def S { transition T first A if x accept E then B; } }",
+        "package Demo { state def S { transition T first A if x do action E; then B; } }",
+        "package Demo { state def S { transition T first A accept E then B; } }",
+        "package Demo { state def S { state A; then B; } }",
+        "package Demo { state def S { state A; then B; state B; } }",
+        "package Demo { state def S { state A; transition T first B then C; } }",
+        "package Demo { state def S { state A; accept E then B; } }",
+        "package Demo { state def S { state A; if x then B; } }",
+        "package Demo { state def S { state A; transition T first B accept E if x then C; } }",
+        "package Demo { state def S { state A; transition T first B if x accept E then C; } }",
+        "package Demo { state def S { state A; transition T first B if x do action E; then C; } }",
+        "package Demo { state def S { state A; transition T first B if x do accept E; then C; } }",
+        "package Demo { state def S { state A; transition T first B if x do send E via C; then D; } }",
+        "package Demo { state def S { state A; transition T first B if x do assign a := b; then C; } }",
+        "package Demo { state def S { state Idle; } }",
+        "package Demo { state Idle; exhibit state Idle; exhibit Idle; }",
+        "package Demo { part def P { part p; item i; } }",
+        "package Demo { item def I; }",
+        "package Demo { part def P :> B; }",
+        "package Demo { part def P specializes B; }",
+        "package Demo { part def P { attribute x : T; } }",
+        "package Demo { part def P { attribute x typed by T; } }",
+        "package Demo { part def P { attribute x :> y; } }",
+        "package Demo { part def P { attribute x subsets y; } }",
+        "package Demo { part def P { attribute x references y; } }",
+        "package Demo { part def P { attribute x crosses y; } }",
+        "package Demo { part def P { attribute x redefines y; } }",
+        "package Demo { part def P { attribute x ::> y; } }",
+        "package Demo { part def P { ref part x : T; } }",
+        "package Demo { part def P { in part x : T; } }",
+        "package Demo { part def P { private part x : T; } }",
+        "package Demo { part def P { individual part x : T; } }",
+        "package Demo { part def P { variation part x : T; } }",
+        "package Demo { part def P { derived part x : T; } }",
+        "package Demo { part def P { constant part x : T; } }",
+        "package Demo { part def P { port p : ~T; } }",
+        "package Demo { part def P { alias A for B; } }",
+        "package Demo { part def P { variant item x; } }",
+        "package Demo { part def P { import A::*; } }",
+        "library package Lib { }",
+        "standard library package Std { }",
+        "doc /* package documentation */ package Demo { }",
+        "comment /* package comment */ package Demo { }",
+    ],
+)
+def test_listener_complete_document_families_round_trip(source):
+    """Exercise action, state, transition, containment, and document callbacks."""
+    result = parse(source)
+    assert result.ok, result.diagnostics
+    rendered = str(result.ast)
+    reparsed = parse(rendered)
+    assert reparsed.ok, reparsed.diagnostics
+    assert reparsed.ast == result.ast
+
+
+def test_action_nodes_are_all_concrete_statement_nodes():
+    """Confirm the action-node dispatcher exposes each concrete node family."""
+    result = parse(
+        "package Demo { action A { merge m; decide d; join j; fork f; "
+        "accept E; send x; assign x := y; terminate; if x { }; while x { }; "
+        "for i in xs { }; } }"
+    )
+    assert result.ok, result.diagnostics
+    action = result.ast.members[0].element.members[0].element
+    nodes = [item.action_node for item in action.body.items if hasattr(item, "action_node")]
+    assert nodes
+    assert all(isinstance(node, ActionNode) for node in nodes)
+
+
+def test_listener_remaining_expression_and_action_branches():
+    """Visit the remaining explicit expression and action-node guards."""
+
+    def mapped(listener, node):
+        context = _FakeContext()
+        listener.nodes[context] = node
+        return context
+
+    expression = _node("A")
+    listener = _fake_listener()
+    feature_member = mapped(listener, ast.RawElement("feature"))
+    listener.exitFeatureMember(_FakeContext(typeFeatureMember=feature_member))
+    reference = mapped(listener, QualifiedReference(["A"]))
+    listener.exitFeatureReferenceExpression(_FakeContext(qualifiedName=reference))
+    listener.exitOccurrenceDefinitionPrefix(
+        _FakeContext(
+            basicDefinitionPrefix=_FakeContext(VARIATION=_FakeToken()),
+            definitionExtensionKeyword=[],
+            INDIVIDUAL=None,
+        )
+    )
+
+    first = mapped(listener, expression)
+    second = mapped(listener, expression)
+    _error(
+        "exitOwnedExpression",
+        _FakeContext(IF=_FakeToken(), ownedExpression=[first, second]),
+    )
+    _error(
+        "exitOwnedExpression",
+        _FakeContext(ISTYPE=_FakeToken(), ownedExpression=[first, second]),
+    )
+
+    expression_context = mapped(listener, expression)
+    toggle_calls = [0]
+
+    def colon_equal():
+        toggle_calls[0] += 1
+        return None if toggle_calls[0] == 1 else _FakeToken()
+
+    listener.exitFeatureValue(
+        _FakeContext(
+            ownedExpression=expression_context,
+            DEFAULT=_FakeToken(),
+            EQ=None,
+            COLON_EQ=colon_equal,
+        )
+    )
+
+    prefix = ast.OccurrenceUsagePrefix()
+    body = ast.ActionBody()
+    prefix_context = mapped(listener, prefix)
+    body_context = mapped(listener, body)
+    bad = ast.RawElement("bad")
+    for callback in ("exitMergeNode", "exitDecisionNode", "exitJoinNode", "exitForkNode"):
+        declaration_context = mapped(listener, bad)
+        _error(
+            callback,
+            _FakeContext(
+                controlNodePrefix=prefix_context,
+                actionBody=body_context,
+                usageDeclaration=declaration_context,
+            ),
+            (prefix_context, ast.ControlNodePrefix()),
+            (body_context, body),
+            (declaration_context, bad),
+        )
+
+    _error(
+        "exitActionNodePrefix",
+        _FakeContext(
+            occurrenceUsagePrefix=prefix_context,
+            actionNodeUsageDeclaration=bad,
+        ),
+        (prefix_context, prefix),
+        (bad, ast.RawElement("bad declaration")),
+    )
+    _error(
+        "exitAcceptNode",
+        _FakeContext(
+            occurrenceUsagePrefix=prefix_context,
+            acceptNodeDeclaration=bad,
+            actionBody=body_context,
+        ),
+        (prefix_context, prefix),
+        (body_context, body),
+    )
+
+    for field in (
+        "actionNodeUsageDeclaration",
+        "actionUsageDeclaration",
+        "nodeParameterMember",
+        "senderReceiverPart",
+    ):
+        field_context = mapped(listener, bad)
+        fields = {
+            "occurrenceUsagePrefix": prefix_context,
+            "actionBody": body_context,
+            field: field_context,
+        }
+        _error(
+            "exitSendNode",
+            _FakeContext(**fields),
+            (prefix_context, prefix),
+            (body_context, body),
+            (field_context, bad),
+        )
+    _error(
+        "exitSendNode",
+        _FakeContext(occurrenceUsagePrefix=prefix_context, actionBody=body_context),
+        (prefix_context, prefix),
+        (body_context, ast.RawElement("bad body")),
+    )
+    _error(
+        "exitAssignmentNode",
+        _FakeContext(
+            occurrenceUsagePrefix=prefix_context,
+            assignmentNodeDeclaration=bad,
+            actionBody=body_context,
+        ),
+        (prefix_context, prefix),
+        (body_context, body),
+    )
+    terminate_declaration = mapped(listener, bad)
+    terminate_parameter = mapped(listener, bad)
+    _error(
+        "exitTerminateNode",
+        _FakeContext(
+            occurrenceUsagePrefix=prefix_context,
+            actionNodeUsageDeclaration=terminate_declaration,
+            nodeParameterMember=terminate_parameter,
+            actionBody=body_context,
+        ),
+        (prefix_context, prefix),
+        (body_context, body),
+        (terminate_declaration, bad),
+        (terminate_parameter, bad),
+    )
+    _error(
+        "exitTerminateNode",
+        _FakeContext(
+            occurrenceUsagePrefix=prefix_context,
+            nodeParameterMember=terminate_parameter,
+            actionBody=body_context,
+        ),
+        (prefix_context, prefix),
+        (body_context, body),
+        (terminate_parameter, bad),
+    )
+    declaration_context = mapped(listener, bad)
+    _error(
+        "exitActionBodyParameter",
+        _FakeContext(usageDeclaration=declaration_context, actionBodyItem=[]),
+        (declaration_context, bad),
+    )
+
+    _error("exitIfNode", _FakeContext(actionBodyParameterMember=[]))
+    condition_context = mapped(listener, expression)
+    action_prefix_context = mapped(listener, ast.ActionNodePrefix(prefix))
+    _error(
+        "exitIfNode",
+        _FakeContext(
+            actionNodePrefix=action_prefix_context,
+            expressionParameterMember=condition_context,
+            actionBodyParameterMember=[],
+        ),
+        (action_prefix_context, ast.ActionNodePrefix(prefix)),
+        (condition_context, expression),
+    )
+    then_context = mapped(listener, ast.ActionBodyParameter())
+    else_context = mapped(listener, bad)
+    _error(
+        "exitIfNode",
+        _FakeContext(
+            actionNodePrefix=action_prefix_context,
+            expressionParameterMember=condition_context,
+            actionBodyParameterMember=[then_context, else_context],
+        ),
+        (action_prefix_context, ast.ActionNodePrefix(prefix)),
+        (condition_context, expression),
+        (then_context, ast.ActionBodyParameter()),
+        (else_context, bad),
+    )
+
+    body_parameter = ast.ActionBodyParameter()
+    body_parameter_context = mapped(listener, body_parameter)
+    _error(
+        "exitWhileLoopNode",
+        _FakeContext(
+            actionNodePrefix=action_prefix_context,
+            UNTIL=_FakeToken(),
+            expressionParameterMember=[condition_context],
+            actionBodyParameterMember=body_parameter_context,
+        ),
+        (action_prefix_context, ast.ActionNodePrefix(prefix)),
+        (condition_context, ast.RawElement("bad until")),
+        (body_parameter_context, body_parameter),
+    )
+    _error(
+        "exitWhileLoopNode",
+        _FakeContext(
+            actionNodePrefix=action_prefix_context,
+            WHILE=_FakeToken(),
+            expressionParameterMember=[condition_context],
+            actionBodyParameterMember=body_parameter_context,
+        ),
+        (action_prefix_context, ast.ActionNodePrefix(prefix)),
+        (condition_context, ast.RawElement("bad condition")),
+        (body_parameter_context, body_parameter),
+    )
+    until_context = mapped(listener, ast.RawElement("bad until"))
+    _error(
+        "exitWhileLoopNode",
+        _FakeContext(
+            actionNodePrefix=action_prefix_context,
+            WHILE=_FakeToken(),
+            UNTIL=_FakeToken(),
+            expressionParameterMember=[condition_context, until_context],
+            actionBodyParameterMember=body_parameter_context,
+        ),
+        (action_prefix_context, ast.ActionNodePrefix(prefix)),
+        (condition_context, expression),
+        (until_context, ast.RawElement("bad until")),
+        (body_parameter_context, body_parameter),
+    )
+
+    variable_context = _FakeContext(usageDeclaration=None)
+    listener.exitForVariableDeclarationMember(variable_context)
+    _error(
+        "exitForVariableDeclarationMember",
+        _FakeContext(usageDeclaration=variable_context),
+        (variable_context, bad),
+    )
+    collection = ast.NodeParameter(expression)
+    collection_context = mapped(listener, collection)
+    _error(
+        "exitForLoopNode",
+        _FakeContext(
+            actionNodePrefix=action_prefix_context,
+            nodeParameterMember=None,
+            actionBodyParameterMember=body_parameter_context,
+        ),
+        (action_prefix_context, ast.ActionNodePrefix(prefix)),
+        (body_parameter_context, body_parameter),
+    )
+    _error(
+        "exitForLoopNode",
+        _FakeContext(
+            actionNodePrefix=action_prefix_context,
+            nodeParameterMember=collection_context,
+            actionBodyParameterMember=body_parameter_context,
+        ),
+        (action_prefix_context, ast.ActionNodePrefix(prefix)),
+        (collection_context, collection),
+        (body_parameter_context, ast.RawElement("bad body")),
+    )
+    for_listener = _fake_listener(
+        (action_prefix_context, ast.ActionNodePrefix(prefix)),
+        (collection_context, collection),
+        (body_parameter_context, body_parameter),
+    )
+    for_listener.parts[variable_context] = bad
+    with pytest.raises(ValueError):
+        for_listener.exitForLoopNode(
+            _FakeContext(
+                actionNodePrefix=action_prefix_context,
+                forVariableDeclarationMember=variable_context,
+                nodeParameterMember=collection_context,
+                actionBodyParameterMember=body_parameter_context,
+            )
+        )
+
+
+def test_listener_remaining_state_transition_and_containment_branches():
+    """Visit state/transition and generic containment callbacks explicitly."""
+
+    def mapped(listener, node):
+        context = _FakeContext()
+        listener.nodes[context] = node
+        return context
+
+    expression = _node("A")
+    listener = _fake_listener()
+    _error(
+        "exitOwnedExpression",
+        _FakeContext(AT_SIGN=_FakeToken(), ownedExpression=[], typeReference=None),
+    )
+    _error(
+        "exitOwnedExpression",
+        _FakeContext(ALL=_FakeToken(), ownedExpression=[], typeReference=None),
+    )
+    _error("exitOwnedExpression", _FakeContext(ownedExpression=[]))
+
+    prefix_context = mapped(listener, ast.OccurrenceUsagePrefix())
+    body_context = mapped(listener, ast.ActionBody())
+    bad_declaration_context = mapped(listener, ast.RawElement("bad declaration"))
+    _error(
+        "exitActionNodePrefix",
+        _FakeContext(
+            occurrenceUsagePrefix=prefix_context,
+            actionNodeUsageDeclaration=bad_declaration_context,
+        ),
+        (prefix_context, ast.OccurrenceUsagePrefix()),
+        (bad_declaration_context, ast.RawElement("bad declaration")),
+    )
+    _error(
+        "exitAcceptNode",
+        _FakeContext(
+            occurrenceUsagePrefix=prefix_context,
+            acceptNodeDeclaration=bad_declaration_context,
+            actionBody=body_context,
+        ),
+        (prefix_context, ast.OccurrenceUsagePrefix()),
+        (body_context, ast.ActionBody()),
+        (bad_declaration_context, ast.RawElement("bad declaration")),
+    )
+    assignment_declaration_context = mapped(listener, ast.RawElement("bad assignment"))
+    _error(
+        "exitAssignmentNode",
+        _FakeContext(
+            occurrenceUsagePrefix=prefix_context,
+            assignmentNodeDeclaration=assignment_declaration_context,
+            actionBody=body_context,
+        ),
+        (prefix_context, ast.OccurrenceUsagePrefix()),
+        (body_context, ast.ActionBody()),
+        (assignment_declaration_context, ast.RawElement("bad assignment")),
+    )
+
+    connector = QualifiedReference(["B"])
+    transition = ast.TransitionSuccession(connector)
+    transition_context = mapped(listener, transition)
+    listener.exitDefaultTargetSuccession(
+        _FakeContext(transitionSuccessionMember=transition_context)
+    )
+    usage_body = ast.DefinitionBody()
+    usage_body_context = mapped(listener, usage_body)
+    bad_succession_context = mapped(listener, ast.RawElement("bad succession"))
+    _error(
+        "exitActionTargetSuccession",
+        _FakeContext(targetSuccession=bad_succession_context, usageBody=usage_body_context),
+        (bad_succession_context, ast.RawElement("bad succession")),
+        (usage_body_context, usage_body),
+    )
+    _error(
+        "exitGuardedSuccession",
+        _FakeContext(
+            featureChainMember=mapped(listener, ast.FeatureChain([connector])),
+            guardExpressionMember=mapped(listener, ast.GuardExpressionMember(expression)),
+            transitionSuccessionMember=bad_succession_context,
+            usageBody=bad_succession_context,
+        ),
+        (bad_succession_context, ast.RawElement("bad succession")),
+    )
+    valid_source = mapped(listener, ast.FeatureChain([connector]))
+    valid_guard = mapped(listener, ast.GuardExpressionMember(expression))
+    invalid_declaration = mapped(listener, ast.RawElement("bad declaration"))
+    _error(
+        "exitGuardedSuccession",
+        _FakeContext(
+            featureChainMember=valid_source,
+            guardExpressionMember=valid_guard,
+            transitionSuccessionMember=transition_context,
+            usageBody=usage_body_context,
+            usageDeclaration=invalid_declaration,
+        ),
+        (valid_source, ast.FeatureChain([connector])),
+        (valid_guard, ast.GuardExpressionMember(expression)),
+        (transition_context, transition),
+        (usage_body_context, usage_body),
+        (invalid_declaration, ast.RawElement("bad declaration")),
+    )
+    guarded_source_context = _FakeContext()
+    guarded_guard_context = _FakeContext()
+    guarded_target_context = _FakeContext()
+    guarded_body_context = _FakeContext()
+    _error(
+        "exitGuardedSuccession",
+        _FakeContext(
+            featureChainMember=guarded_source_context,
+            guardExpressionMember=guarded_guard_context,
+            transitionSuccessionMember=guarded_target_context,
+            usageBody=guarded_body_context,
+        ),
+        (guarded_source_context, ast.FeatureChain([connector])),
+        (guarded_guard_context, ast.GuardExpressionMember(expression)),
+        (guarded_target_context, ast.RawElement("bad target")),
+        (guarded_body_context, ast.RawElement("bad body")),
+    )
+
+    accept_parameters = ast.AcceptParameterPart(ast.PayloadParameter(trigger_expression=expression))
+    accept_parameters_context = mapped(listener, accept_parameters)
+    accept_action = ast.AcceptNodeDeclaration(accept_parameters)
+    accept_action_context = mapped(listener, accept_action)
+    send_declaration = ast.SendNodeDeclaration(ast.NodeParameter(expression))
+    send_declaration_context = mapped(listener, send_declaration)
+    assignment_declaration = ast.AssignmentNodeDeclaration(
+        ast.FeatureChain([connector]), ast.NodeParameter(expression)
+    )
+    assignment_declaration_context = mapped(listener, assignment_declaration)
+    action_body = ast.ActionBody()
+    action_body_context = mapped(listener, action_body)
+    listener.exitStateAcceptActionUsage(
+        _FakeContext(
+            acceptNodeDeclaration=accept_action_context,
+            actionBody=action_body_context,
+        )
+    )
+    listener.exitStateSendActionUsage(
+        _FakeContext(
+            sendNodeDeclaration=send_declaration_context,
+            actionBody=action_body_context,
+        )
+    )
+    listener.exitStateAssignmentActionUsage(
+        _FakeContext(
+            assignmentNodeDeclaration=assignment_declaration_context,
+            actionBody=action_body_context,
+        )
+    )
+    payload_member_context = mapped(listener, ast.PayloadFeature())
+    listener.exitPayloadFeatureMember(_FakeContext(payloadFeature=payload_member_context))
+    listener.exitPayloadFeatureSpecializationPart(
+        _FakeContext(featureSpecialization=[], multiplicityPart=None)
+    )
+    payload_parameter = ast.PayloadParameter(trigger_expression=expression)
+    payload_parameter_context = mapped(listener, payload_parameter)
+    invalid_via_context = mapped(listener, ast.RawElement("bad via"))
+    _error(
+        "exitAcceptParameterPart",
+        _FakeContext(
+            payloadParameterMember=payload_parameter_context,
+            nodeParameterMember=invalid_via_context,
+        ),
+        (payload_parameter_context, payload_parameter),
+        (invalid_via_context, ast.RawElement("bad via")),
+    )
+    accept_payload_context = _FakeContext()
+    accept_via_context = _FakeContext()
+    _error(
+        "exitAcceptParameterPart",
+        _FakeContext(
+            payloadParameterMember=accept_payload_context,
+            nodeParameterMember=accept_via_context,
+        ),
+        (accept_payload_context, payload_parameter),
+        (accept_via_context, ast.RawElement("bad via")),
+    )
+
+    listener.exitActionNodeUsageDeclaration(_FakeContext(usageDeclaration=None))
+    invalid_action_declaration = mapped(listener, ast.RawElement("bad declaration"))
+    _error(
+        "exitSendNodeDeclaration",
+        _FakeContext(
+            nodeParameterMember=mapped(listener, ast.NodeParameter(expression)),
+            actionNodeUsageDeclaration=invalid_action_declaration,
+        ),
+        (invalid_action_declaration, ast.RawElement("bad declaration")),
+    )
+    send_parameter_context = _FakeContext()
+    send_action_declaration_context = _FakeContext()
+    _error(
+        "exitSendNodeDeclaration",
+        _FakeContext(
+            nodeParameterMember=send_parameter_context,
+            actionNodeUsageDeclaration=send_action_declaration_context,
+        ),
+        (send_parameter_context, ast.NodeParameter(expression)),
+        (send_action_declaration_context, ast.RawElement("bad declaration")),
+    )
+    invalid_sender = mapped(listener, ast.RawElement("bad sender"))
+    _error(
+        "exitSendNodeDeclaration",
+        _FakeContext(
+            nodeParameterMember=mapped(listener, ast.NodeParameter(expression)),
+            senderReceiverPart=invalid_sender,
+        ),
+        (invalid_sender, ast.RawElement("bad sender")),
+    )
+    send_sender_context = _FakeContext()
+    _error(
+        "exitSendNodeDeclaration",
+        _FakeContext(
+            nodeParameterMember=send_parameter_context,
+            senderReceiverPart=send_sender_context,
+        ),
+        (send_parameter_context, ast.NodeParameter(expression)),
+        (send_sender_context, ast.RawElement("bad sender")),
+    )
+    invalid_binding = mapped(listener, ast.RawElement("bad binding"))
+    _error(
+        "exitAssignmentNodeDeclaration",
+        _FakeContext(
+            assignmentTargetMember=invalid_binding,
+            featureChainMember=mapped(listener, ast.FeatureChain([connector])),
+            nodeParameterMember=mapped(listener, ast.NodeParameter(expression)),
+        ),
+        (invalid_binding, ast.RawElement("bad binding")),
+    )
+    binding_context = _FakeContext()
+    target_context = _FakeContext()
+    value_context = _FakeContext()
+    _error(
+        "exitAssignmentNodeDeclaration",
+        _FakeContext(
+            assignmentTargetMember=binding_context,
+            featureChainMember=target_context,
+            nodeParameterMember=value_context,
+        ),
+        (binding_context, ast.RawElement("bad binding")),
+        (target_context, ast.FeatureChain([connector])),
+        (value_context, ast.NodeParameter(expression)),
+    )
+
+    action_prefix = ast.OccurrenceUsagePrefix()
+    action_prefix_context = mapped(listener, action_prefix)
+    action_declaration = ast.ActionUsageDeclaration()
+    action_declaration_context = mapped(listener, action_declaration)
+    listener.exitActionUsage(
+        _FakeContext(
+            occurrenceUsagePrefix=action_prefix_context,
+            actionUsageDeclaration=action_declaration_context,
+            actionBody=None,
+            TERMINATE=_FakeToken(),
+            SEMI=_FakeToken(),
+        )
+    )
+    perform_declaration = ast.PerformActionUsageDeclaration()
+    perform_declaration_context = mapped(listener, perform_declaration)
+    listener.exitPerformActionUsage(
+        _FakeContext(
+            occurrenceUsagePrefix=action_prefix_context,
+            performActionUsageDeclaration=perform_declaration_context,
+            actionBody=action_body_context,
+        )
+    )
+    definition_prefix = ast.OccurrenceDefinitionPrefix()
+    definition_prefix_context = mapped(listener, definition_prefix)
+    definition_declaration = ast.DefinitionDeclaration()
+    definition_declaration_context = mapped(listener, definition_declaration)
+    listener.exitActionDefinition(
+        _FakeContext(
+            occurrenceDefinitionPrefix=definition_prefix_context,
+            definitionDeclaration=definition_declaration_context,
+            actionBody=action_body_context,
+        )
+    )
+
+    guarded_context = _FakeContext()
+    bad_guard_context = mapped(listener, ast.RawElement("bad guard"))
+    guarded_context._context_values.update(
+        {
+            "guardExpressionMember": bad_guard_context,
+            "transitionSuccessionMember": transition_context,
+        }
+    )
+    _error(
+        "exitEntryTransitionMember",
+        _FakeContext(guardedTargetSuccession=guarded_context),
+        (bad_guard_context, ast.RawElement("bad guard")),
+        (transition_context, transition),
+    )
+
+    listener.exitEffectBehaviorUsage(_FakeContext(emptyActionUsage_=_FakeToken()))
+    transition_declaration = ast.PerformActionUsageDeclaration()
+    for callback, field in (
+        ("exitTransitionPerformActionUsage", "performActionUsageDeclaration"),
+        ("exitTransitionAcceptActionUsage", "acceptNodeDeclaration"),
+        ("exitTransitionSendActionUsage", "sendNodeDeclaration"),
+        ("exitTransitionAssignmentActionUsage", "assignmentNodeDeclaration"),
+    ):
+        declaration = transition_declaration
+        if field == "acceptNodeDeclaration":
+            declaration = accept_action
+        elif field == "sendNodeDeclaration":
+            declaration = send_declaration
+        elif field == "assignmentNodeDeclaration":
+            declaration = assignment_declaration
+        declaration_context = mapped(listener, declaration)
+        getattr(listener, callback)(
+            _FakeContext(
+                **{field: declaration_context, "LBRACE": _FakeToken(), "actionBodyItem": []}
+            )
+        )
+        getattr(listener, callback)(
+            _FakeContext(**{field: declaration_context, "SEMI": _FakeToken()})
+        )
+
+    listener.exitTargetTransitionUsage(
+        _FakeContext(
+            transitionSuccessionMember=transition_context,
+            actionBody=action_body_context,
+            TRANSITION=_FakeToken(),
+            emptyParameterMember=[],
+        )
+    )
+    listener.exitBehaviorUsageElement(_FakeContext())
+    listener.exitSourceSuccessionMember(_FakeContext())
+    listener.exitSourceSuccession(_FakeContext())
+
+    non_behavior_context = mapped(listener, ast.RawElement("non-behavior"))
+    listener.exitStateBodyItem(_FakeContext(nonBehaviorBodyItem=non_behavior_context))
+    incomplete_entry_context = mapped(listener, ast.RawElement("bad entry"))
+    _error(
+        "exitStateBodyItem",
+        _FakeContext(
+            entryActionMember=incomplete_entry_context,
+            entryTransitionMember=[],
+        ),
+        (incomplete_entry_context, ast.RawElement("bad entry")),
+    )
+
+    variant_context = _FakeContext()
+    _error(
+        "exitDefinitionBodyItemContent",
+        _FakeContext(VARIANT=_FakeToken(), variantUsageElement=variant_context),
+        (variant_context, ast.ASTNode()),
+    )
+    unassembled_content = _FakeContext()
+    _error(
+        "exitDefinitionBodyItem",
+        _FakeContext(definitionBodyItemContent=unassembled_content),
+    )
+    item_context = _FakeContext()
+    _error(
+        "exitDefinitionBody",
+        _FakeContext(definitionBodyItem=[item_context]),
+        (item_context, ast.RawElement("not a definition body item")),
+    )
+    usage_context = mapped(listener, ast.RawElement("usage"))
+    listener.exitEndOccurrenceUsageElement(
+        _FakeContext(
+            occurrenceUsageElement=usage_context,
+            name=None,
+            ownedCrossMultiplicityMember=None,
+            NONUNIQUE=None,
+        )
+    )
+    structure_context = mapped(listener, ast.RawElement("structure"))
+    structure_member_prefix = _FakeContext()
+    listener.exitStructureUsageMember(
+        _FakeContext(structureUsageElement=structure_context, memberPrefix=structure_member_prefix),
+    )
+    listener.exitPackageDeclaration(_FakeContext(identification=None))
+    listener.exitAnnotatingElement(_FakeContext())
+    _error("exitUsageElement", _FakeContext())
+    listener.exitOccurrenceUsageElement(_FakeContext())
+    definition_element_context = mapped(listener, ast.RawElement("definition"))
+    listener.exitDefinitionMember(
+        _FakeContext(definitionElement=definition_element_context, memberPrefix=_FakeContext()),
+    )
+    structure_member_context = mapped(listener, ast.RawElement("structure member"))
+    listener.exitNonBehaviorBodyItem(
+        _FakeContext(structureUsageMember=structure_member_context),
+    )
+    _error("exitPackageBodyElement", _FakeContext())
+    listener.exitPackageBodyElement(_FakeContext(elementFilterMember=_FakeContext()))
+    listener.exitVariantUsageElement(_FakeContext())
+    direct_bad_via_context = mapped(listener, ast.RawElement("bad via"))
+    with pytest.raises(ValueError):
+        listener.exitAcceptParameterPart(
+            _FakeContext(
+                payloadParameterMember=accept_parameters_context,
+                nodeParameterMember=direct_bad_via_context,
+            )
+        )
+    direct_bad_guard_context = mapped(listener, ast.RawElement("bad guard"))
+    direct_guarded_context = _FakeContext(
+        guardExpressionMember=direct_bad_guard_context,
+        transitionSuccessionMember=transition_context,
+    )
+    with pytest.raises(ValueError):
+        listener.exitEntryTransitionMember(
+            _FakeContext(guardedTargetSuccession=direct_guarded_context)
+        )
+    definition_declaration_context = _FakeContext()
+    definition_body_context = _FakeContext()
+    _error(
+        "exitDefinition",
+        _FakeContext(
+            definitionDeclaration=definition_declaration_context,
+            definitionBody=definition_body_context,
+        ),
+        (definition_declaration_context, ast.RawElement("bad declaration")),
+        (definition_body_context, ast.RawElement("bad body")),
+    )
+    part_prefix_context = _FakeContext()
+    part_definition_context = _FakeContext()
+    _error(
+        "exitPartDefinition",
+        _FakeContext(
+            occurrenceDefinitionPrefix=part_prefix_context,
+            definition=part_definition_context,
+        ),
+        (part_prefix_context, ast.RawElement("bad prefix")),
+        (part_definition_context, ast.RawElement("bad definition")),
+    )
+    completion_context = _FakeContext()
+    _error(
+        "exitUsage",
+        _FakeContext(usageCompletion=completion_context),
+        (completion_context, ast.RawElement("bad completion")),
+    )
+    invalid_body_context = _FakeContext()
+    _error(
+        "exitUsageCompletion",
+        _FakeContext(usageBody=invalid_body_context),
+        (invalid_body_context, ast.RawElement("bad body")),
+    )
+    usage_prefix_context = _FakeContext()
+    usage_context = _FakeContext()
+    _error(
+        "exitPartUsage",
+        _FakeContext(
+            occurrenceUsagePrefix=usage_prefix_context,
+            usage=usage_context,
+        ),
+        (usage_prefix_context, ast.RawElement("bad prefix")),
+        (usage_context, ast.RawElement("bad usage")),
+    )
+    _error(
+        "exitItemUsage",
+        _FakeContext(
+            occurrenceUsagePrefix=usage_prefix_context,
+            usage=usage_context,
+        ),
+        (usage_prefix_context, ast.RawElement("bad prefix")),
+        (usage_context, ast.RawElement("bad usage")),
+    )
+    invalid_end_usage_context = _FakeContext()
+    _error(
+        "exitEndOccurrenceUsageElement",
+        _FakeContext(occurrenceUsageElement=invalid_end_usage_context),
+        (invalid_end_usage_context, ast.ASTNode()),
+    )
+    invalid_structure_context = _FakeContext()
+    _error(
+        "exitStructureUsageMember",
+        _FakeContext(
+            structureUsageElement=invalid_structure_context,
+            memberPrefix=_FakeContext(),
+        ),
+        (invalid_structure_context, ast.ASTNode()),
+    )
+    invalid_definition_element_context = _FakeContext()
+    _error(
+        "exitDefinitionMember",
+        _FakeContext(
+            definitionElement=invalid_definition_element_context,
+            memberPrefix=_FakeContext(),
+        ),
+        (invalid_definition_element_context, ast.ASTNode()),
+    )
+    definition_member_context = _FakeContext()
+    listener.nodes[definition_member_context] = ast.RawElement("definition member")
+    listener.exitNonBehaviorBodyItem(
+        _FakeContext(definitionMember=definition_member_context),
+    )
+    invalid_package_element_context = _FakeContext()
+    _error(
+        "exitPackageMember",
+        _FakeContext(
+            definitionElement=invalid_package_element_context,
+            memberPrefix=_FakeContext(),
+        ),
+        (invalid_package_element_context, ast.ASTNode()),
+    )
+    listener.exitPackageBody(_FakeContext(SEMI=_FakeToken()))

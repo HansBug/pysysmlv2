@@ -1,4 +1,4 @@
-"""Placeholder semantic model boundary for future SysML/KerML linking.
+"""Placeholder semantic model boundary for future SysML v2 linking.
 
 The semantic model will eventually own symbol identity, imports, references,
 and semantic diagnostics. It currently wraps the syntax AST without pretending
@@ -19,7 +19,7 @@ from typing import Any
 
 @dataclass
 class SemanticModel:
-    """Wrap syntax while the full KerML/SysML semantic layer is staged.
+    """Wrap syntax while the full SysML v2 semantic layer is staged.
 
     This boundary deliberately does not claim symbol resolution or semantic
     validation. Those facilities will be added without changing the syntax

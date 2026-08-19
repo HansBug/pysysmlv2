@@ -1,0 +1,42 @@
+{
+  "effective_parser_sha256": "d10f5277ead989127af308e9c2b82e36c689914747b7cc8562de409916d3e73e",
+  "overlay": "pysysmlv2-sysml-state-v1",
+  "overlay_notes": [
+    {
+      "classification": "upstream_gap",
+      "id": "transition-trigger-guard-order",
+      "official_evidence": "OMG SysML 2.0 Language formal PDF, Clause 7.18.3 (State Examples), printed pages 120-121: complete TransitionUsage in OnOff3 uses trigger-before-guard and complete TransitionUsage in OnOff4 uses guard-before-trigger (https://www.omg.org/spec/SysML/2.0/Language/PDF). The official Pilot's corresponding rule is https://github.com/Systems-Modeling/SysML-v2-Pilot-Implementation/blob/fa709f28dfd49dfdb7ee83e4e19da2f57e0eb3aa/org.omg.sysml.xtext/src/org/omg/sysml/xtext/SysML.xtext#L1866-L1882.",
+      "reason": "The generated full TransitionUsage rule hard-codes trigger-before-guard, although the normative full-transition examples exercise both orders.",
+      "rules": [
+        "transitionUsage"
+      ]
+    },
+    {
+      "classification": "upstream_gap",
+      "id": "transition-effect-semicolon",
+      "official_evidence": "OMG SysML 2.0 Language formal PDF, Clause 7.18.3 (State Examples), printed page 121, OnOff5 contains closed transition effects ``do action powerUp : PowerUp; then`` and ``do send new TimeoutSignal() via commPort; then`` (https://www.omg.org/spec/SysML/2.0/Language/PDF).",
+      "reason": "The shorthand effect form is a closed action terminated by ``;``; the generated rules only allow a brace body or an omitted body.",
+      "rules": [
+        "transitionPerformActionUsage",
+        "transitionAcceptActionUsage",
+        "transitionSendActionUsage",
+        "transitionAssignmentActionUsage"
+      ]
+    },
+    {
+      "classification": "upstream_gap",
+      "id": "terminate-action-shorthand",
+      "official_evidence": "OMG SysML 2.0 Language formal PDF, Clause 7.17.10 (Terminate Usages) and Clause 7.18.3 (State Examples), printed page 122 OnOff6: ``action stop terminate;`` (https://www.omg.org/spec/SysML/2.0/Language/PDF).",
+      "reason": "The generated actionUsage requires actionBody after the declaration and rejects the official terminate shorthand.",
+      "rules": [
+        "actionUsage"
+      ]
+    }
+  ],
+  "schema_version": 1,
+  "upstream": {
+    "describe": "v2026.05.0",
+    "parser_sha256": "ee173b758dd42c2944990d801e586f4f801843f11a3b750808a9c82adbf54316",
+    "revision": "7292dc39983a6d263d14f8f6689de0f3b35db5eb"
+  }
+}

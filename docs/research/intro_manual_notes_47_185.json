@@ -1,0 +1,897 @@
+{
+  "47": [
+    {
+      "anchor": "language \"Alf\"",
+      "text": "An \"opaque\" action definition or usage can be specified using a textual representation annotation in a language other than SysML."
+    },
+    {
+      "anchor": "/*",
+      "text": "The textual representation body is written using comment syntax. The /*, */ and leading * symbols are not included in the body text. Note that support for referencing SysML elements from the body text is tool-specific."
+    },
+    {
+      "anchor": "action def UpdateSensors",
+      "text": "A textual representation annotation can actually be used with any kind of element, not just actions. OMG-standard languages a tool may support include \"OCL\" (Object Constraint Language) and \"Alf\" (Action Language for fUML). A tool can also provide support for other languages (e.g., \"JavaScript\" or \"Modelica\")."
+    }
+  ],
+  "48": [
+    {
+      "anchor": "state def VehicleStates",
+      "text": "A state definition is like a state machine in UML and SysML v1. It defines a behavioral state that can be exhibited by a system."
+    },
+    {
+      "anchor": "first start then off",
+      "text": "This indicates the initial state after entry is \"off\"."
+    },
+    {
+      "anchor": "state off",
+      "text": "A state definition can specify a set of discrete nested states."
+    },
+    {
+      "anchor": "accept VehicleStartSignal",
+      "text": "States are connected by transitions that fire on acceptance of item transfers (like accept actions)."
+    }
+  ],
+  "49": [
+    {
+      "anchor": "accept VehicleStartSignal",
+      "text": "This is a shorthand for a transition whose source is the lexically previous state."
+    }
+  ],
+  "50": [
+    {
+      "anchor": "state def VehicleStates",
+      "text": "A state can be explicitly declared to be a usage of a state definition."
+    },
+    {
+      "anchor": "state off",
+      "text": "A state can also be directly decomposed into other states."
+    }
+  ],
+  "51": [
+    {
+      "anchor": "state vehicleStates",
+      "text": "A parallel state is one whose nested states are concurrent."
+    },
+    {
+      "anchor": "state healthStates",
+      "text": "Transitions are not allowed between concurrent states."
+    }
+  ],
+  "52": [
+    {
+      "anchor": "state def VehicleStates",
+      "text": "States, like actions, can have parameters."
+    },
+    {
+      "anchor": "entry performSelfTest",
+      "text": "An entry action is performed on entry to a state, a do action while in it, and an exit action on exit from it."
+    },
+    {
+      "anchor": "do action providePower",
+      "text": "A state entry, do or exit can reference an action defined elsewhere..."
+    },
+    {
+      "anchor": "exit action applyParkingBrake",
+      "text": "... or the action can be defined within the state."
+    }
+  ],
+  "53": [
+    {
+      "anchor": "if operatingVehicle.brakePedalDepressed",
+      "text": "A guard is a condition that must be true for a transition to fire."
+    },
+    {
+      "anchor": "do send new ControllerStartSignal",
+      "text": "An effect action is performed when a transition fires, before entry to the target state."
+    }
+  ],
+  "54": [
+    {
+      "anchor": "accept at vehicle.maintenanceTime",
+      "text": "An absolute time trigger fires at a given instant of time."
+    },
+    {
+      "anchor": "accept when senseTemperature.temp",
+      "text": "A change trigger fires when a given Boolean expression becomes true."
+    },
+    {
+      "anchor": "accept after 48",
+      "text": "A relative time trigger fires after a given time duration."
+    },
+    {
+      "anchor": "accept when senseTemperature.temp <= vehicle.maxTemperature",
+      "text": "Change and time triggers can also be used in accept actions."
+    },
+    {
+      "anchor": "accept at vehicle.maintenanceTime",
+      "text": "Time instant quantities are defined in the Time package, not the ISQ package."
+    }
+  ],
+  "55": [
+    {
+      "anchor": "part :>> localClock",
+      "text": "Redefining the localClock feature of a part provides a local time reference for composite items, parts and actions nested within it."
+    },
+    {
+      "anchor": "part :>> localClock = new Time::Clock()",
+      "text": "Each Server instance will have its own independent Clock."
+    },
+    {
+      "anchor": "accept Start via requestPort",
+      "text": "A localClock can also be declared for an item or an action (or any kind of occurrence that happens over time)."
+    },
+    {
+      "anchor": "accept at new Time::Iso8601DateTime(today + \"11:59:00\")",
+      "text": "All absolute and relative time references are relative to the localClock."
+    },
+    {
+      "anchor": "part def Server",
+      "text": "If no localClock is declared, the default is a universalClock that provides a common time universal reference."
+    }
+  ],
+  "56": [
+    {
+      "anchor": "exhibit vehicleStates",
+      "text": "exhibit identifies the part that is exhibiting states that are defined elsewhere."
+    },
+    {
+      "anchor": "in operatingVehicle",
+      "text": "Parameters for a state usage can be bound in the same way as parameters of an action usage."
+    },
+    {
+      "anchor": "part vehicle",
+      "text": "Like performed actions, exhibited states are not composite features, therefore, a localClock on a part will not apply to performed actions or exhibited states of the part."
+    }
+  ],
+  "57": [
+    {
+      "anchor": "attribute def Date",
+      "text": "An occurrence is something that happens over time. Items and parts are structural occurrences. Actions are behavioral occurrences. Attributes are not occurrences."
+    },
+    {
+      "anchor": "timeslice assembly",
+      "text": "A time slice represents a portion of the lifetime of an occurrence over some period of time."
+    },
+    {
+      "anchor": "snapshot delivery",
+      "text": "A snapshot represents an occurrence at a specific point in time (a time slice with zero duration)."
+    },
+    {
+      "anchor": "first assembly then delivery",
+      "text": "A succession asserts that the first occurrence ends before the second can begin."
+    },
+    {
+      "anchor": "snapshot junked",
+      "text": "done is the name of the end-of-life snapshot of any occurrence."
+    }
+  ],
+  "58": [
+    {
+      "anchor": "then timeslice ownership",
+      "text": "This is a shorthand for a succession after the lexically previous occurrence."
+    },
+    {
+      "anchor": "timeslice driven",
+      "text": "Time slices and snapshots can have nested time slices, snapshots and other features applicable during their occurrence."
+    },
+    {
+      "anchor": "snapshot sale",
+      "text": "start is the name of the start-of-life snapshot of any occurrence."
+    },
+    {
+      "anchor": "ref item owner : Person[1]",
+      "text": "One occurrence references another during the same time period in the other reference's lifetime."
+    }
+  ],
+  "59": [
+    {
+      "anchor": "event occurrence setSpeedSent",
+      "text": "An event occurrence is a reference to something that happens during the lifetime of another occurrence."
+    },
+    {
+      "anchor": "then event occurrence sensedSpeedReceived",
+      "text": "Event occurrences can be sequenced as usual using succession."
+    }
+  ],
+  "60": [
+    {
+      "anchor": "occurrence def CruiseControlInteraction",
+      "text": "An occurrence definition defines a class of occurrences, without committing to whether they are structural or behavioral."
+    },
+    {
+      "anchor": "message setSpeedMessage",
+      "text": "A message asserts that there is a transfer of some payload of a certain type from one occurrence to another (specifying the payload type is optional)."
+    },
+    {
+      "anchor": "first setSpeedMessage",
+      "text": "Messages can be explicitly ordered. Otherwise, they are only partially ordered by the time-ordering of their respective source and target events."
+    }
+  ],
+  "61": [
+    {
+      "anchor": "event setSpeedMessage.sourceEvent",
+      "text": "An event can also be specified by reference to an identified occurrence (such as the source or target of a message)."
+    },
+    {
+      "anchor": "message setSpeedMessage",
+      "text": "Each message has a sourceEvent and targetEvent, even if it is not explicitly identified in the message declaration."
+    }
+  ],
+  "63": [
+    {
+      "anchor": "part driver_a",
+      "text": "An interaction can be realized by many different models. A valid realization must have suboccurrences that can be identified with all the events and messages in the interaction."
+    },
+    {
+      "anchor": "accept SetSpeed via vehicle_a",
+      "text": "In this model, event occurrences are realized by nested send and accept actions."
+    },
+    {
+      "anchor": "send new SensedSpeed() to cruiseController_a",
+      "text": "Messages are realized by the implicit transfers between send actions and corresponding accept actions."
+    },
+    {
+      "anchor": "part engine_a",
+      "text": "In more realistic cases, a realizing model will have more extensive behavior, only a subset of which will conform to any one interaction model."
+    }
+  ],
+  "65": [
+    {
+      "anchor": "part driver_b",
+      "text": "Ports are also suboccurrences of the parts that contain them."
+    },
+    {
+      "anchor": "interface driver_b.setSpeedPort",
+      "text": "In this model, event occurrences are realized by values leaving from and arriving at ports."
+    },
+    {
+      "anchor": "flow of SensedSpeed",
+      "text": "Messages are realized by explicit flows between features of ports."
+    }
+  ],
+  "67": [
+    {
+      "anchor": "message setSpeedMessage",
+      "text": "The default name for a message payload is payload."
+    },
+    {
+      "anchor": "of fuelCommand : FuelCommand",
+      "text": "The payload of a message can be declared with a name for reference."
+    },
+    {
+      "anchor": "then message fuelCommandForwardingMessage",
+      "text": "The payload of a message can also be bound to a specific value. In this case, the fuelCommandMessage payload is forwarded by the engineController to the engine."
+    },
+    {
+      "anchor": "message setSpeedMessage",
+      "text": "Note that a payload declaration without a colon names the type of the payload, not the payload itself."
+    }
+  ],
+  "68": [
+    {
+      "anchor": "individual part def Vehicle_1",
+      "text": "An individual definition is an occurrence definition (of any kind) restricted to model a single individual and how it changes over its lifetime."
+    },
+    {
+      "anchor": "snapshot part vehicle_1_t0",
+      "text": "As occurrences, individuals can have snapshots that describe them at a single instant of time."
+    },
+    {
+      "anchor": ":>> mass",
+      "text": "This is a compact notation for showing redefinition of an attribute usage."
+    },
+    {
+      "anchor": "individual part def Vehicle_1",
+      "text": "An individual definition will often specialize a definition of the general class of things the individual is one of."
+    },
+    {
+      "anchor": ":>> status",
+      "text": "An attribute does not have snapshots, but it can be asserted to have a specific value in a certain snapshot."
+    }
+  ],
+  "69": [
+    {
+      "anchor": "first vehicle_1_t0",
+      "text": "As usual, succession asserts that the first snapshot occurs before the second in time, in some context."
+    },
+    {
+      "anchor": "snapshot part vehicle_1_t1",
+      "text": "The values of the attributes of an individual can change over time."
+    }
+  ],
+  "70": [
+    {
+      "anchor": "individual part def Vehicle_1",
+      "text": "An individual usage represents an individual during some portion of its lifetime."
+    },
+    {
+      "anchor": "snapshot leftFrontWheel_t0",
+      "text": "During the first snapshot of vehicle_1, Wheel_1 has the role of the leftFrontWheel."
+    },
+    {
+      "anchor": "snapshot rightFrontWheel_t1",
+      "text": "During a later snapshot, the same Wheel_1 has the role of the rightFrontWheel."
+    }
+  ],
+  "71": [
+    {
+      "anchor": "timeslice aliceDriving",
+      "text": "A time slice represents an individual over some period of time (that this is a time slice of a part is implicit)."
+    },
+    {
+      "anchor": "snapshot :>> start",
+      "text": "start and done are snapshots at the beginning and end of the time slice."
+    },
+    {
+      "anchor": "ref individual item :>> driver : Alice",
+      "text": "During this time slice of Vehicle_1, Alice has the role of the driver."
+    },
+    {
+      "anchor": "then timeslice bobDriving",
+      "text": "Succession asserts that the first time slice must complete before the second can begin."
+    },
+    {
+      "anchor": "ref individual item :>> driver : Bob",
+      "text": "During a later time slice of Vehicle_1, Bob has the role of the driver."
+    }
+  ],
+  "72": [
+    {
+      "anchor": "simpleMass + sum(subcomponents.totalMass)",
+      "text": "An expression in general is a computation expressed using a typical mathematical operator notation."
+    },
+    {
+      "anchor": "attribute simpleMass",
+      "text": "ISQ::mass is a standard quantity kind from the International System of Quantities library model."
+    },
+    {
+      "anchor": "attribute :>> totalMass = simpleMass",
+      "text": "A feature value is a shorthand for binding a feature to the result of an expression (here simply the value of another feature)."
+    },
+    {
+      "anchor": "simpleMass + sum",
+      "text": "The dot notation can be used as an expression to read the values of a feature. Here, the totalMass is collected for each of the subcomponents."
+    }
+  ],
+  "73": [
+    {
+      "anchor": "attribute :>> simpleMass = 1000[kg]",
+      "text": "This is an expression for a quantity with a specific numeric value and unit. Note that units are identified on the quantity value, not the type."
+    },
+    {
+      "anchor": "part c :> car",
+      "text": "The totalMass of c can be computed using the feature value expressions from simpleThing and compositeThing."
+    }
+  ],
+  "74": [
+    {
+      "anchor": "attribute totalMass :> ISQ::mass default simpleMass",
+      "text": "A default value is a feature value that applies unless explicitly overridden."
+    },
+    {
+      "anchor": "attribute :>> totalMass default",
+      "text": "A default value can be overridden when the feature is redefined, with a default or bound value."
+    },
+    {
+      "anchor": "attribute :>> totalMass default",
+      "text": "Once bound, the value of the feature is fixed as the result of the value expression."
+    },
+    {
+      "anchor": "sum(subcomponents.totalMass",
+      "text": "A dot can be followed by a select expression in order to filter a collection of values."
+    }
+  ],
+  "75": [
+    {
+      "anchor": "part def CarPart",
+      "text": "The default of totalMass to simpleMass is inherited."
+    },
+    {
+      "anchor": "part car: CarPart",
+      "text": "The default for totalMass is overridden as specified in compositeThing."
+    },
+    {
+      "anchor": "part carParts : CarPart[*] :>> subcomponents",
+      "text": "The totalMass default is not overridden for the nested carParts."
+    },
+    {
+      "anchor": "part c :> car",
+      "text": "When computing the totalMass of c, c.engine and c.transmission, the relevant defaults are used."
+    }
+  ],
+  "76": [
+    {
+      "anchor": "calc def Power",
+      "text": "A calculation definition is a reusable, parameterized expression."
+    },
+    {
+      "anchor": "in whlpwr",
+      "text": "Similarly to actions, the directed features of a calculation are its parameters."
+    },
+    {
+      "anchor": "return : PowerValue",
+      "text": "A calculation has a single return result."
+    },
+    {
+      "anchor": "attribute drag",
+      "text": "The calculation can include the computation of intermediate values."
+    },
+    {
+      "anchor": "whlpwr - drag",
+      "text": "The calculation result expression must conform to the return type."
+    },
+    {
+      "anchor": "return : AccelerationValue =",
+      "text": "The result expression can also be bound directly to the return parameter."
+    }
+  ],
+  "77": [
+    {
+      "anchor": "calc acc : Acceleration",
+      "text": "Values are bound to the parameters of calculation usages (similar to action parameters)."
+    },
+    {
+      "anchor": "in tp = Power(wheelPower, C_d, C_f, mass, v_in)",
+      "text": "A calculation definition can also be invoked as an expression, with input values given as arguments, evaluating to the result of the calculation."
+    },
+    {
+      "anchor": "out v_out",
+      "text": "Calculation results can be referenced by name (they are output parameters)."
+    }
+  ],
+  "78": [
+    {
+      "anchor": "calc updateState",
+      "text": "A calculation can be specified without an explicit calculation definition."
+    },
+    {
+      "anchor": "return attribute newState : DynamicState",
+      "text": "Calculations can also handle structured values."
+    },
+    {
+      "anchor": "return attribute newState",
+      "text": "This is a declaration of the result parameter of the calculation, with bound subattributes."
+    }
+  ],
+  "79": [
+    {
+      "anchor": "constraint def MassConstraint",
+      "text": "A constraint definition is a reusable, parameterized Boolean expression."
+    },
+    {
+      "anchor": "in partMasses",
+      "text": "Constraint parameters are always in parameters."
+    },
+    {
+      "anchor": "sum(partMasses)",
+      "text": "The constraint expression can be any Boolean expression using the constraint parameters."
+    },
+    {
+      "anchor": "constraint massConstraint",
+      "text": "A constraint is the usage of a constraint definition, which may be true or false in a given context."
+    },
+    {
+      "anchor": "in partMasses =",
+      "text": "Values are bound to constraint parameters (similarly to actions)."
+    },
+    {
+      "anchor": "constraint def MassConstraint",
+      "text": "A constraint may be violated (false) without making the model inconsistent."
+    }
+  ],
+  "80": [
+    {
+      "anchor": "attribute partMasses : MassValue[0..*]",
+      "text": "Alternatively, constraint parameters may be modeled as attribute or reference features."
+    },
+    {
+      "anchor": "redefines partMasses",
+      "text": "The constraint parameter properties are then redefined in order to be bound."
+    }
+  ],
+  "81": [
+    {
+      "anchor": "assert constraint massConstraint",
+      "text": "A constraint assertion asserts that a constraint must be true."
+    },
+    {
+      "anchor": "assert constraint massConstraint",
+      "text": "If an assertion is violated, then the model is inconsistent."
+    }
+  ],
+  "82": [
+    {
+      "anchor": "constraint def MassConstraint",
+      "text": "The constraint expression can also be defined on a usage of a constraint def."
+    },
+    {
+      "anchor": "assert massConstraint",
+      "text": "A named constraint can be asserted in multiple contexts."
+    }
+  ],
+  "83": [
+    {
+      "anchor": "part vehicle1",
+      "text": "In UML and SysML v1, constraints are often used to define derived values."
+    },
+    {
+      "anchor": "attribute totalMass : MassValue =",
+      "text": "In SysML v2 this can usually be done more directly using a binding."
+    },
+    {
+      "anchor": "force * deltaT",
+      "text": "However, constraints allow for more general equalities and inequalities than direct derivation."
+    },
+    {
+      "anchor": "force * deltaT",
+      "text": "Be careful about the difference between ==, which is the Boolean-valued equality operator, and =, which denotes binding."
+    }
+  ],
+  "84": [
+    {
+      "anchor": "constraint def StraightLineDynamicsEquations",
+      "text": "This constraint definition provides a reusable specification of a system of (coupled) equations."
+    },
+    {
+      "anchor": "a == Acceleration(p, m, v_avg)",
+      "text": "Note the use of the calculation definitions defined earlier."
+    },
+    {
+      "anchor": "action def StraightLineDynamics",
+      "text": "An action definition is inherently \"causal\" in the sense that outputs are determined in terms of inputs."
+    },
+    {
+      "anchor": "assert constraint dynamics",
+      "text": "A constraint is inherently \"acausal\" – it is simply true or false for given values of its parameters."
+    },
+    {
+      "anchor": "in p = power",
+      "text": "This specifies that the action outputs must be solved for analytically given the action inputs, consistent with the asserted constraint."
+    }
+  ],
+  "85": [
+    {
+      "anchor": "state healthStates",
+      "text": "TimeOf and DurationOf are from the Time package in the Quantities and Units Domain Library."
+    },
+    {
+      "anchor": "assert constraint { TimeOf(maintenance)",
+      "text": "TimeOf returns the time of the start of an occurrence (in this example, a state performance)."
+    },
+    {
+      "anchor": "constraint { DurationOf(maintenance)",
+      "text": "DurationOf returns the time duration of an occurrence (the difference between its start and done times)."
+    }
+  ],
+  "86": [
+    {
+      "anchor": "requirement def MassLimitationRequirement",
+      "text": "A requirement definition is a special kind of constraint definition."
+    },
+    {
+      "anchor": "doc /* The actual mass",
+      "text": "A textual statement of the requirement can be given as a documentation comment in the requirement definition body."
+    },
+    {
+      "anchor": "attribute massActual",
+      "text": "Like a constraint definition, a requirement definition can be parameterized using features."
+    },
+    {
+      "anchor": "require constraint",
+      "text": "The requirement can be formalized by giving one or more component required constraints."
+    }
+  ],
+  "87": [
+    {
+      "anchor": "requirement def <'1'",
+      "text": "A requirement definition may have a modeler specified short name, which is an alternate name for it."
+    },
+    {
+      "anchor": "subject vehicle",
+      "text": "A requirement definition is always about some subject, which may be implicit or specified explicitly."
+    },
+    {
+      "anchor": "assume constraint",
+      "text": "A requirement definition may also specify one or more assumptions."
+    },
+    {
+      "anchor": "attribute redefines massActual",
+      "text": "Features of the subject can be used in the requirement definition."
+    },
+    {
+      "anchor": "attribute dryMass",
+      "text": "Actually, any identifiable element can have a short name, not just requirements."
+    }
+  ],
+  "88": [
+    {
+      "anchor": "port def ClutchPort",
+      "text": "The subject of a requirement definition can have any kind of definition."
+    }
+  ],
+  "89": [
+    {
+      "anchor": "requirement <'1.1'",
+      "text": "A requirement may optionally have its own short name."
+    },
+    {
+      "anchor": "requirement <'1.1'",
+      "text": "A requirement is the usage of a requirement definition."
+    },
+    {
+      "anchor": "attribute :>> massReqd",
+      "text": "A requirement will often bind requirement definition parameters to specific values."
+    }
+  ],
+  "90": [
+    {
+      "anchor": "requirement vehicleSpecification",
+      "text": "A requirement may also be used to group other requirements."
+    },
+    {
+      "anchor": "require fullVehicleMassLimit",
+      "text": "Grouped requirements are treated as required constraints of the group."
+    },
+    {
+      "anchor": "require fullVehicleMassLimit",
+      "text": "Requirements can be grouped by reference..."
+    },
+    {
+      "anchor": "requirement drivePowerInterface",
+      "text": "...or by composition."
+    },
+    {
+      "anchor": "subject engine",
+      "text": "By default, the subject of grouped requirements is assumed to be the same as that of the group."
+    },
+    {
+      "anchor": "subject clutchPort",
+      "text": "The subject of a grouped requirement can also be bound explicitly."
+    }
+  ],
+  "91": [
+    {
+      "anchor": "satisfy vehicleSpecification",
+      "text": "A requirement satisfaction asserts that a given requirement is satisfied when its subject parameter is bound to a specific thing."
+    },
+    {
+      "anchor": "satisfy vehicleSpecification",
+      "text": "Formally, a requirement is satisfied for a subject if, when all its assumed constraints are true, then all its required constraints are true."
+    }
+  ],
+  "92": [
+    {
+      "anchor": "analysis def FuelEconomyAnalysis",
+      "text": "An analysis case definition defines the computation of the result of analyzing some subject, meeting an objective."
+    },
+    {
+      "anchor": "subject vehicle",
+      "text": "The subject may be specified similarly to the subject of a requirement definition."
+    },
+    {
+      "anchor": "objective fuelEconomyAnalysisObjective",
+      "text": "The objective is a requirement on the result of the analysis case."
+    },
+    {
+      "anchor": "assume constraint",
+      "text": "The analysis objective is specified as a requirement, allowing both assumed and required constraints."
+    },
+    {
+      "anchor": "return fuelEconomyResult",
+      "text": "The analysis result is declared as a return result (as for a calculation definition)."
+    }
+  ],
+  "93": [
+    {
+      "anchor": "action solveForPower",
+      "text": "The first step solves for the engine power needed for a given position/velocity scenario."
+    }
+  ],
+  "94": [
+    {
+      "anchor": "analysis cityAnalysis",
+      "text": "The previously defined analysis is carried out for a specific vehicle configuration for two different scenarios."
+    }
+  ],
+  "95": [
+    {
+      "anchor": "analysis engineTradeStudy",
+      "text": "A trade-off study is an analysis with the objective of selecting the optimum alternative from a given set based on an evaluation of each alternative."
+    }
+  ],
+  "96": [
+    {
+      "anchor": "verification def VehicleMassTest",
+      "text": "A verification case definition defines a process for verifying whether a subject satisfies one or more requirements."
+    },
+    {
+      "anchor": "objective vehicleMassVerificationObjective",
+      "text": "The requirements to be verified are declared in the verification case objective. The subject of the verification case is automatically bound to the subject of the verified requirements."
+    },
+    {
+      "anchor": "return verdict",
+      "text": "A verification case always returns a verdict of type VerdictKind. (The default name is verdict, but a different name can be used if desired.)"
+    }
+  ],
+  "97": [
+    {
+      "anchor": "action collectData",
+      "text": "The steps of a verification case are actions that, together, determine the verdict."
+    }
+  ],
+  "98": [
+    {
+      "anchor": "verification vehicleMassTest",
+      "text": "This is a verification case usage in which the subject has been restricted to a specific test configuration."
+    }
+  ],
+  "99": [
+    {
+      "anchor": "individual testSystem",
+      "text": "Individuals can be used to model the carrying out of actual tests."
+    }
+  ],
+  "100": [
+    {
+      "anchor": "use case def 'Provide Transportation'",
+      "text": "A use case definition defines a required interaction between its subject and certain external actors."
+    },
+    {
+      "anchor": "objective",
+      "text": "The objective of the use case is for the subject to provide a result of value to one or more of the actors."
+    }
+  ],
+  "101": [
+    {
+      "anchor": "then include use case 'exit vehicle'",
+      "text": "A use case can include the performance of a use case defined elsewhere (similar to performing an action)."
+    },
+    {
+      "anchor": "then include use case 'exit vehicle'",
+      "text": "The subject of a nested use case is implicitly bound to that of its containing use case, but actors need to be explicitly bound."
+    }
+  ],
+  "102": [
+    {
+      "anchor": "variation attribute def DiameterChoices",
+      "text": "Any kind of definition can be marked as a variation, expressing variability within a product line model."
+    },
+    {
+      "anchor": "variation attribute def DiameterChoices",
+      "text": "A variation defines one or more variant usages, which represent the allowed choices for that variation."
+    }
+  ],
+  "103": [
+    {
+      "anchor": "variation part transmission",
+      "text": "Any kind of usage can also be a variation, defining allowable variants without a separate variation definition."
+    }
+  ],
+  "104": [
+    {
+      "anchor": "part redefines engine",
+      "text": "A selection is made for a variation by binding one of the allowed variants to the variation usage."
+    }
+  ],
+  "105": [
+    {
+      "anchor": "dependency from 'System Assembly'",
+      "text": "A dependency is a relationship that indicates that one or more client elements require one or more supplier elements for their complete specification. A dependency is entirely a model-level relationship, without instance-level semantics."
+    }
+  ],
+  "106": [
+    {
+      "anchor": "allocate torqueGenerator to powerTrain",
+      "text": "An allocation specifies that some or all of the responsibility for realizing the intent of the source is allocated to the target."
+    },
+    {
+      "anchor": "allocate torqueGenerator.generateTorque",
+      "text": "An allocation can be refined using nested allocations that give a finer-grained decomposition of the containing allocation mapping."
+    }
+  ],
+  "107": [
+    {
+      "anchor": "allocation def LogicalToPhysical",
+      "text": "An allocation definition defines a class of allocations between features of specific types."
+    },
+    {
+      "anchor": "allocation torqueGenAlloc",
+      "text": "An allocation usage must allocate features that conform to the types of the ends of its allocation definition."
+    }
+  ],
+  "108": [
+    {
+      "anchor": "metadata def SafetyFeature",
+      "text": "Metadata is defined using a metadata definition."
+    },
+    {
+      "anchor": "metadata SafetyFeature about",
+      "text": "A specific type of metadata can then be applied as an annotation to one or more model elements."
+    }
+  ],
+  "109": [
+    {
+      "anchor": "standard library package AnalysisTooling",
+      "text": "The AnalysisTooling package is part of the Analysis domain library."
+    }
+  ],
+  "110": [
+    {
+      "anchor": "filter @Safety",
+      "text": "A filter is a Boolean condition that must be true for an element to actually be imported into a package."
+    }
+  ],
+  "111": [
+    {
+      "anchor": "public import vehicle::**[@Safety and",
+      "text": "Filter conditions can also be combined with the import itself."
+    }
+  ],
+  "112": [
+    {
+      "anchor": "library package FailureModeling",
+      "text": "For a domain-specific extension to SysML, first create a library model of domain-specific concepts. This can be explicitly identified as a library package."
+    },
+    {
+      "anchor": "abstract occurrence def Situation",
+      "text": "For each concept, provide a base definition and a base usage modeling the concept semantics."
+    }
+  ],
+  "113": [
+    {
+      "anchor": "metadata def situation",
+      "text": "Declare semantic metadata for each concept to be included in the language extension."
+    }
+  ],
+  "114": [
+    {
+      "anchor": "#scenario def DeviceFailure",
+      "text": "A user-defined keyword, starting with # and referencing a semantic metadata definition, can be used to declare a definition or usage."
+    }
+  ],
+  "115": [
+    {
+      "anchor": "concern 'system breakdown'",
+      "text": "A concern is a specific topic that one or more stakeholders desire to be addressed."
+    },
+    {
+      "anchor": "stakeholder se",
+      "text": "A stakeholder is a person, organization or other entity with concerns to be addressed."
+    }
+  ],
+  "116": [
+    {
+      "anchor": "viewpoint 'system structure perspective'",
+      "text": "A viewpoint is a requirement to present information from a model in a view that addresses certain stakeholder concerns."
+    },
+    {
+      "anchor": "frame 'system breakdown'",
+      "text": "A viewpoint frames the concerns that will be addressed by a view that satisfies the viewpoint."
+    }
+  ],
+  "117": [
+    {
+      "anchor": "view def 'Part Structure View'",
+      "text": "A view definition specifies how information can be extracted from a model in order to satisfy one or more viewpoints."
+    },
+    {
+      "anchor": "expose vehicle::**",
+      "text": "A view usage exposes the model elements to be included in the view, which are filtered as specified in the view definition."
+    },
+    {
+      "anchor": "render asTreeDiagram",
+      "text": "A view usage specifies how the view is to be rendered as a physical artifact."
+    }
+  ],
+  "118": [
+    {
+      "anchor": "rendering asTextualNotationTable",
+      "text": "Specialized kinds of renderings can be defined in a user model."
+    },
+    {
+      "anchor": "expose vehicle::**[@Safety]",
+      "text": "Views can specify additional filtering conditions on an expose, using the same notation as for an import."
+    }
+  ],
+  "119": []
+}

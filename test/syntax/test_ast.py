@@ -25,6 +25,7 @@ from pysysmlv2.syntax import (
     TransitionUsage,
     TransitionUsageMember,
 )
+from pysysmlv2.syntax import ast as ast_module
 
 pytestmark = pytest.mark.unit
 
@@ -51,12 +52,33 @@ def test_source_span_contains_child_and_keeps_source_path():
 
 
 def test_ast_base_only_carries_provenance_and_requires_concrete_exporter():
-    assert [item.name for item in fields(ASTNode)] == ["source_path", "span"]
+    assert [item.name for item in fields(ASTNode)] == ["span"]
     assert not hasattr(ASTNode, "children")
     with pytest.raises(NotImplementedError):
         ASTNode().to_sysml()
     with pytest.raises(NotImplementedError):
         str(ASTNode())
+
+
+def test_source_path_is_owned_only_by_source_span():
+    ast_node_types = [
+        value
+        for value in vars(ast_module).values()
+        if isinstance(value, type) and issubclass(value, ASTNode)
+    ]
+    assert all(
+        "source_path" not in {item.name for item in fields(node_type)}
+        for node_type in ast_node_types
+    )
+    assert [item.name for item in fields(SourceSpan)][-1] == "source_path"
+
+
+def test_ast_default_equality_ignores_span_provenance():
+    first = ASTNode()
+    first.span = SourceSpan(1, 1, 1, 4, "demo.sysml")
+    second = ASTNode()
+    second.span = SourceSpan(2, 1, 2, 4, "other.sysml")
+    assert first == second
 
 
 def test_concrete_grammar_fields_are_required_and_span_is_optional():
@@ -67,7 +89,7 @@ def test_concrete_grammar_fields_are_required_and_span_is_optional():
     state = _element(_package(parse("package Demo { state def Mode; }")))
     assert isinstance(state, StateDefinition)
     assert state.span is not None
-    assert state.source_path is None
+    assert state.span.source_path is None
 
 
 def test_parser_returns_explicit_package_and_state_definition_fields():
@@ -78,7 +100,7 @@ def test_parser_returns_explicit_package_and_state_definition_fields():
     state_definition = _element(package)
     assert isinstance(state_definition, StateDefinition)
     assert state_definition.definition_declaration.identification.declared_name == "Mode"
-    assert state_definition.source_path == "demo.sysml"
+    assert state_definition.span.source_path == "demo.sysml"
     assert state_definition.span.line == 1
 
 
@@ -93,6 +115,15 @@ def test_state_body_keeps_explicit_entry_do_and_exit_memberships():
     ]
     assert str(state_definition) == "state def Mode {\n    entry;\n    do;\n    exit;\n}"
     assert parse(str(state_definition)).ok
+
+
+def test_entry_transition_preserves_its_structured_guard_expression():
+    source = "package Demo { state def S { entry; if g then T; } }"
+    state_definition = _element(_package(parse(source)))
+    entry = state_definition.state_def_body.state_body_members[0]
+    assert entry.entry_transition_members[0].guard.reference.segments == ["g"]
+    assert str(entry) == "entry; if g then T;"
+    assert parse(str(parse(source).ast)).ok
 
 
 def test_state_usage_is_a_typed_package_member_and_round_trips():
@@ -182,3 +213,149 @@ def test_multiple_top_level_packages_are_not_dropped():
     assert result.ok
     assert [item.element.identification.declared_name for item in result.ast.members] == ["A", "B"]
     assert parse(rendered).ok
+
+
+def test_ast_concrete_exporters_cover_optional_and_prefix_alternatives():
+    """Exercise handwritten exporters that are not selected by the smoke corpus."""
+    a = ast_module
+
+    def ref(name):
+        return a.QualifiedReference([name])
+
+    literal = a.BooleanLiteral("true")
+
+    assert str(a.Identification(short_name="short")) == "<short>"
+    assert str(a.ConjugatedPortTyping(ref("FuelPort"))) == "~FuelPort"
+
+    declared_typing = a.DeclaredFeatureTyping(
+        ref("feature"),
+        ":",
+        ref("Type"),
+        a.RelationshipBody(";"),
+        is_specialization=True,
+        identification=a.Identification(declared_name="typingRelation"),
+    )
+    assert str(declared_typing) == "specialization typingRelation typing feature : Type;"
+    assert (
+        str(
+            a.NonFeatureMember(
+                a.OwnedFeatureTyping(a.DottedQualifiedReference([ref("T")])), "private"
+            )
+        )
+        == "private T"
+    )
+
+    assert (
+        str(
+            a.OccurrenceUsagePrefix(
+                is_derived=True,
+                is_constant=True,
+                extension_keywords=["variation"],
+            )
+        )
+        == "derived constant variation"
+    )
+    assert (
+        str(
+            a.ControlNodePrefix(
+                feature_direction="in",
+                is_derived=True,
+                is_abstract=True,
+                is_variation=True,
+                is_constant=True,
+                is_individual=True,
+                portion_kind="snapshot",
+                extension_keywords=["readonly"],
+            )
+        )
+        == "in derived abstract variation constant individual snapshot readonly"
+    )
+
+    assert str(a.RealLiteral("1.25")) == "1.25"
+    assert str(a.InfinityLiteral()) == "*"
+    assert str(a.CoalesceExpression(literal, a.IntegerLiteral("0"))) == "true ?? 0"
+    assert (
+        str(a.ConditionalExpression(literal, a.StringLiteral('"yes"'), a.NullExpression()))
+        == 'if true ? "yes" else null'
+    )
+    assert str(a.TypeOperationExpression("@", ref("Meta"))) == "@Meta"
+    assert str(a.TypeOperationExpression("hastype", ref("Type"), literal)) == "true hastype Type"
+    assert str(a.CastExpression(a.IntegerLiteral("1"), ref("Integer"))) == "1 as Integer"
+    assert str(a.MetadataAccessExpression(ref("model"))) == "model.metadata"
+    assert str(a.MetadataCastExpression(ref("Metadata"))) == "(as Metadata)"
+    assert str(a.AllExpression(ref("Vehicle"))) == "all Vehicle"
+
+    assert (
+        str(a.ReturnFeatureMember(a.RawElement(": Boolean;"), "public"))
+        == "public return : Boolean;"
+    )
+    assert str(a.CommentExpression("/* note */")) == "/* note */"
+    end_item = a.ItemUsage(a.OccurrenceUsagePrefix(), a.Usage(a.DefinitionBody(True)))
+    assert str(a.EndOccurrenceUsageElement(end_item, "endName", "[1]", True)) == (
+        "end endName [1] nonunique item;"
+    )
+
+    succession = a.TransitionSuccession(ref("Run"))
+    assert str(a.TargetSuccession(succession, "Idle")) == "Idle then Run"
+    guarded_target = a.GuardedTargetSuccession(a.GuardExpressionMember(literal), succession)
+    assert str(guarded_target) == "if true then Run"
+    assert str(a.DefaultTargetSuccession(succession)) == "else Run"
+    action_target = a.ActionTargetSuccession(a.TargetSuccession(succession), a.DefinitionBody(True))
+    assert str(action_target) == "then Run;"
+    assert str(a.ActionTargetSuccessionMember(action_target, "protected")) == "protected then Run;"
+
+    assert (
+        str(
+            a.PerformActionUsageDeclaration(
+                action_usage_declaration=a.UsageDeclaration(
+                    a.Identification(declared_name="Effect")
+                ),
+            )
+        )
+        == "Effect"
+    )
+    with pytest.raises(ValueError, match="payloadParameter requires"):
+        a.PayloadParameter()
+
+    declaration = a.PerformActionUsageDeclaration(
+        action_usage_declaration=a.UsageDeclaration(a.Identification(declared_name="Effect")),
+    )
+    assert str(a.TransitionPerformActionUsage(declaration, a.ActionBody())) == "Effect { }"
+    accept = a.AcceptNodeDeclaration(
+        a.AcceptParameterPart(a.PayloadParameter(trigger_expression=literal))
+    )
+    assert str(a.AcceptActionUsage(accept, a.ActionBody())) == "accept true { }"
+    assert str(a.StateSubactionMembership(a.StateSubactionKind.ENTRY)) == "entry;"
+
+    assert (
+        str(a.Package(a.Identification(declared_name="Lib"), is_library=True, is_standard=True))
+        == "standard library package Lib { }"
+    )
+    assert a.structural_text(a.RealLiteral("3.0")) == "3.0"
+
+
+def test_ast_exporters_cover_remaining_optional_rendering_branches():
+    """Exercise the final concrete exporter choices and source indentation path."""
+    a = ast_module
+
+    def ref(name):
+        return a.QualifiedReference([name])
+
+    assert a._relative_source("one\n  two") == "one\ntwo"
+    assert a._relative_source("one") == "one"
+    assert str(a.Identification(short_name="s", declared_name="State")) == "<s> State"
+    assert (
+        str(
+            a.FeatureSpecializationPart(
+                [a.FeatureSpecialization("subsets", [ref("Base")])], multiplicity_text="[1]"
+            )
+        )
+        == "subsets Base [1]"
+    )
+    assert str(a.OccurrenceDefinitionPrefix("part", is_individual=True)) == "part individual"
+    assert (
+        str(a.OccurrenceUsagePrefix(is_abstract=True, portion_kind="snapshot"))
+        == "abstract snapshot"
+    )
+    assert str(a.PerformActionUsageDeclaration(referenced_feature=ref("Effect"))) == "Effect"
+    assert str(a.TransitionPerformActionUsage(a.PerformActionUsageDeclaration())) == ""

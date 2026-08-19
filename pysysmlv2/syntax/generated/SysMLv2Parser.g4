@@ -1486,6 +1486,17 @@ guardedSuccessionMember
 
 actionUsage
     : occurrenceUsagePrefix ACTION actionUsageDeclaration actionBody
+    // [pysysmlv2 overlay: terminate-action-shorthand]
+    // Difference from pinned upstream ANTLR rule: upstream requires an
+    // ``actionBody`` after ``actionUsageDeclaration``. The added alternative
+    // represents the declaration-only terminate usage and its terminating
+    // semicolon. Upstream source:
+    // https://github.com/daltskin/sysml-v2-grammar/blob/v2026.05.0/grammar/SysMLv2Parser.g4#L1487-L1489
+    // OMG SysML 2.0 Language formal PDF, Clause 7.17.10 (Terminate Usages)
+    // and Clause 7.18.3 (State Examples), printed page 122 (OnOff6), explicitly
+    // uses ``action stop terminate;``:
+    // https://www.omg.org/spec/SysML/2.0/Language/PDF
+    | occurrenceUsagePrefix ACTION actionUsageDeclaration TERMINATE SEMI
     ;
 
 actionUsageDeclaration
@@ -1765,7 +1776,26 @@ exhibitStateUsage
     ;
 
 transitionUsage
-    : TRANSITION ( usageDeclaration? FIRST )? featureChainMember emptyParameterMember ( emptyParameterMember triggerActionMember )? ( guardExpressionMember )? ( effectBehaviorMember )? THEN transitionSuccessionMember actionBody
+    : TRANSITION ( usageDeclaration? FIRST )? featureChainMember emptyParameterMember
+      (
+          // [pysysmlv2 overlay: transition-trigger-guard-order]
+          // Difference from pinned upstream ANTLR rule: upstream fixes this
+          // optional group to ``emptyParameterMember triggerActionMember``
+          // before ``guardExpressionMember``.
+          // Upstream source: https://github.com/daltskin/sysml-v2-grammar/blob/v2026.05.0/grammar/SysMLv2Parser.g4#L1767-L1769
+          // OMG SysML 2.0 Language, Clause 7.18.3, printed pages 120-121:
+          // OnOff3 uses ``accept ... if ...`` while OnOff4 uses
+          // ``if ... accept ...``. These are both complete TransitionUsage
+          // forms; OnOff5 is a separate target-transition shorthand and is
+          // intentionally not evidence for this alternative. The PDF is the
+          // official source:
+          // https://www.omg.org/spec/SysML/2.0/Language/PDF
+          // Keep both orders because the upstream KEBNF converter emits only
+          // the former and would reject the latter official examples.
+          emptyParameterMember triggerActionMember ( guardExpressionMember )?
+        | guardExpressionMember ( emptyParameterMember triggerActionMember )?
+      )?
+      ( effectBehaviorMember )? THEN transitionSuccessionMember actionBody
     ;
 
 targetTransitionUsage
@@ -1797,19 +1827,47 @@ effectBehaviorUsage
     ;
 
 transitionPerformActionUsage
-    : performActionUsageDeclaration ( LBRACE actionBodyItem* RBRACE )?
+    // [pysysmlv2 overlay: transition-effect-semicolon]
+    // Difference from pinned upstream ANTLR rule: upstream allows a braced
+    // body or omission only; this alternative admits the closed ``SEMI`` form.
+    // Upstream source: https://github.com/daltskin/sysml-v2-grammar/blob/v2026.05.0/grammar/SysMLv2Parser.g4#L1799-L1801
+    // OMG SysML 2.0 Language Clause 7.18.3, printed page 121, OnOff5 shows
+    // ``do action powerUp : PowerUp; then``:
+    // https://www.omg.org/spec/SysML/2.0/Language/PDF
+    : performActionUsageDeclaration ( LBRACE actionBodyItem* RBRACE | SEMI )?
     ;
 
 transitionAcceptActionUsage
-    : acceptNodeDeclaration ( LBRACE actionBodyItem* RBRACE )?
+    // [pysysmlv2 overlay: transition-effect-semicolon]
+    // Difference from pinned upstream ANTLR rule: admit the same closed
+    // ``SEMI`` effect alternative as the official OnOff5 notation.
+    // Upstream source: https://github.com/daltskin/sysml-v2-grammar/blob/v2026.05.0/grammar/SysMLv2Parser.g4#L1803-L1805
+    // OMG SysML 2.0 Language Clause 7.18.3, printed page 121:
+    // https://www.omg.org/spec/SysML/2.0/Language/PDF
+    : acceptNodeDeclaration ( LBRACE actionBodyItem* RBRACE | SEMI )?
     ;
 
 transitionSendActionUsage
-    : sendNodeDeclaration ( LBRACE actionBodyItem* RBRACE )?
+    // [pysysmlv2 overlay: transition-effect-semicolon]
+    // Difference from pinned upstream ANTLR rule: admit the closed ``SEMI``
+    // effect alternative. OMG SysML 2.0 Language Clause 7.18.3, printed page
+    // 121, OnOff5 shows
+    // ``do send new TimeoutSignal() via commPort; then``.
+    // Upstream source: https://github.com/daltskin/sysml-v2-grammar/blob/v2026.05.0/grammar/SysMLv2Parser.g4#L1807-L1809
+    // https://www.omg.org/spec/SysML/2.0/Language/PDF
+    : sendNodeDeclaration ( LBRACE actionBodyItem* RBRACE | SEMI )?
     ;
 
 transitionAssignmentActionUsage
-    : assignmentNodeDeclaration ( LBRACE actionBodyItem* RBRACE )?
+    // [pysysmlv2 overlay: transition-effect-semicolon]
+    // Difference from pinned upstream ANTLR rule: apply the same closed-effect
+    // ``SEMI`` alternative to assignment effects, keeping all four
+    // EffectBehaviorUsage alternatives consistent. Upstream source:
+    // https://github.com/daltskin/sysml-v2-grammar/blob/v2026.05.0/grammar/SysMLv2Parser.g4#L1811-L1813
+    // The official closed-effect notation is documented in SysML 2.0
+    // Language Clause 7.18.3, printed page 121:
+    // https://www.omg.org/spec/SysML/2.0/Language/PDF
+    : assignmentNodeDeclaration ( LBRACE actionBodyItem* RBRACE | SEMI )?
     ;
 
 transitionSuccessionMember

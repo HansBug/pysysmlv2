@@ -16,9 +16,13 @@ compares snapshots instead of relying only on ``git diff``.
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
+from hashlib import sha256
 from pathlib import Path
+
+from tools.grammar_overlay import OVERLAY_IDENTIFIER
 
 ROOT = Path(__file__).resolve().parents[1]
 GENERATED = ROOT / "pysysmlv2" / "syntax" / "generated"
@@ -35,6 +39,7 @@ GENERATED_FILES = frozenset(
         "SysMLv2Parser.tokens",
         "SysMLv2ParserListener.py",
         "__init__.py",
+        "grammar-provenance.json",
     }
 )
 
@@ -72,6 +77,33 @@ def _check_generated_files() -> None:
     empty = sorted(name for name in GENERATED_FILES if (GENERATED / name).stat().st_size == 0)
     if empty:
         raise SystemExit("generated ANTLR files are empty: " + ", ".join(empty))
+
+
+def _check_grammar_provenance() -> None:
+    """Require a valid manifest for the copied grammar and local overlay.
+
+    :return: ``None`` when the manifest has the expected effective hash.
+    :rtype: None
+    :raises SystemExit: If provenance data is missing, malformed, or stale.
+    """
+    manifest_path = GENERATED / "grammar-provenance.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise SystemExit("generated grammar provenance is unreadable") from error
+    expected_hash = sha256((GENERATED / "SysMLv2Parser.g4").read_bytes()).hexdigest()
+    if manifest.get("schema_version") != 1:
+        raise SystemExit("generated grammar provenance schema is unsupported")
+    if manifest.get("overlay") != OVERLAY_IDENTIFIER:
+        raise SystemExit("generated grammar provenance has an unknown overlay")
+    upstream = manifest.get("upstream")
+    if not isinstance(upstream, dict) or not all(
+        isinstance(upstream.get(key), str) and upstream[key]
+        for key in ("revision", "describe", "parser_sha256")
+    ):
+        raise SystemExit("generated grammar provenance lacks upstream revision data")
+    if manifest.get("effective_parser_sha256") != expected_hash:
+        raise SystemExit("generated grammar provenance hash does not match parser grammar")
 
 
 def _snapshot() -> dict:
@@ -141,6 +173,7 @@ def check() -> None:
     before = _snapshot()
     subprocess.check_call([os.environ.get("MAKE", "make"), "antlr_update"], cwd=str(ROOT))
     _check_generated_files()
+    _check_grammar_provenance()
     after = _snapshot()
     if before != after:
         raise SystemExit("generated ANTLR artifacts are not reproducible")

@@ -1,0 +1,2671 @@
+{
+  "schema_version": 1,
+  "source": {
+    "title": "Introduction to the SysML v2 Language - Textual Notation",
+    "release": "2026-05",
+    "repository": "Systems-Modeling/SysML-v2-Release",
+    "branch": "master",
+    "commit": "de1070ae8e79c21532b8004fc663d47b35d0e9fa",
+    "commit_date": "2026-07-22T17:51:53Z",
+    "path": "doc/Intro to the SysML v2 Language-Textual Notation.pdf",
+    "url": "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/de1070ae8e79c21532b8004fc663d47b35d0e9fa/doc/Intro%20to%20the%20SysML%20v2%20Language-Textual%20Notation.pdf",
+    "blob_url": "https://github.com/Systems-Modeling/SysML-v2-Release/blob/de1070ae8e79c21532b8004fc663d47b35d0e9fa/doc/Intro%20to%20the%20SysML%20v2%20Language-Textual%20Notation.pdf",
+    "git_blob_sha": "e355535bb6c4d0f9d3dd1ddb9b69da06fc41fd1c",
+    "sha256": "0d9df8880314a58ecb7aecf3ed3da9075957c30ee59f9b686358f53a3af7be4d",
+    "retrieved_at": "2026-08-19",
+    "local_review_copy": "/tmp/sysml-intro-review/intro-textual.pdf",
+    "test_source_note": "The original PDF is retained only as a research source. Runtime tests must use repository-owned copied fixtures or goldens and must not download the PDF or read the upstream checkout.",
+    "pdf_pages": 185,
+    "pdf_size_bytes": 24083409,
+    "license": "Copyright 2019-2026 Model Driven Solutions, Inc.; Creative Commons Attribution 4.0 International License as printed on slide 1."
+  },
+  "review": {
+    "method": "All 185 rendered pages were visually inspected slide-by-slide. PDF text/XML extraction was used only to locate and transcribe code lines; it was not used to decide fixture boundaries. Code panels were normalized against the rendered pages and source ambiguities are recorded per entry.",
+    "normalization_policy": "Code excerpts normalize presentation-only curly single-quote glyphs to ASCII apostrophes, typographic ellipses to three ASCII periods, and typographic dashes inside code to ASCII hyphens. Slide titles retain their printed punctuation.",
+    "scope": "Every textual code panel in the deck, including selected standard-library model slides. Diagram labels and explanatory prose are recorded separately when they resemble code.",
+    "fixture_policy": "fixture_candidate means a closed SysML textual panel without visible ellipsis or an external-language body. It does not claim semantic resolution or parser compatibility; definitions referenced from other slides are listed as context dependencies in notes.",
+    "runtime_policy": "The original PDF is a research source only. Tests should use repository-owned copied fixtures or goldens; never download this PDF or depend on the upstream checkout at test runtime.",
+    "counts": {
+      "slides_total": 185,
+      "slides_with_textual_code_panels": 167,
+      "fixture_candidates": 104,
+      "context_or_template_panels": 62,
+      "external_language_panels": 1,
+      "diagram_only_observations": 5,
+      "non_code_or_divider_slides": 13,
+      "exact_normalized_duplicate_panels_in_existing_ledgers": 0,
+      "statement_overlap_with_existing_ledgers_is_not_semantic_uniqueness": true
+    },
+    "non_code_or_divider_slides": [
+      1,
+      2,
+      3,
+      4,
+      120,
+      125,
+      144,
+      146,
+      151,
+      157,
+      160,
+      163,
+      178
+    ],
+    "known_ambiguities": [
+      {
+        "slide": 5,
+        "issue": "The closing quote in Package Example is typeset as a right quotation mark; normalized to ASCII in code."
+      },
+      {
+        "slide": 7,
+        "issue": "The closing quote in Comment Example is typeset as a right quotation mark; normalized to ASCII in code."
+      },
+      {
+        "slide": 47,
+        "issue": "The opaque action body is Alf, not SysML textual notation."
+      },
+      {
+        "slide": 75,
+        "issue": "The first import was visually `private import ScalarValues::*;`; the text layer dropped `import` and was corrected."
+      },
+      {
+        "slide": 76,
+        "issue": "The calculation examples intentionally use a result expression without a trailing semicolon and mix return-expression forms with a parameter-list form; retained as a non-fixture source panel."
+      },
+      {
+        "slide": 168,
+        "issue": "The rendered SI example visibly lacks a semicolon after `referenceUnit = g`; retained and excluded as a fixture candidate."
+      },
+      {
+        "slide": 169,
+        "issue": "Typographic quotes around `mi/hr` were normalized to ASCII quotes."
+      },
+      {
+        "slide": "multiple",
+        "issue": "The deck uses typographic single-quote glyphs for many quoted names and operator names; all code excerpts use ASCII apostrophes consistently."
+      }
+    ],
+    "novelty_assessment": {
+      "new_slide_level_panels": 167,
+      "exact_normalized_duplicate_panels_in_existing_ledgers": 0,
+      "interpretation": "No complete slide panel is an exact whitespace/typography-normalized duplicate of an existing local PDF ledger entry. Many panels intentionally reuse individual declarations and language patterns from the formal specification; this is not a claim that all panels are semantically novel."
+    }
+  },
+  "parser_compatibility_gaps": [
+    {
+      "slide": 67,
+      "reason": "The message panel is a continuation chain whose `then` members require the enclosing context; it is retained as a reviewed source panel rather than silently rejected as a complete root document."
+    },
+    {
+      "slide": 82,
+      "reason": "The formal panel uses the legacy comma-separated parameter form; the current SysML-only grammar retains the body `in` member form instead."
+    },
+    {
+      "slide": 84,
+      "reason": "The formal panel uses the legacy comma-separated parameter form; the current SysML-only grammar retains the body `in` member form instead."
+    },
+    {
+      "slide": 121,
+      "reason": "The standard-library datatype declarations are KerML/foundation syntax outside this SysML-only AST scope."
+    },
+    {
+      "slide": 124,
+      "reason": "The standard-library datatype declarations are KerML/foundation syntax outside this SysML-only AST scope."
+    },
+    {
+      "slide": 130,
+      "reason": "The standard-library function declarations are KerML/foundation syntax outside this SysML-only AST scope."
+    },
+    {
+      "slide": 132,
+      "reason": "The standard-library function declarations are KerML/foundation syntax outside this SysML-only AST scope."
+    },
+    {
+      "slide": 134,
+      "reason": "The standard-library function declarations are KerML/foundation syntax outside this SysML-only AST scope."
+    },
+    {
+      "slide": 135,
+      "reason": "The standard-library function declarations are KerML/foundation syntax outside this SysML-only AST scope."
+    },
+    {
+      "slide": 136,
+      "reason": "The standard-library function declarations are KerML/foundation syntax outside this SysML-only AST scope."
+    },
+    {
+      "slide": 173,
+      "reason": "The rendered panel uses the historical alias `as` spelling; the current SysML grammar requires `for`."
+    }
+  ],
+  "slides": [
+    {
+      "id": "slide-005",
+      "slide": 5,
+      "pdf_page": 5,
+      "title": "Packages – Members",
+      "source_kind": "textual_code_panel",
+      "code": "package 'Package Example' {\n  public import ISQ::TorqueValue;\n  private import ScalarValues::*;\n  part def Automobile;\n  alias Car for Automobile;\n alias Torque for ISQ::TorqueValue;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_005.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "Visual/text-layer correction: \"package 'Package Example' {\" -> \"package 'Package Example' {\".",
+        "The PDF renders the closing quote typographically; normalized to an ASCII quote."
+      ]
+    },
+    {
+      "id": "slide-006",
+      "slide": 6,
+      "pdf_page": 6,
+      "title": "Packages – Visibility",
+      "source_kind": "textual_code_panel",
+      "code": "package 'Package Example' {\n  public import ISQ::TorqueValue;\n  private import ScalarValues::*;\n  private part def Automobile;\n  public alias Car for Automobile;\n alias Torque for ISQ::TorqueValue;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_006.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-007",
+      "slide": 7,
+      "pdf_page": 7,
+      "title": "Comments",
+      "source_kind": "textual_code_panel",
+      "code": "package 'Comment Example' {\n  /* This is comment, part of the model,\n   * annotating (by default) it's owning package. */\n  comment Comment1 /* This is a named comment. */\n  comment about Automobile\n  /* This is an unnamed comment, annotating an\n   * explicitly specified element.\n   */\n  part def Automobile;\n  alias Car for Automobile {\n   /* This is a comment annotating its owning\n     * element.\n     */\n  }\n\n  // This is a note. It is in the text, but not part\n  // of the model.\n  alias Torque for ISQ::TorqueValue;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_007.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "Visual/text-layer correction: \"package 'Comment Example' {\" -> \"package 'Comment Example' {\".",
+        "The PDF renders the closing quote typographically; normalized to an ASCII quote."
+      ]
+    },
+    {
+      "id": "slide-008",
+      "slide": 8,
+      "pdf_page": 8,
+      "title": "Documentation",
+      "source_kind": "textual_code_panel",
+      "code": "package 'Documentation Example' {\n doc  /* This is documentation of the owning\n       * package.\n       */\n  part def Automobile {\n   doc Document1\n      /* This is documentation of Automobile. */\n  }\n  alias Car for Automobile {\n    doc /* This is documentation of the alias. */\n  }\n  alias Torque for ISQ::TorqueValue;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_008.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-009",
+      "slide": 9,
+      "pdf_page": 9,
+      "title": "Part and Attribute Definitions",
+      "source_kind": "textual_code_panel",
+      "code": "part def Vehicle {\n  attribute mass : ScalarValues::Real;\n  part eng : Engine;\n  ref part driver : Person;\n}\nattribute def VehicleStatus {\n private import ScalarValues::*;\n attribute gearSetting : Integer;\n attribute acceleratorPosition : Real;\n}\npart def Engine;\npart def Person;",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_009.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-010",
+      "slide": 10,
+      "pdf_page": 10,
+      "title": "Generalization/Specialization",
+      "source_kind": "textual_code_panel",
+      "code": "abstract part def Vehicle;\npart def HumanDrivenVehicle specializes Vehicle {\n    ref part driver : Person;\n}\npart def PoweredVehicle :> Vehicle {\n    part eng : Engine;\n}\npart def HumanDrivenPoweredVehicle :>\n  HumanDrivenVehicle, PoweredVehicle;\npart def Engine;\npart def Person;",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_010.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-011",
+      "slide": 11,
+      "pdf_page": 11,
+      "title": "Subsetting",
+      "source_kind": "textual_code_panel",
+      "code": "part def Vehicle {\n  part parts : VehiclePart[*];\n  part eng : Engine subsets parts;\n  part trans : Transmission subsets parts;\n  part wheels : Wheel[4] :> parts;\n}\nabstract part def VehiclePart;\npart def Engine :> VehiclePart;\npart def Transmission :> VehiclePart;\npart def Wheel :> VehiclePart;",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_011.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-012",
+      "slide": 12,
+      "pdf_page": 12,
+      "title": "Redefinition",
+      "source_kind": "textual_code_panel",
+      "code": "part def Vehicle {\n  part eng : Engine;\n}\npart def SmallVehicle :> Vehicle {\n  part smallEng : SmallEngine redefines eng;\n}\npart def BigVehicle :> Vehicle {\n  part bigEng : BigEngine :>> eng;\n}\npart def Engine {\n  part cyl : Cylinder[4..6];\n}\npart def SmallEngine :> Engine {\n  part redefines cyl[4];\n}\npart def BigEngine :> Engine {\n  part redefines cyl[6];\n}\npart def Cylinder;",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_012.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-013",
+      "slide": 13,
+      "pdf_page": 13,
+      "title": "Enumeration Definitions (1)",
+      "source_kind": "textual_code_panel",
+      "code": "enum def TrafficLightColor {\n  enum green;\n  enum yellow;\n  enum red;\n}\npart def TrafficLight {\n  attribute currentColor : TrafficLightColor;\n}\npart def TrafficLightGo specializes TrafficLight {\n  attribute redefines currentColor = TrafficLightColor::green;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_013.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-014",
+      "slide": 14,
+      "pdf_page": 14,
+      "title": "Enumeration Definitions (2)",
+      "source_kind": "textual_code_panel",
+      "code": "attribute def ClassificationLevel {\n  attribute code : String;\n  attribute color : TrafficLightColor;\n}\nenum def ClassificationKind specializes ClassificationLevel {\n  unclassified {\n    :>> code = \"uncl\";\n    :>> color = TrafficLightColor::green;\n  }\n  confidential {\n    :>> code = \"conf\";\n    :>> color = TrafficLightColor::yellow;\n  }\n  secret {\n    :>> code = \"secr\";\n    :>> color = TrafficLightColor::red;\n  }\n}\nenum def GradePoints :> Real {\n  A = 4.0;\n  B = 3.0;\n  C = 2.0;\n  D = 1.0;\n  F = 0.0;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_014.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-015",
+      "slide": 15,
+      "pdf_page": 15,
+      "title": "Parts (1)",
+      "source_kind": "textual_code_panel",
+      "code": "// Definitions\npart def Vehicle {\n  part eng : Engine;\n}\npart def Engine {\n  part cyl : Cylinder[4..6];\n}\npart def Cylinder;\n// Usages\npart smallVehicle : Vehicle {\n  part redefines eng {\n    part redefines cyl[4];\n  }\n}\npart bigVehicle : Vehicle {\n  part redefines eng {\n    part redefines cyl[6];\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_015.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-016",
+      "slide": 16,
+      "pdf_page": 16,
+      "title": "Parts (2)",
+      "source_kind": "textual_code_panel",
+      "code": "// Definitions\npart def Vehicle;\npart def Engine;\npart def Cylinder;\n// Usages\npart vehicle : Vehicle {\n  part eng : Engine {\n    part cyl : Cylinder[4..6];\n  }\n}\npart smallVehicle :> vehicle {\n  part redefines eng {\n    part redefines cyl[4];\n  }\n}\npart bigVehicle :> vehicle {\n  part redefines eng {\n    part redefines cyl[6];\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_016.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-017",
+      "slide": 17,
+      "pdf_page": 17,
+      "title": "Items",
+      "source_kind": "textual_code_panel",
+      "code": "item def Fuel;\nitem def Person;\npart def Vehicle {\n  attribute mass : Real;\n  ref item driver : Person;\n  part fuelTank {\n    item fuel: Fuel;\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_017.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-018",
+      "slide": 18,
+      "pdf_page": 18,
+      "title": "Connections (1)",
+      "source_kind": "textual_code_panel",
+      "code": "connection def PressureSeat {\n  end [1] part bead : TireBead;\n  end [1] part mountingRim: TireMountingRim;\n}\npart wheelHubAssembly : WheelHubAssembly {\n  part wheel : WheelAssembly[1] {\n    part t : Tire[1] {\n      part bead : TireBead[2];\n    }\n   part w: Wheel[1] {\n      part rim : TireMountingRim[2];\n      part mountingHoles : LugBoltMountingHole[5];\n    }\n    connection : PressureSeat\n      connect bead references t.bead\n      to mountingRim references w.rim;\n  }\n  part lugBoltJoints : LugBoltJoint[0..5];\n  part hub : Hub[1] {\n    part h : LugBoltThreadableHole[5];\n  }\n  connect [0..1] lugBoltJoints to [1] wheel.w.mountingHoles;\n  connect [0..1] lugBoltJoints to [1] hub.h;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_018.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-020",
+      "slide": 20,
+      "pdf_page": 20,
+      "title": "Ports",
+      "source_kind": "textual_code_panel",
+      "code": "port def FuelOutPort {\n  attribute temperature : Temp;\n  out item fuelSupply : Fuel;\n  in item fuelReturn : Fuel;\n}\nport def FuelInPort {\n  attribute temperature : Temp;\n  in item fuelSupply : Fuel;\n  out item fuelReturn : Fuel;\n}\npart def FuelTankAssembly {\n  port fuelTankPort : FuelOutPort;\n}\npart def Engine {\n  port engineFuelPort : FuelInPort;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_020.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-021",
+      "slide": 21,
+      "pdf_page": 21,
+      "title": "Port Conjugation",
+      "source_kind": "textual_code_panel",
+      "code": "port def FuelPort {\n  attribute temperature : Temp;\n  out item fuelSupply : Fuel;\n  in item fuelReturn : Fuel;\n}\npart def FuelTankAssembly {\n  port fuelTankPort : FuelPort;\n}\npart def Engine {\n  port engineFuelPort : ~FuelPort;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_021.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-022",
+      "slide": 22,
+      "pdf_page": 22,
+      "title": "Interfaces",
+      "source_kind": "textual_code_panel",
+      "code": "interface def FuelInterface {\n  end port supplierPort : FuelOutPort;\n  end port consumerPort : FuelInPort;\n}\npart vehicle : Vehicle {\n  part tankAssy : FuelTankAssembly;\n  part eng : Engine;\n  interface : FuelInterface connect\n    supplierPort ::> tankAssy.fuelTankPort to\n    consumerPort ::> eng.engineFuelPort;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_022.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-023",
+      "slide": 23,
+      "pdf_page": 23,
+      "title": "Interface Decomposition",
+      "source_kind": "textual_code_panel",
+      "code": "interface def WaterDelivery {\n  end [1] port suppliedBy : SpigotBank {\n    port hot : Spigot;\n    port cold : Spigot;\n  }\n  end [1..*] port deliveredTo : Faucet {\n    port hot : FaucetInlet;\n    port cold : FaucetInlet;\n  }\n  connect suppliedBy.hot to deliveredTo.hot;\n  connect suppliedBy.cold to deliveredTo.cold;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_023.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-024",
+      "slide": 24,
+      "pdf_page": 24,
+      "title": "Binding Connections",
+      "source_kind": "textual_code_panel",
+      "code": "part tank : FuelTankAssembly {\n  port redefines fuelTankPort {\n    out item redefines fuelSupply;\n    in item redefines fuelReturn;\n  }\n  bind fuelTankPort.fuelSupply = pump.pumpOut;\n  bind fuelTankPort.fuelReturn = tank.fuelIn;\n  part pump : FuelPump {\n    out item pumpOut : Fuel;\n    in item pumpIn : Fuel;\n  }\n  part tank : FuelTank {\n    out item fuelOut : Fuel;\n    in item fuelIn : Fuel;\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_024.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-025",
+      "slide": 25,
+      "pdf_page": 25,
+      "title": "Binding Connections – Feature Values",
+      "source_kind": "textual_code_panel",
+      "code": "part tank : FuelTankAssembly {\n  port redefines fuelTankPort {\n    out item redefines fuelSupply = pump.pumpOut;\n    in item redefines fuelReturn;\n  }\n  part pump : FuelPump {\n    out item pumpOut : Fuel;\n    in item pumpIn : Fuel;\n  }\n  part tank : FuelTank {\n    out item fuelOut : Fuel;\n    in item fuelIn : Fuel = fuelTankPort.fuelReturn;\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_025.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-027",
+      "slide": 27,
+      "pdf_page": 27,
+      "title": "Flow Usage",
+      "source_kind": "textual_code_panel",
+      "code": "part vehicle : Vehicle {\n  part tankAssy : FuelTankAssembly;\n  part eng : Engine;\n  flow of Fuel\n  from tankAssy.fuelTankPort.fuelSupply\n    to eng.engineFuelPort.fuelSupply;\n  flow of Fuel\n  from eng.engineFuelPort.fuelReturn\n    to tankAssy.fuelTankPort.fuelReturn;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_027.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-028",
+      "slide": 28,
+      "pdf_page": 28,
+      "title": "Flows in Interfaces",
+      "source_kind": "textual_code_panel",
+      "code": "interface def FuelInterface {\n  end supplierPort : FuelOutPort;\n  end consumerPort : FuelInPort;\n  flow supplierPort.fuelSupply to consumerPort.fuelSupply;\n  flow consumerPort.fuelReturn to supplierPort.fuelReturn;\n}\npart vehicle : Vehicle {\n  part tankAssy : FuelTankAssembly;\n  part eng : Engine;\n  interface : FuelInterface connect\n    supplierPort ::> tankAssy.fuelTankPort to\n    consumerPort ::> eng.engineFuelPort;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_028.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-029",
+      "slide": 29,
+      "pdf_page": 29,
+      "title": "Flow Definitions",
+      "source_kind": "textual_code_panel",
+      "code": "flow def FuelFlow {\n ref :>> payload : Fuel;\n  end port fuelOut : FuelOutPort;\n  end port fuelIn : FuelInPort;\n}\npart vehicle : Vehicle {\n  part tankAssy : FuelTankAssembly;\n  part eng : Engine;\n  flow : FuelFlow of Fuel\n  from tankAssy.fuelTankPort.fuelSupply\n    to eng.engineFuelPort.fuelSupply;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_029.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-030",
+      "slide": 30,
+      "pdf_page": 30,
+      "title": "Action Definition",
+      "source_kind": "textual_code_panel",
+      "code": "action def Focus{ in scene : Scene; out image : Image; }\naction def Shoot{ in image : Image; out picture : Picture; }\naction def TakePicture {\n  in scene : Scene;\n  out picture : Picture;\n  bind focus.scene = scene;\n  action focus : Focus { in scene; out image; };\n  flow focus.image to shoot.image;\n  action shoot : Shoot { in image; out picture; }\n  bind shoot.picture = picture;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_030.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-031",
+      "slide": 31,
+      "pdf_page": 31,
+      "title": "Action Succession (1)",
+      "source_kind": "textual_code_panel",
+      "code": "action def Focus{ in scene : Scene; out image : Image; }\naction def Shoot{ in image : Image; out picture : Picture; }\naction def TakePicture {\n in scene : Scene;\n  out picture : Picture;\n  bind focus.scene = scene;\n  action focus : Focus { in scene; out image; }\n  flow focus.image to shoot.image;\n  first focus then shoot;\n  action shoot : Shoot { in image; out picture; }\n  bind shoot.picture = picture;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_031.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-032",
+      "slide": 32,
+      "pdf_page": 32,
+      "title": "Action Succession (2)",
+      "source_kind": "textual_code_panel",
+      "code": "action def Focus{ in scene : Scene; out image : Image; }\naction def Shoot{ in image : Image; out picture : Picture; }\naction def TakePicture {\n in scene : Scene;\n  out picture : Picture;\n  bind focus.scene = scene;\n  action focus : Focus { in scene; out image; }\n  succession flow focus.image to shoot.image;\n  action shoot : Shoot { in image; out picture; }\n  bind shoot.picture = picture;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_032.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-033",
+      "slide": 33,
+      "pdf_page": 33,
+      "title": "Action Notation Shorthands",
+      "source_kind": "textual_code_panel",
+      "code": "action def Focus{ in scene : Scene; out image : Image; }\naction def Shoot{ in image : Image; out picture : Picture; }\n\naction def TakePicture {\n in scene : Scene;\n  action focus : Focus {\n    in scene = TakePicture::scene;\n    out image;\n  }\n flow focus.image to shoot.image;\n  then action shoot : Shoot {\n    in image;\n    out picture;\n  }\n  out picture : Picture = shoot.picture;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_033.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-034",
+      "slide": 34,
+      "pdf_page": 34,
+      "title": "Action Decomposition",
+      "source_kind": "textual_code_panel",
+      "code": "action def Focus{ in scene : Scene; out image : Image; }\naction def Shoot{ in image : Image; out picture : Picture; }\naction def TakePicture{in scene : Scene; out picture : Picture;}\naction takePicture : TakePicture {\n  in scene;\n  action focus : Focus {\n    in scene = takePicture::scene;\n    out image;\n  }\n flow focus.image to shoot.image;\n  then action shoot : Shoot {\n    in image;\n    out picture;\n  }\n  out picture = shoot.picture;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_034.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-035",
+      "slide": 35,
+      "pdf_page": 35,
+      "title": "Conditional Succession (1)",
+      "source_kind": "textual_code_panel",
+      "code": "action takePicture : TakePicture {\n  in scene;\n  action focus : Focus {\n    in scene = takePicture::scene;\n    out image;\n  }\n  first focus\n    if focus.image.isFocused then shoot;\n flow focus.image to shoot.image;\n  action shoot : Shoot {\n    in image;\n    out picture;\n  }\n  out picture = shoot.picture;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_035.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The panel intentionally relies on the surrounding action definitions and named `shoot` usage."
+      ]
+    },
+    {
+      "id": "slide-036",
+      "slide": 36,
+      "pdf_page": 36,
+      "title": "Conditional Succession (2)",
+      "source_kind": "textual_code_panel",
+      "code": "action takePicture : TakePicture {\n  in scene;\n  out picture;\n  action focus : Focus {\n    in scene = takePicture::scene;\n    out image;\n  }\n  if focus.image.isFocused then shoot;\n flow focus.image to shoot.image;\n  action shoot : Shoot {\n    in image;\n    out picture;\n  }\n  out picture = shoot.picture;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_036.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The panel intentionally relies on the surrounding action definitions and named `shoot` usage."
+      ]
+    },
+    {
+      "id": "slide-037",
+      "slide": 37,
+      "pdf_page": 37,
+      "title": "Merge Nodes",
+      "source_kind": "textual_code_panel",
+      "code": "action takePicture : TakePicture {\n  first start;\n  then merge continue;\n  then action trigger { out item scene; }\n flow trigger.scene to focus.scene;\n  then action focus : Focus {\n    in scene;\n    out image;\n  }\n  flow focus.image to shoot.image;\n  then action shoot : Shoot {\n    in image;\n    out picture;\n  }\n flow shoot.picture to display.picture;\n  then action display {\n    in picture;\n  }\n  then continue;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_037.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-038",
+      "slide": 38,
+      "pdf_page": 38,
+      "title": "Decision Nodes",
+      "source_kind": "textual_code_panel",
+      "code": "action def ChargeBattery {\n first start;\n  then merge continueCharging;\n  then action monitor : MonitorBattery {\n    out batteryCharge : Real;\n  }\n  then decide;\n    if monitor.batteryCharge < 100 then addCharge;\n    if monitor.batteryCharge >= 100 then endCharging;\n  action addCharge : AddCharge {\n    in charge = monitor.batteryCharge;\n  }\n  then continueCharging;\n  action endCharging : EndCharging;\n\n  then done;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_038.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-039",
+      "slide": 39,
+      "pdf_page": 39,
+      "title": "Control Structures",
+      "source_kind": "textual_code_panel",
+      "code": "action def ChargeBattery {\n  loop action charging {\n    action monitor : MonitorBattery {\n      out charge;\n    }\n    then if monitor.charge < 100 {\n      action addCharge : AddCharge {\n        in charge = monitor.charge;\n      }\n    }\n  } until charging.monitor.charge >= 100;\n  then action endCharging : EndCharging;\n  then done;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_039.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-040",
+      "slide": 40,
+      "pdf_page": 40,
+      "title": "Fork and Join Nodes",
+      "source_kind": "textual_code_panel",
+      "code": "action def Brake {\n  action turnOn;\n  then fork;\n    then monitorBrakePedal;\n    then monitorTraction;\n    then braking;\n  action monitorBrakePedal : MonitorBrakePedal {\n   out brakePressure; }\n  then joinNode;\n  action monitorTraction : MonitorTraction {\n    out modulationFrequency; }\n  then joinNode;\n flow monitorBrakePedal.brakePressure to\n      braking.breakPressure;\n flow monitorTraction.modulationFrequency to\n       braking.modulationFrequency;\n  action braking : Braking {\n    in brakePressure;\n    in modulationFrequency; }\n  then joinNode;\n  join joinNode;\n  then done;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_040.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-041",
+      "slide": 41,
+      "pdf_page": 41,
+      "title": "Performed Actions",
+      "source_kind": "textual_code_panel",
+      "code": "part camera : Camera {\n  perform action takePhoto[*] ordered\n    references takePicture;\n  part f : AutoFocus {\n    perform takePhoto.focus;\n  }\n  part i : Imager {\n    perform takePhoto.shoot;\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_041.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-042",
+      "slide": 42,
+      "pdf_page": 42,
+      "title": "Terminate Actions (1)",
+      "source_kind": "textual_code_panel",
+      "code": "action def MonitoredActivity {\nfirst start;\nthen fork;\n  then performCriticalActivity;\n  then waitForTimeOut;\naction performCriticalActivity {\n  perform monitorCriticalActivity;\n  perform criticalActivity;\n  then terminate;\n}\nthen stop;\naction waitForTimeOut;\nthen stop;\naction stop terminate;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_042.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-043",
+      "slide": 43,
+      "pdf_page": 43,
+      "title": "Terminate Actions (2)",
+      "source_kind": "textual_code_panel",
+      "code": "part def Processor {\nref action workflowProcess : WorkflowProcess;\naction internalProcess {\n// ...\n}\n}\naction terminateProcessing {\nin processor : Processor;\nterminate processor.workflowProcess;\nterminate processor;\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-044",
+      "slide": 44,
+      "pdf_page": 44,
+      "title": "Assignment Actions",
+      "source_kind": "textual_code_panel",
+      "code": "action def ComputeMotion {\n  in attribute powerProfile :> ISQ::power[*];\n  in attribute vehicleMass :> ISQ::mass;\n  in attribute initialPosition :> ISQ::length;\n  in attribute initialSpeed :> ISQ::speed;\n  in attribute deltaT :> ISQ::time;\n  out attribute positions :> ISQ::length[*] := ( );\n  private attribute position := initialPosition;\n  private attribute speed := initialSpeed;\n  for vehiclePower in powerProfile {\n    perform action dynamics : StraightLineDynamics {\n      in power = vehiclePower;\n      in mass = vehicleMass;\n      in delta_t = deltaT;\n      in x_in = position; in v_in = speed;\n      out x_out; out v_out;\n    }\n    then assign position := dynamics.x_out;\n    then assign speed := dynamics.v_out;\n    then assign positions :=\n      positions->including(position);\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_044.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-045",
+      "slide": 45,
+      "pdf_page": 45,
+      "title": "Asynchronous Messaging",
+      "source_kind": "textual_code_panel",
+      "code": "action takePicture : TakePicture {\n  action trigger accept scene : Scene;\n  then action focus : Focus {\n    in scene = trigger.scene;\n    out image;\n  }\n flow from focus.image to shoot.image;\n  then action shoot : Shoot {\n    in image;\n    out picture;\n  }\n  then send new Show(shoot.picture) to screen;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_045.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-046",
+      "slide": 46,
+      "pdf_page": 46,
+      "title": "Asynchronous Messaging through Ports",
+      "source_kind": "textual_code_panel",
+      "code": "part camera : Camera {\n  port viewPort;\n  port displayPort;\n  action takePicture : TakePicture {\n    action trigger accept scene : Scene via viewPort;\n    then action focus : Focus {\n      in scene = trigger.scene;\n      out image;\n    }\n    flow from focus.image to shoot.image;\n    then action shoot : Shoot {\n      in image;\n      out picture;\n    }\n    then send new Show(shoot.picture) via displayPort;\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_046.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-047",
+      "slide": 47,
+      "pdf_page": 47,
+      "title": "Opaque Actions",
+      "source_kind": "textual_code_panel",
+      "code": "action def UpdateSensors {\n  in sensors : Sensor[*];\nlanguage \"Alf\"\n/*\n * for (sensor in sensors) {\n *     if (sensor.ready) {\n *         Update(sensor);\n *     }\n * }\n */\n}",
+      "completeness": "external_language",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The language body is Alf text inside a SysML opaque action; it is not a standalone SysML fixture."
+      ]
+    },
+    {
+      "id": "slide-048",
+      "slide": 48,
+      "pdf_page": 48,
+      "title": "State Definitions (1)",
+      "source_kind": "textual_code_panel",
+      "code": "state def VehicleStates {\n  first start then off;\n  state off;\n  transition off_to_starting\n    first off\n    accept VehicleStartSignal\n    then starting;\n  state starting;\n  transition starting_to_on\n    first starting\n    accept VehicleOnSignal\n    then on;\n  state on;\n  transition on_to_off\n    first on\n    accept VehicleOffSignal\n    then off;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_048.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-049",
+      "slide": 49,
+      "pdf_page": 49,
+      "title": "State Definitions (2)",
+      "source_kind": "textual_code_panel",
+      "code": "state def VehicleStates {\n  first start then off;\n  state off;\n  accept VehicleStartSignal\n    then starting;\n  state starting;\n  accept VehicleOnSignal\n    then on;\n  state on;\n  accept VehicleOffSignal\n    then off;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_049.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-050",
+      "slide": 50,
+      "pdf_page": 50,
+      "title": "State Decomposition",
+      "source_kind": "textual_code_panel",
+      "code": "state def VehicleStates;\nstate vehicleStates : VehicleStates {\n  first start then off;\n  state off;\n  accept VehicleStartSignal\n    then starting;\n  state starting;\n  accept VehicleOnSignal\n    then on;\n  state on;\n  accept VehicleOffSignal\n    then off;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_050.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-051",
+      "slide": 51,
+      "pdf_page": 51,
+      "title": "Concurrent States",
+      "source_kind": "textual_code_panel",
+      "code": "state def VehicleStates;\nstate vehicleStates : VehicleStates parallel {\n state operationalStates {\n    first start then off;\n    state off;\n    accept VehicleStartSignal\n      then starting;\n    state starting;\n    accept VehicleOnSignal\n      then on;\n    state on;\n    accept VehicleOffSignal\n      then off;\n  }\n state healthStates {\n   ...\n  }\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-052",
+      "slide": 52,
+      "pdf_page": 52,
+      "title": "State Entry, Do and Exit Actions",
+      "source_kind": "textual_code_panel",
+      "code": "action performSelfTest{in vehicle : Vehicle;}\nstate def VehicleStates{in operatingVehicle : Vehicle;}\nstate vehicleStates : VehicleStates {\n in operatingVehicle : Vehicle;\n  first start then off;\n  state off;\n  accept VehicleStartSignal\n    then starting;\n  state starting;\n  accept VehicleOnSignal\n    then on;\n  state on {\n    entry performSelfTest\n      { in vehicle = operatingVehicle; }\n    do action providePower { ... }\n    exit action applyParkingBrake { ... }\n  }\n  accept VehicleOffSignal\n    then off;\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-053",
+      "slide": 53,
+      "pdf_page": 53,
+      "title": "Transition Guards and Effect Actions",
+      "source_kind": "textual_code_panel",
+      "code": "action performSelfTest{in vehicle : Vehicle;}\nstate def VehicleStates {\n  in operatingVehicle : Vehicle;\n in controller : VehicleController; }\nstate vehicleStates : VehicleStates {\n in operatingVehicle : Vehicle;\n in controller : VehicleController;\n  first start then off;\n  state off;\n  accept VehicleStartSignal\n    if operatingVehicle.brakePedalDepressed\n    do send new ControllerStartSignal() to controller\n    then starting;\n  state starting;\n  accept VehicleOnSignal\n    then on;\n  state on { ... }\n  accept VehicleOffSignal\n    then off;\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-054",
+      "slide": 54,
+      "pdf_page": 54,
+      "title": "Change and Time Triggers",
+      "source_kind": "textual_code_panel",
+      "code": "action senseTemperature { out temp : TemperatureValue; }\nstate healthStates {\n  in vehicle : Vehicle;\n  in controller : VehicleController;\n  do senseTemperature;\n first start then normal;\n  state normal;\n  accept at vehicle.maintenanceTime\n    then maintenance;\n  accept when senseTemperature.temp > vehicle.maxTemperature\n    do send new OverTemp() to controller\n    then degraded;\n  state maintenance {\n    entry assign vehicle.maintenanceTime :=\n      vehicle.maintenanceTime + vehicle.maintenanceInterval;\n  }\n  accept after 48 [h]\n    then normal;\n  state degraded;\n  accept when senseTemperature.temp <= vehicle.maxTemperature\n    then normal;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_054.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-055",
+      "slide": 55,
+      "pdf_page": 55,
+      "title": "Local Clocks",
+      "source_kind": "textual_code_panel",
+      "code": "part def Server {\npart :>> localClock = new Time::Clock();\nattribute today : String;\nport requestPort;\nstate ServerBehavior {\nfirst start then off;\nstate off;\naccept Start via requestPort\n  then waiting;\nstate waiting;\naccept request : Request via requestPort\n  then responding;\naccept at new Time::Iso8601DateTime(today + \"11:59:00\")\n  then off;\nstate responding;\naccept after 5 [SI::min]\n  then waiting;\n}\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_055.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-056",
+      "slide": 56,
+      "pdf_page": 56,
+      "title": "Exhibited States",
+      "source_kind": "textual_code_panel",
+      "code": "part vehicle : Vehicle {\n  part vehicleController : VehicleController;\n  exhibit vehicleStates {\n   in operatingVehicle = vehicle;\n   in controller = vehicleController;\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_056.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-057",
+      "slide": 57,
+      "pdf_page": 57,
+      "title": "Occurrences, Time Slices and Snapshots (1)",
+      "source_kind": "textual_code_panel",
+      "code": "attribute def Date;\nitem def Person;\npart def Vehicle {\n  timeslice assembly;\n  first assembly then delivery;\n  snapshot delivery;\n first delivery then ownership;\n  timeslice ownership[0..*] ordered;\n  snapshot junked = done;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_057.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-058",
+      "slide": 58,
+      "pdf_page": 58,
+      "title": "Occurrences, Time Slices and Snapshots (2)",
+      "source_kind": "textual_code_panel",
+      "code": "part def Vehicle {\n ...\n  snapshot delivery {\n    attribute deliveryDate : Date;\n  }\n  then timeslice ownership[0..*] ordered {\n    snapshot sale = start;\n    ref item owner : Person[1];\n    timeslice driven[0..*] {\n      ref item driver : Person[1];\n    }\n  }\n  snapshot junked = done;\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-059",
+      "slide": 59,
+      "pdf_page": 59,
+      "title": "Event Occurrences",
+      "source_kind": "textual_code_panel",
+      "code": "part driver : Driver {\n  event occurrence setSpeedSent;\n}\npart vehicle : Vehicle {\n  part cruiseController : CruiseController {\n    event occurrence setSpeedReceived;\n    then event occurrence sensedSpeedReceived;\n    then event occurrence fuelCommandSent;\n  }\n  part speedometer : Speedometer {\n    event occurrence sensedSpeedSent;\n  }\n  part engine : Engine {\n    event occurrence fuelCommandReceived;\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_059.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-060",
+      "slide": 60,
+      "pdf_page": 60,
+      "title": "Messages (1)",
+      "source_kind": "textual_code_panel",
+      "code": "occurrence def CruiseControlInteraction {\n  ref part :>> driver;\n  ref part :>> vehicle;\n  message setSpeedMessage of SetSpeed\n    from driver.setSpeedSent\n    to vehicle.cruiseController.setSpeedReceived;\n  message sensedSpeedMessage of SensedSpeed\n    from vehicle.speedometer.sensedSpeedSent\n    to vehicle.cruiseController.sensedSpeedReceived;\n  message fuelCommandMessage of FuelCommand\n    from vehicle.cruiseController.fuelCommandSent\n    to vehicle.engine.fuelCommandReceived;\n  first setSpeedMessage then sensedSpeedMessage;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_060.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-061",
+      "slide": 61,
+      "pdf_page": 61,
+      "title": "Messages (2)",
+      "source_kind": "textual_code_panel",
+      "code": "occurrence def CruiseControlInteraction {\n  ref part driver : Driver {\n    event setSpeedMessage.sourceEvent;\n  }\n  ref part vehicle : Vehicle {\n    part cruiseController : CruiseController {\n      event setSpeedMessage.targetEvent;\n      then event sensedSpeedMessage.targetEvent;\n      then event fuelCommandMessage.sourceEvent;\n    }\n    part speedometer : Speedometer {\n      event sensedSpeedMessage.sourceEvent;\n    }\n    part engine : Engine {\n      event fuelCommandMessage.targetEvent;\n    }\n  }\n  message setSpeedMessage of SetSpeed;\n  then message sensedSpeedMessage of SensedSpeed;\n  message fuelCommandMessage of FuelCommand;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_061.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-063",
+      "slide": 63,
+      "pdf_page": 63,
+      "title": "Interaction Realization by Actions (1)",
+      "source_kind": "textual_code_panel",
+      "code": "part driver_a : Driver {\n  perform action driverBehavior {\n    send new SetSpeed() to vehicle_a;\n  }\n}\npart vehicle_a : Vehicle {\n  part cruiseController_a : CruiseController {\n    perform action controllerBehavior {\n      accept SetSpeed via vehicle_a;\n      then accept SensedSpeed via cruiseController_a;\n      then send new FuelCommand() to engine_a;\n    }\n  }\n  part speedometer_a : Speedometer {\n    perform action speedometerBehavior {\n      send new SensedSpeed() to cruiseController_a;\n    }\n  }\n  part engine_a : Engine {\n    perform action engineBehavior {\n      accept FuelCommand via engine_a;\n    }\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_063.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-065",
+      "slide": 65,
+      "pdf_page": 65,
+      "title": "Interaction Realization by Flows (1)",
+      "source_kind": "textual_code_panel",
+      "code": "part driver_b : Driver {\n  port setSpeedPort {\n    out setSpeed : SetSpeed;\n  }\n}\ninterface driver_b.setSpeedPort to vehicle_b.setSpeedPort {\n  flow of SetSpeed from driver_b.setSpeedPort.setSpeed\n     to vehicle_b.setSpeedPort.setSpeed;\n}\npart vehicle_b : Vehicle {\n  port setSpeedPort {\n    in setSpeed : SetSpeed;\n  }\n  part cruiseController_b : CruiseController {\n    port setSpeedPort {\n      in setSpeed : SetSpeed = vehicle_b.setSpeedPort.setSpeed;\n    }\n    port sensedSpeedPort {\n      in sensedSpeed : SetSpeed;\n    }\n   ...\n  }\n  flow of SensedSpeed from speedometer_b.sensedSpeedPort.sensedSpeed\n    to cruiseController_b.sensedSpeedPort.sensedSpeed;\n  part speedometer_b : Speedometer {\n    port sensedSpeedPort {\n      out sensedSpeed : SensedSpeed;\n    }\n  }\n...",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-067",
+      "slide": 67,
+      "pdf_page": 67,
+      "title": "Message Payloads",
+      "source_kind": "textual_code_panel",
+      "code": "message setSpeedMessage of SetSpeed\n  from driver.setSpeedSent\n  to vehicle.cruiseController.setSpeedReceived;\nthen message sensedSpeedMessage of SensedSpeed\n  from vehicle.speedometer.sensedSpeedSent\n  to vehicle.cruiseController.sensedSpeedReceived;\nthen message fuelCommandMessage of fuelCommand : FuelCommand\n  from vehicle.cruiseController.fuelCommandSent\n  to vehicle.engineController.fuelCommandReceived;\nthen message fuelCommandForwardingMessage\n  of fuelCommand : FuelCommand = fuelCommandMessage.fuelCommand\n  from vehicle.engineController.fuelCommandForwarded\n  to vehicle.engine.fuelCommandReceived;",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_067.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-068",
+      "slide": 68,
+      "pdf_page": 68,
+      "title": "Individuals and Snapshots (1)",
+      "source_kind": "textual_code_panel",
+      "code": "individual part def Vehicle_1 :> Vehicle {\n  snapshot part vehicle_1_t0 : Vehicle_1 {\n    :>> mass = 2000.0;\n    :>> status {\n      :>> gearSetting = 0;\n      :>> acceleratorPosition = 0.0;\n    }\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_068.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-069",
+      "slide": 69,
+      "pdf_page": 69,
+      "title": "Individuals and Snapshots (2)",
+      "source_kind": "textual_code_panel",
+      "code": "individual part def Vehicle_1 :> Vehicle {\n  snapshot part vehicle_1_t0 : Vehicle_1 {\n    :>> mass = 2000.0;\n    :>> status {\n      :>> gearSetting = 0;\n      :>> acceleratorPosition = 0.0;\n    }\n  }\n  snapshot part vehicle_1_t1 : Vehicle_1 {\n    :>> mass = 1500.0;\n    :>> status {\n      :>> gearSetting = 2;\n      :>> acceleratorPosition = 0.5;\n    }\n  }\n  first vehicle_1_t0 then vehicle_1_t1;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_069.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-070",
+      "slide": 70,
+      "pdf_page": 70,
+      "title": "Individuals and Roles",
+      "source_kind": "textual_code_panel",
+      "code": "individual part def Vehicle_1 :> Vehicle {\n  part leftFrontWheel : Wheel;\n  part rightFrontWheel : Wheel;\n}\nindividual part def Wheel_1 :> Wheel;\nindividual part vehicle_1 : Vehicle_1 {\n  snapshot part vehicle_1_t0 {\n    snapshot leftFrontWheel_t0 : Wheel_1 :>> leftFrontWheel;\n  }\n  then snapshot part vehicle_1_t1 {\n    snapshot rightFrontWheel_t1 : Wheel_1 :>> rightFrontWheel;\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_070.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-071",
+      "slide": 71,
+      "pdf_page": 71,
+      "title": "Individuals and Time Slices",
+      "source_kind": "textual_code_panel",
+      "code": "individual item def Alice :> Person;\nindividual item def Bob :> Person;\nindividual part : Vehicle_1 {\n  timeslice aliceDriving {\n    ref individual item :>> driver : Alice;\n    snapshot :>> start {\n      :>> mass = 2000.0;\n    }\n    snapshot :>> done {\n      :>> mass = 1500.0;\n    }\n  }\n  then timeslice bobDriving {\n    ref individual item :>> driver : Bob;\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_071.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-072",
+      "slide": 72,
+      "pdf_page": 72,
+      "title": "Expressions and Feature Values",
+      "source_kind": "textual_code_panel",
+      "code": "package MassRollup1 {\n  private import ScalarFunctions::*;\n  part def MassedThing {\n    attribute simpleMass :> ISQ::mass;\n    attribute totalMass :> ISQ::mass;\n  }\n  part simpleThing : MassedThing {\n    attribute :>> totalMass = simpleMass;\n  }\n  part compositeThing : MassedThing {\n    part subcomponents: MassedThing[*];\n    attribute :>> totalMass =\n      simpleMass + sum(subcomponents.totalMass);\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_072.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-073",
+      "slide": 73,
+      "pdf_page": 73,
+      "title": "Car Mass Rollup Example (1)",
+      "source_kind": "textual_code_panel",
+      "code": "private import ScalarValues::*;\nprivate import MassRollup1::*;\npart def CarPart :> MassedThing {\n  attribute serialNumber : String;\n}\npart car: CarPart :> compositeThing {\n  attribute vin :>> serialNumber;\n  part carParts : CarPart[*] :>> subcomponents;\n  part engine :> simpleThing, carParts { ... }\n  part transmission :> simpleThing, carParts { ... }\n}\n// Example usage\nprivate import SI::kg;\npart c :> car {\n  attribute :>> simpleMass = 1000[kg];\n  part :>> engine {\n    attribute :>> simpleMass = 100[kg];\n  }\n  part attribute transmission {\n    attribute :>> simpleMass = 50[kg];\n  }\n}\n// c.totalMass --> 1150.0[kg]",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger.",
+        "The panel is one half of a two-slide worked example; pair with the adjacent slide for full semantic context."
+      ]
+    },
+    {
+      "id": "slide-074",
+      "slide": 74,
+      "pdf_page": 74,
+      "title": "Default Values",
+      "source_kind": "textual_code_panel",
+      "code": "package MassRollup2 {\n  private import ScalarFunctions::*;\n  part def MassedThing {\n    attribute simpleMass :> ISQ::mass;\n    attribute totalMass :> ISQ::mass default simpleMass;\n  }\n  part compositeThing : MassedThing {\n    part subcomponents: MassedThing[*];\n    attribute :>> totalMass default mass + sum(subcomponents.totalMass);\n  }\n\n  part filteredMassThing :> compositeThing {\n   attribute minMass : ISQ::mass\n    attribute :>> totalMass =\n      sum(subcomponents.totalMass.?{in p:>ISQ::mass; p >= minMass)});\n  }\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The rendered slide visibly omits a semicolon after the `minMass` declaration and has an incomplete selector expression; retained as printed and excluded from direct fixtures."
+      ]
+    },
+    {
+      "id": "slide-075",
+      "slide": 75,
+      "pdf_page": 75,
+      "title": "Car Mass Rollup Example (2)",
+      "source_kind": "textual_code_panel",
+      "code": "private import ScalarValues::*;\nprivate import MassRollup2::*;\npart def CarPart :> MassedThing {\n  attribute serialNumber : String;\n}\npart car: CarPart :> compositeThing {\n  attribute vin :>> serialNumber;\n  part carParts : CarPart[*] :>> subcomponents;\n  part engine :> carParts { ... }\n  part transmission :> carParts { ... }\n}\n// Example usage\nprivate import SI::kg;\npart c :> car {\n  attribute :>> simpleMass = 1000[kg];\n  part :>> engine {\n    attribute :>> simpleMass = 100[kg];\n  }\n  part attribute transmission {\n    attribute :>> simpleMass = 50[kg];\n  }\n}\n// c.totalMass --> 1150.0[kg]",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "Visual/text-layer correction: 'private alarValues::*;' -> 'private import ScalarValues::*;'.",
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger.",
+        "The panel is one half of a two-slide worked example; pair with the adjacent slide for full semantic context."
+      ]
+    },
+    {
+      "id": "slide-076",
+      "slide": 76,
+      "pdf_page": 76,
+      "title": "Calculation Definitions",
+      "source_kind": "textual_code_panel",
+      "code": "calc def Power {\n in whlpwr : PowerValue;\n in Cd : Real;\n in Cf : Real;\n in tm : MassValue;\n in v : SpeedValue;\n return : PowerValue;\n  attribute drag = Cd * v;\n  attribute friction = Cf * tm * v;\n  whlpwr - drag - friction\n}\ncalc def Acceleration { in tp: PowerValue; in tm : MassValue; in v: SpeedValue;\n return : AccelerationValue = tp / (tm * v);\n}\ncalc def Velocity { in dt : TimeValue; in v0 : SpeedValue; in a : AccelValue;\n return : SpeedValue = v0 + a * dt;\n}\n\ncalc def Position (dt : TimeValue; x0 : LengthValue; v : SpeedValue;\n return : LengthValue = x0 + v * dt;\n}",
+      "completeness": "context_fragment",
+      "context_fragment": false,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The rendered calculation examples use return-expression forms and a parameter-list form that are intentionally retained as a source panel; no ellipsis is present."
+      ]
+    },
+    {
+      "id": "slide-077",
+      "slide": 77,
+      "pdf_page": 77,
+      "title": "Calculation Usages (1)",
+      "source_kind": "textual_code_panel",
+      "code": "part def VehicleDynamics {\n  attribute C_d : Real;\n  attribute C_f : Real;\n  attribute wheelPower : PowerValue;\n  attribute mass : MassValue;\n  action straightLineDynamics { in delta_t : TimeValue;\n   in v_in : SpeedValue; in x_in : LengthValue;\n    calc acc : Acceleration {\n     in tp = Power(wheelPower, C_d, C_f, mass, v_in);\n     in tm = mass;\n     in v = v_in;\n     return a;\n    }\n    calc vel : Velocity {\n     in dt = delta_t;\n     in v0 = v_in;\n     in a = acc.a;\n     return v;\n    }\n    calc pos : Position {\n     in dt = delta_t;\n     in x0 = x_in;\n     in v = vel.v;\n     return x;\n    }\n    out v_out : SpeedValue = vel.v;\n   out x_out : LengthValue = pos.x;\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_077.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-078",
+      "slide": 78,
+      "pdf_page": 78,
+      "title": "Calculation Usages (2)",
+      "source_kind": "textual_code_panel",
+      "code": "attribute def DynamicState {\n  attribute v: SpeedValue;\n  attribute x: LengthValue;\n}\npart def VehicleDynamics {\n  attribute C_d : Real;\n  attribute C_f : Real;\n  attribute wheelPower : PowerValue;\n  attribute mass : MassValue;\n\n  calc updateState {\n   in delta_t : TimeValue; in currState : DynamicState;\n    attribute totalPower : PowerValue =\n      Power(wheelPower, C_d, C_f, mass, currState.v);\n    return attribute newState : DynamicState {\n      :>> v = Velocity(delta_t, currState.v, Acceleration(totalPower, mass, currState.v));\n      :>> x = Position(delta_t, currState.x, currState.v);\n    }\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_078.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-079",
+      "slide": 79,
+      "pdf_page": 79,
+      "title": "Constraint Definitions (1)",
+      "source_kind": "textual_code_panel",
+      "code": "private import ISQ::*;\nprivate import SI::*;\nprivate import ScalarFunctions::*;\nconstraint def MassConstraint {\n in partMasses : MassValue[0..*];\n in massLimit : MassValue;\n  sum(partMasses) <= massLimit\n}\npart def Vehicle {\n  constraint massConstraint : MassConstraint {\n   in partMasses = (chassisMass, engine.mass, transmission.mass);\n   in massLimit = 2500[kg];\n  }\n  attribute chassisMass : MassValue;\n  part engine : Engine {\n    attribute mass : MassValue;\n  }\n  part transmission : Transmission {\n    attribute mass : MassValue;\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_079.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-080",
+      "slide": 80,
+      "pdf_page": 80,
+      "title": "Constraint Definitions (2)",
+      "source_kind": "textual_code_panel",
+      "code": "private import ISQ::*;\nprivate import SI::*;\nprivate import ScalarFunctions::*;\nconstraint def MassConstraint {\n  attribute partMasses : MassValue[0..*];\n attribute massLimit : MassValue;\n  sum(partMasses) <= massLimit\n}\npart def Vehicle {\n  constraint massConstraint : MassConstraint {\n    redefines partMasses = (chassisMass, engine.mass, transmission.mass);\n   redefines massLimit = 2500[kg];\n  }\n  attribute chassisMass : MassValue;\n  part engine : Engine {\n    attribute mass : MassValue;\n  }\n  part transmission : Engine {\n    attribute mass : MassValue;\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_080.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-081",
+      "slide": 81,
+      "pdf_page": 81,
+      "title": "Constraint Assertions (1)",
+      "source_kind": "textual_code_panel",
+      "code": "private import ISQ::*;\nprivate import SI::*;\nprivate import ScalarFunctions::*;\nconstraint def MassConstraint {\n in partMasses : MassValue[0..*];\n in massLimit : MassValue;\n  sum(partMasses) <= massLimit\n}\npart def Vehicle {\n  assert constraint massConstraint : MassConstraint {\n   in partMasses = (chassisMass, engine.mass, transmission.mass);\n   in massLimit = 2500[kg];\n  }\n  attribute chassisMass : MassValue;\n  part engine : Engine {\n    attribute mass : MassValue;\n  }\n  part transmission : Engine {\n    attribute mass : MassValue;\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_081.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-082",
+      "slide": 82,
+      "pdf_page": 82,
+      "title": "Constraint Assertions (2)",
+      "source_kind": "textual_code_panel",
+      "code": "constraint def MassConstraint {\n in partMasses : MassValue[0..*];\n in massLimit : MassValue;\n}\nconstraint massConstraint : MassConstraint {\n  sum(partMasses) <= massLimit\n}\npart def Vehicle {\n  assert massConstraint  {\n   in partMasses = (chassisMass, engine.mass, transmission.mass);\n   in massLimit = 2500[kg];\n  }\n  attribute chassisMass : MassValue;\n  attribute engine : Engine {\n    value mass : MassValue;\n  }\n  attribute transmission : Engine {\n    value mass : MassValue;\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_082.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-083",
+      "slide": 83,
+      "pdf_page": 83,
+      "title": "Derivation Constraints",
+      "source_kind": "textual_code_panel",
+      "code": "part vehicle1 : Vehicle {\n  attribute totalMass : MassValue;\n  assert constraint {totalMass == chassisMass + engine.mass + transmission.mass}\n}\npart vehicle2 : Vehicle {\n  attribute totalMass : MassValue = chassisMass + engine.mass + transmission.mass;\n}\nconstraint def AveragedDynamics {\n  in mass: MassValue;\n  in initialSpeed : SpeedValue;\n  in finalSpeed : SpeedValue;\n  in deltaT : TimeValue;\n  in force : ForceValue;\n  force * deltaT == mass * (finalSpeed - initialSpeed) and\n  mass > 0[kg]\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_083.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-084",
+      "slide": 84,
+      "pdf_page": 84,
+      "title": "Analytical Constraints",
+      "source_kind": "textual_code_panel",
+      "code": "constraint def StraightLineDynamicsEquations {\n in p : PowerValue, in m : MassValue, in dt : TimeValue;\n in x_i : LengthValue; in v_i : SpeedValue;\n in x_f : LengthValue; in v_f : SpeedValue,\n in a : AccelerationValue;\n  attribute v_avg : SpeedValue = (v_i + v_f)/2;\n  a == Acceleration(p, m, v_avg) and\n  v_f == Velocity(dt, v_i, a) and\n  x_f == Position(dt, x_i, v_avg)\n}\naction def StraightLineDynamics {\n  in power : PowerValue; in mass : MassValue; in delta_t : TimeValue;\n  in x_in : LengthValue; in v_in : SpeedValue;\n  out x_out : LengthValue; out v_out : SpeedValue;\n  out a_out : AccelerationValue;\n  assert constraint dynamics : StraightLineDynamicsEquations {\n   in p = power; in m = mass; in dt = delta_t;\n   in x_i = x_in; in v_i = v_in;\n   in x_f = x_out; in v_f = v_out;\n   in a = a_out;\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_084.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-085",
+      "slide": 85,
+      "pdf_page": 85,
+      "title": "Time Constraints",
+      "source_kind": "textual_code_panel",
+      "code": "state healthStates {\n  in vehicle : Vehicle;\n  entry; then normal;\n  state normal;\n  accept at vehicle.maintenanceTime\n    then maintenance;\n  state maintenance {\n    assert constraint { TimeOf(maintenance) > vehicle.maintenanceTime }\n    assert constraint { TimeOf(maintenance) - TimeOf(normal.done) < 2 [s]\n}\n    entry assign vehicle.maintenanceTime :=\n      vehicle.maintenanceTime + vehicle.maintenanceInterval;\n  }\n  accept MaintenanceDone\n    then normal;\n  constraint { DurationOf(maintenance) <= 48 [h] }\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The rendered second time constraint is visibly missing its closing brace before the next state action; retained as printed and excluded from direct fixtures."
+      ]
+    },
+    {
+      "id": "slide-086",
+      "slide": 86,
+      "pdf_page": 86,
+      "title": "Requirement Definitions (1)",
+      "source_kind": "textual_code_panel",
+      "code": "requirement def MassLimitationRequirement {\n doc /* The actual mass shall be less than or equal\n   * to the required mass. */\n  attribute massActual : MassValue;\n  attribute massReqd : MassValue;\n  require constraint { massActual <= massReqd }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_086.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-087",
+      "slide": 87,
+      "pdf_page": 87,
+      "title": "Requirement Definitions (2)",
+      "source_kind": "textual_code_panel",
+      "code": "part def Vehicle {\n  attribute dryMass: MassValue;\n  attribute fuelMass: MassValue;\n  attribute fuelFullMass: MassValue;\n ...\n}\nrequirement def <'1'> VehicleMassLimitationRequirement :> MassLimitationRequirement {\n doc /* The total mass of a vehicle shall be less than or equal to the required mass. */\n subject vehicle : Vehicle;\n  attribute redefines massActual = vehicle.dryMass + vehicle.fuelMass;\n  assume constraint { vehicle.fuelMass > 0[kg] }\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-088",
+      "slide": 88,
+      "pdf_page": 88,
+      "title": "Requirement Definitions (3)",
+      "source_kind": "textual_code_panel",
+      "code": "port def ClutchPort;\naction def GenerateTorque;\nrequirement def <'2'> DrivePowerInterfaceRequirement {\n doc /* The engine shall transfer its generated torque to the transmission\n   * via the clutch interface. */\n subject clutchPort: ClutchPort;\n}\nrequirement def <'3'> TorqueGenerationRequirement {\n doc /* The engine shall generate torque as a function of RPM as shown in Table 1. */\n  subject generateTorque: GenerateTorque;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_088.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-089",
+      "slide": 89,
+      "pdf_page": 89,
+      "title": "Requirement Usages",
+      "source_kind": "textual_code_panel",
+      "code": "requirement <'1.1'> fullVehicleMassLimit : VehicleMassLimitationRequirement {\n  subject vehicle : Vehicle;\n  attribute :>> massReqd = 2000[kg];\n  assume constraint {\n   doc /* Fuel tank is full. */\n    vehicle.fuelMass == vehicle.fuelFullMass\n  }\n}\nrequirement <'1.2'> emptyVehicleMassLimit : VehicleMassLimitationRequirement {\n  subject vehicle : Vehicle;\n  attribute :>> massReqd = 1500[kg];\n  assume constraint {\n   doc /* Fuel tank is empty. */\n    vehicle.fuelMass == 0[kg]\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_089.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-090",
+      "slide": 90,
+      "pdf_page": 90,
+      "title": "Requirement Groups",
+      "source_kind": "textual_code_panel",
+      "code": "requirement vehicleSpecification {\n doc /* Overall vehicle requirements group */\n  subject vehicle : Vehicle;\n  require fullVehicleMassLimit;\n  require emptyVehicleMassLimit;\n}\npart def Engine {\n  port clutchPort: ClutchPort;\n  perform action generateTorque: GenerateTorque;\n}\nrequirement engineSpecification {\n doc /* Engine power requirements group */\n  subject engine : Engine;\n  requirement drivePowerInterface : DrivePowerInterfaceRequirement {\n    subject clutchPort = engine.clutchPort;\n  }\n  requirement torqueGeneration : TorqueGenerationRequirement {\n     subject generateTorque = engine.generateTorque;\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_090.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-091",
+      "slide": 91,
+      "pdf_page": 91,
+      "title": "Requirement Satisfaction",
+      "source_kind": "textual_code_panel",
+      "code": "part vehicle_c1 : Vehicle {\n  part engine_v1: Engine { ... }\n ...\n}\npart 'Vehicle c1 Design Context' {\n  ref vehicle_design :> vehicle_c1;\n  satisfy vehicleSpecification by vehicle_design;\n  satisfy engineSpecification by vehicle_design.engine_v1;\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-092",
+      "slide": 92,
+      "pdf_page": 92,
+      "title": "Analysis Case Definitions (1)",
+      "source_kind": "textual_code_panel",
+      "code": "analysis def FuelEconomyAnalysis {\n subject vehicle : Vehicle;\nobjective fuelEconomyAnalysisObjective {\ndoc /*\n * The objective of this analysis is to determine whether the\n * subject vehicle can satisfy the fuel economy requirement.\n */\nassume constraint {\n  vehicle.wheelDiameter == 33['in'] and\n  vehicle.driveTrainEfficiency == 0.4\n}\nrequire constraint {\n   fuelEconomyResult > 30[mi / gallon]\n}\n}\n...\n return fuelEconomyResult : DistancePerVolumeValue = ...;\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-093",
+      "slide": 93,
+      "pdf_page": 93,
+      "title": "Analysis Case Definitions (2)",
+      "source_kind": "textual_code_panel",
+      "code": "attribute def WayPoint {\n time : TimeValue;\n position : LengthValue;\n speed : SpeedValue;\n}\nanalysis def FuelEconomyAnalysis {\n subject vehicle : Vehicle;\n objective fuelEconomyAnalysisObjective { ... }\nin attribute scenario : WayPoint[*];\naction solveForPower {\n  out power: PowerValue[*];\n  out acceleration: AccelerationValue[*];\nassert constraint {\n  (1..size(scenario)-1)->forAll {in i : Positive;\n    StraightLineDynamicsEquations (\n      power#(i), vehicle.mass,\n      scenario.time#(i+1) - scenario.time#(i),\n      scenario.position#(i), scenario.speed#(i),\n      scenario.position#(i+1), scenario.speed#(i+1),\n      acceleration#(i+1)))\n}\n}\nthen action solveForFuelEconomy {\n  in power : PowerValue[*] = solveForPower.power;\n  out fuelEconomy : DistancePerVolumeValue;\n ...\n}\nreturn fuelEconomyResult : DistancePerVolumeValue;\n        = solveForFuelEconomy.fuelEconomy;\n... }",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger.",
+        "The rendered equation uses a typographic en dash for subtraction; normalized to an ASCII hyphen in code."
+      ]
+    },
+    {
+      "id": "slide-094",
+      "slide": 94,
+      "pdf_page": 94,
+      "title": "Analysis Case Usages",
+      "source_kind": "textual_code_panel",
+      "code": "part vehicleFuelEconomyAnalysisContext {\nrequirement vehicleFuelEconomyRequirements{subject vehicle : Vehicle; ... }\nattribute cityScenario : WayPoint[*] = { ... };\nattribute highwayScenario : WayPoint[*] = { ... };\nanalysis cityAnalysis : FuelEconomyAnalysis {\n  subject vehicle = vehicle_c1;\n  in scenario = cityScenario;\n}\nanalysis highwayAnalysis : FuelEconomyAnalysis {\n  subject vehicle = vehicle_c1;\n  in scenario = highwayScenario;\n}\npart vehicle_c1 : Vehicle {\n ...\n  attribute :>> fuelEconomy_city = cityAnalysis.fuelEconomyResult;\n  attribute :>> fuelEconomy_highway = highwayAnalysis.fuelEconomyResult;\n}\nsatisfy vehicleFuelEconomyRequirements by vehicle_c1;\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-095",
+      "slide": 95,
+      "pdf_page": 95,
+      "title": "Trade-off Study Analysis",
+      "source_kind": "textual_code_panel",
+      "code": "analysis engineTradeStudy : TradeStudies::TradeStudy {\n  subject : Engine = (engine4cyl, engine6cyl);\n  objective : MaximizeObjective;\n  calc :>> evaluationFunction {\n    in part anEngine :>> alternative : Engine;\n    calc powerRollup: PowerRollup {in engine = anEngine;\n      return power : ISQ::PowerValue; }\n    calc massRollup: MassRollup {in engine = anEngine;\n      return mass : ISQ::MassValue; }\n    calc efficiencyRollup: EfficiencyRollup {in engine = anEngine;\n      return efficiency : Real; }\n    calc costRollup: CostRollup {in engine = anEngine;\n      return cost : Real; }\n    return :>> result : Real = EngineEvaluation(\n      powerRollup.power, massRollup.mass,\n      efficiencyRollup.efficiency, costRollup.cost\n    );\n  }\n  return part :>> selectedAlternative : Engine;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_095.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-096",
+      "slide": 96,
+      "pdf_page": 96,
+      "title": "Verification Case Definitions (1)",
+      "source_kind": "textual_code_panel",
+      "code": "requirement vehicleMassRequirement {\n  subject vehicle : Vehicle;\n in massActual :> ISQ::mass;\n  doc  /* The vehicle mass shall be less\n       * than or equal to 2500 kg. */\n  require constraint {\n    massActual == vehicle.mass and\n    massActual <= 2500[SI::kg] }\n}\nverification def VehicleMassTest {\n  private import VerificationCases::*;\n  subject testVehicle : Vehicle;\n  objective vehicleMassVerificationObjective {\n    verify vehicleMassRequirement;\n  }\n  return verdict : VerdictKind;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_096.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-097",
+      "slide": 97,
+      "pdf_page": 97,
+      "title": "Verification Case Definitions (2)",
+      "source_kind": "textual_code_panel",
+      "code": "verification def VehicleMassTest {\n  private import VerificationCases::*;\n  subject testVehicle : Vehicle;\n  objective vehicleMassVerificationObjective {\n    verify vehicleMassRequirement;\n  }\n  action collectData {\n    in part testVehicle : Vehicle = VehicleMassTest::testVehicle;\n    out massMeasured :> ISQ::mass;\n  }\n  action processData {\n    in massMeasured :> ISQ::mass = collectData.massMeasured;\n    out massProcessed :> ISQ::mass;\n  }\n  action evaluateData {\n    in massProcessed :> ISQ::mass = processData.massProcessed;\n    out verdict : VerdictKind =\n      PassIf(vehicleMassRequirement(\n        vehicle = testVehicle,\n        massActual = massProcessed));\n    }\n  return verdict : VerdictKind = evaluateData.verdict;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_097.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-098",
+      "slide": 98,
+      "pdf_page": 98,
+      "title": "Verification Case Usages (1)",
+      "source_kind": "textual_code_panel",
+      "code": "part vehicleTestConfig : Vehicle { ... }\nverification vehicleMassTest : VehicleMassTest {\n  subject testVehicle :> vehicleTestConfig;\n}\npart massVerificationSystem : MassVerificationSystem {\n  perform vehicleMassTest;\n  part scale : Scale {\n    perform vehicleMassTest.collectData {\n      in part :>> testVehicle;\n     bind measurement = testVehicle.mass;\n      out :>> massMeasured = measurement;\n    }\n  }\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-099",
+      "slide": 99,
+      "pdf_page": 99,
+      "title": "Verification Case Usages (2)",
+      "source_kind": "textual_code_panel",
+      "code": "individual def TestSystem :> MassVerificationSystem;\nindividual def TestVehicle1 :> Vehicle;\nindividual def TestVehicle2 :> Vehicle;\nindividual testSystem : TestSystem :> massVerificationSystem {\n  timeslice test1 {\n    perform action :>> vehicleMassTest {\n      individual :>> testVehicle : TestVehicle1 {\n        :>> mass = 2500[SI::kg];\n      }\n    }\n  }\n  then timeslice test2 {\n    perform action :>> vehicleMassTest {\n      individual :>> testVehicle : TestVehicle2 {\n        :>> mass = 3000[SI::kg];\n      }\n    }\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_099.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-100",
+      "slide": 100,
+      "pdf_page": 100,
+      "title": "Use Case Definition",
+      "source_kind": "textual_code_panel",
+      "code": "use case def 'Provide Transportation' {\n  subject vehicle : Vehicle;\n  actor driver : Person;\n  actor passengers : Person[0..4];\n  actor environment : Environment;\n  objective {\n    doc /* Transport driver and passengers from\n         * starting location to ending location.\n         */\n  }\n}\nuse case def 'Enter Vehicle' {\n  subject vehicle : Vehicle;\n  actor driver : Person;\n  actor passengers : Person[0..4];\n}\nuse case def 'Exit Vehicle' {\n  subject vehicle : Vehicle;\n  actor driver : Person;\n  actor passengers : Person[0..4];\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_100.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-101",
+      "slide": 101,
+      "pdf_page": 101,
+      "title": "Use Case Usage",
+      "source_kind": "textual_code_panel",
+      "code": "use case 'provide transportation' : 'Provide Transportation' {\n  subject vehicle;\n  first start;\n  then include use case 'enter vehicle' : 'Enter Vehicle' {\n   subject vehicle;\n    actor :>> driver = 'provide transportation'::driver;\n    actor :>> passengers = 'provide transportation'::passengers;\n  }\n  then use case 'drive vehicle' {\n   subject vehicle;\n    actor driver = 'provide transportation'::driver;\n    actor environment = 'provide transportation'::environment;\n    include 'add fuel'[0..*] {\n     subject vehicle;\n      actor :>> fueler = driver;\n    }\n  }\n  then include use case 'exit vehicle' : 'Exit Vehicle' {\n   subject vehicle;\n    actor :>> driver = 'provide transportation'::driver;\n    actor :>> passengers = 'provide transportation'::passengers;\n  }\n  then done;\n}\nuse case 'add fuel' {\n  subject vehicle : Vehicle;\n  actor fueler : Person;\n  actor 'fuel station' : 'Fuel Station';\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_101.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-102",
+      "slide": 102,
+      "pdf_page": 102,
+      "title": "Variation Definitions",
+      "source_kind": "textual_code_panel",
+      "code": "attribute def Diameter :> Real;\npart def Cylinder {\n  attribute diameter : Diameter[1];\n}\npart def Engine {\n  part cylinder : Cylinder[2..*];\n}\npart '4cylEngine' : Engine {\n  part redefines cylinder[4];\n}\npart '6cylEngine' : Engine {\n  part redefines cylinder[6];\n}\n// Variability model\nvariation attribute def DiameterChoices :> Diameter {\n  variant attribute diameterSmall = 70[mm];\n  variant attribute diameterLarge = 100[mm];\n}\nvariation part def EngineChoices :> Engine {\n  variant '4cylEngine';\n  variant '6cylEngine';\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_102.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-103",
+      "slide": 103,
+      "pdf_page": 103,
+      "title": "Variation Usages",
+      "source_kind": "textual_code_panel",
+      "code": "abstract part vehicleFamily : Vehicle {\npart engine : EngineChoices[1];\nvariation part transmission : Transmission[1] {\n  variant manualTransmission;\n  variant automaticTransmission;\n}\nassert constraint {\n (engine == engine::'4cylEngine' and\n   transmission == transmission::manualTransmission) xor\n (engine == engine::'6cylEngine' and\n   transmission == transmission::automaticTransmission)\n}\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_103.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-104",
+      "slide": 104,
+      "pdf_page": 104,
+      "title": "Variation Configuration",
+      "source_kind": "textual_code_panel",
+      "code": "part vehicle4Cyl :> vehicleFamily {\n  part redefines engine = engine::'4cylEngine';\n  part redefines transmission = transmission::manualTransmission;\n}\npart vehicle6Cyl :> vehicleFamily {\n  part redefines engine = engine::'6cylEngine';\n  part redefines transmission = transmission::manualTransmission;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_104.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-105",
+      "slide": 105,
+      "pdf_page": 105,
+      "title": "Dependencies",
+      "source_kind": "textual_code_panel",
+      "code": "package 'Dependency Example' {\npart 'System Assembly' {\n  part 'Computer Subsystem' {\n   ...\n  }\n  part 'Storage Subsystem' {\n   ...\n  }\n}\npackage 'Software Design' {\n  item def MessageSchema {\n   ...\n  }\n  item def DataSchema {\n   ...\n  }\n}\ndependency from 'System Assembly'::'Computer Subsystem' to 'Software Design';\ndependency Schemata\n  from 'System Assembly'::'Storage Subsystem'\n  to 'Software Design'::MessageSchema, 'Software Design'::DataSchema;\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-106",
+      "slide": 106,
+      "pdf_page": 106,
+      "title": "Allocation",
+      "source_kind": "textual_code_panel",
+      "code": "package LogicalModel {\n ...\n  part torqueGenerator : TorqueGenerator {\n    perform generateTorque;\n  }\n}\npackage PhysicalModel {\n  private import LogicalModel::*;\n ...\n  part powerTrain : PowerTrain {\n    part engine : Engine {\n      perform generateTorque;\n    }\n  }\n  allocate torqueGenerator to powerTrain {\n    allocate torqueGenerator.generateTorque\n         to powerTrain.engine.generateTorque;\n  }\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-107",
+      "slide": 107,
+      "pdf_page": 107,
+      "title": "Allocation Definition",
+      "source_kind": "textual_code_panel",
+      "code": "package LogicalModel {\n ...\n  part def LogicalElement;\n  part def TorqueGenerator :> LogicalElement;\n  part torqueGenerator : TorqueGenerator { ... }\n}\npackage PhysicalModel {\n  private import LogicalModel::*;\n ...\n  part def PhysicalElement;\n  part def PowerTrain :> PhysicalElement;\n  part powerTrain : PowerTrain { ... }\n  }\n  allocation def LogicalToPhysical {\n    end logical : LogicalElement;\n    end physical : PhysicalElement;\n  }\n  allocation torqueGenAlloc : LogicalToPhysical\n    allocate torqueGenerator to powerTrain { ... }\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-108",
+      "slide": 108,
+      "pdf_page": 108,
+      "title": "Metadata (1)",
+      "source_kind": "textual_code_panel",
+      "code": "part vehicle {\n  part interior {\n    part alarm;\n    part seatBelt[2];\n    part frontSeat[2];\n    part driverAirBag;\n  }\n  part bodyAssy {\n    part body;\n    part bumper;\n    part keylessEntry;\n  }\n}\nmetadata def SafetyFeature;\nmetadata def SecurityFeature {\n  :> annotatedElement : SysML::PartDefinition;\n  :> annotatedElement : SysML::PartUsage;\n}\nmetadata SafetyFeature about\n  vehicle::interior::seatBelt,\n  vehicle::interior::driverAirBag,\n  vehicle::bodyAssy::bumper;\nmetadata SecurityFeature about\n  vehicle::interior::alarm,\n  vehicle::bodyAssy::keylessEntry;",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_108.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-109",
+      "slide": 109,
+      "pdf_page": 109,
+      "title": "Metadata (2)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package AnalysisTooling {\n  private import ScalarValues::*;\n  metadata def ToolExecution {\n    attribute toolName : String;\n    attribute uri : String;\n  }\n  metadata def ToolVariable {\n    attribute name : String;\n  }\n}\naction computeDynamics {\n  private import AnalysisTooling::*;\n  metadata ToolExecution {\n    toolName = \"ModelCenter\";\n    uri = \"aserv://localhost/Vehicle/Equation1\";\n  }\n  in dt : ISQ::TimeValue  {@ToolVariable {name = \"deltaT\";}}\n  in a : ISQ:: AccelerationValue  {@ToolVariable {name = \"mass\";}}\n  in v_in : ISQ:: VelocityValue   {@ToolVariable {name = \"v0\";}}\n  in x_in : ISQ:: LengthValue {@ToolVariable {name = \"x0\";}}\n  out v_out : ISQ:: VelocityValue {@ToolVariable {name = \"v\";}}\n  out x_out : ISQ:: LengthValue   {@ToolVariable {name = \"x\";}}\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_109.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-110",
+      "slide": 110,
+      "pdf_page": 110,
+      "title": "Element Import Filtering (1)",
+      "source_kind": "textual_code_panel",
+      "code": "metadata def Safety {\n  attribute isMandatory : Boolean;\n}\npart vehicle {\n  part interior {\n    part alarm;\n    part seatBelt[2] {\n      @Safety { isMandatory = true; }\n    }\n    part frontSeat[2];\n    part driverAirBag {\n      @Safety { isMandatory = false; }\n    }\n  }\n  part bodyAssy {\n    part body;\n    part bumper {\n      @Safety { isMandatory = true; }\n    }\n    part keylessEntry;\n  }\n  part wheelAssy {\n    part wheel[2];\n    part antilockBrakes[2] {\n      @Safety { isMandatory = false; }\n    }\n  }\n}\n\npackage 'Safety Features' {\n  public import vehicle::**;\n  filter @Safety;\n}\n\npackage 'Mandatory Safety Features' {\n  public import vehicle::**;\n  filter @Safety and (as Safety).isMandatory;\n}",
+      "code_blocks": [
+        "metadata def Safety {\n  attribute isMandatory : Boolean;\n}\npart vehicle {\n  part interior {\n    part alarm;\n    part seatBelt[2] {\n      @Safety { isMandatory = true; }\n    }\n    part frontSeat[2];\n    part driverAirBag {\n      @Safety { isMandatory = false; }\n    }\n  }\n  part bodyAssy {\n    part body;\n    part bumper {\n      @Safety { isMandatory = true; }\n    }\n    part keylessEntry;\n  }\n  part wheelAssy {\n    part wheel[2];\n    part antilockBrakes[2] {\n      @Safety { isMandatory = false; }\n    }\n  }\n}",
+        "package 'Safety Features' {\n  public import vehicle::**;\n  filter @Safety;\n}",
+        "package 'Mandatory Safety Features' {\n  public import vehicle::**;\n  filter @Safety and (as Safety).isMandatory;\n}"
+      ],
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide has three separately rendered source panels; code_blocks preserves panel boundaries and code is their visual reading-order concatenation."
+      ]
+    },
+    {
+      "id": "slide-111",
+      "slide": 111,
+      "pdf_page": 111,
+      "title": "Element Import Filtering (2)",
+      "source_kind": "textual_code_panel",
+      "code": "metadata def Safety {\n  attribute isMandatory : Boolean;\n}\npart vehicle {\n  part interior {\n    part alarm;\n    part seatBelt[2] {\n      @Safety { isMandatory = true; }\n    }\n    part frontSeat[2];\n    part driverAirBag {\n      @Safety { isMandatory = false; }\n    }\n  }\n  part bodyAssy {\n    part body;\n    part bumper {\n      @Safety { isMandatory = true; }\n    }\n    part keylessEntry;\n  }\n  part wheelAssy {\n    part wheel[2];\n    part antilockBrakes[2] {\n      @Safety { isMandatory = false; }\n    }\n  }\n}\n\npackage 'Safety Features' {\n  public import vehicle::**[@Safety];\n}\n\npackage 'Mandatory Safety Features' {\n  public import vehicle::**[@Safety and (as Safety).isMandatory];\n}",
+      "code_blocks": [
+        "metadata def Safety {\n  attribute isMandatory : Boolean;\n}\npart vehicle {\n  part interior {\n    part alarm;\n    part seatBelt[2] {\n      @Safety { isMandatory = true; }\n    }\n    part frontSeat[2];\n    part driverAirBag {\n      @Safety { isMandatory = false; }\n    }\n  }\n  part bodyAssy {\n    part body;\n    part bumper {\n      @Safety { isMandatory = true; }\n    }\n    part keylessEntry;\n  }\n  part wheelAssy {\n    part wheel[2];\n    part antilockBrakes[2] {\n      @Safety { isMandatory = false; }\n    }\n  }\n}",
+        "package 'Safety Features' {\n  public import vehicle::**[@Safety];\n}",
+        "package 'Mandatory Safety Features' {\n  public import vehicle::**[@Safety and (as Safety).isMandatory];\n}"
+      ],
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide has three separately rendered source panels; code_blocks preserves panel boundaries and code is their visual reading-order concatenation."
+      ]
+    },
+    {
+      "id": "slide-112",
+      "slide": 112,
+      "pdf_page": 112,
+      "title": "Language Extension (1)",
+      "source_kind": "textual_code_panel",
+      "code": "library package FailureModeling {\nabstract occurrence def Situation;\nabstract occurrence situations : Situation[*] nonunique;\nabstract occurrence def Cause {\n  attribute probability : Real;\n}\nabstract occurrence causes : Cause[*] nonunique :> situations;\nabstract occurrence def Failure {\n  attribute severity : Level;\n}\nabstract occurrence failures : Failure[*] nonunique :> situations;\nabstract connection def Causation :> Occurrences::HappensBefore {\n  end cause : Situation[*];\n  end effect : Situation[*];\n}\nabstract connection causations : Causation[*] nonunique;\nitem def Scenario {\n  occurrence :>> situations;\n  occurrence :>> causes :> situations;\n  occurrence :>> failures :> situations;\n}\nitem scenarios : Scenario[*] nonunique;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_112.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-113",
+      "slide": 113,
+      "pdf_page": 113,
+      "title": "Language Extension (2)",
+      "source_kind": "textual_code_panel",
+      "code": "library package FailureModelingMetadata {\nprivate import FailureModeling::*;\nprivate import Metaobjects::SemanticMetadata;\nmetadata def situation :> SemanticMetadata {\n  :>> baseType = situations meta SysML::Usage;\n}\nmetadata def cause :> SemanticMetadata {\n  :>> baseType = causes meta SysML::Usage;\n}\nmetadata def failure :> SemanticMetadata {\n  :>> baseType = failures meta SysML::Usage;\n}\nmetadata def causation :> SemanticMetadata {\n  :>> baseType = causations meta SysML::Usage;\n}\nmetadata def scenario :> SemanticMetadata {\n  :>> baseType = scenarios meta SysML::Usage;\n}\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_113.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-114",
+      "slide": 114,
+      "pdf_page": 114,
+      "title": "Language Extension (3)",
+      "source_kind": "textual_code_panel",
+      "code": "private import FailureModelingMetadata::*;\n#scenario def DeviceFailure {\n  ref device : Device;\n  attribute minPower : Real;\n  #cause 'battery old' {\n    :>> probability = 0.01;\n  }\n  #causation connect 'battery old' to 'power low';\n  #situation 'power low' {\n    constraint { device.battery.power < minPower }\n  }\n  #causation connect 'power low' to 'device shutoff';\n  #failure 'device shutoff' {\n    :>> severity = LevelEnum::high;\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_114.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-115",
+      "slide": 115,
+      "pdf_page": 115,
+      "title": "Stakeholders and Concerns",
+      "source_kind": "textual_code_panel",
+      "code": "part def 'Systems Engineer';\npart def 'IV&V';\nconcern 'system breakdown' {\n  doc /*\n   * To ensure that a system covers all its required capabilities,\n   * it is necessary to understand how it is broken down into\n   * subsystems and components that provide those capabilities.\n   */\n subject system;\n  stakeholder se: 'systems engineer';\n  stakeholder ivv: 'IV&V';\n}\nconcern modularity {\n  doc /*\n   * There should be well defined interfaces between the parts of\n   * a system that allow each part to be understood individually,\n   * as well as being part of the whole system.\n   */\n subject system;\n  stakeholder 'systems engineer';\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_115.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-116",
+      "slide": 116,
+      "pdf_page": 116,
+      "title": "Viewpoints",
+      "source_kind": "textual_code_panel",
+      "code": "viewpoint 'system structure perspective' {\n  frame 'system breakdown';\n  frame modularity;\n  require constraint {\n    doc /*\n     * A system structure view shall show the hierarchical\n     * part decomposition of a system, starting with a\n     * specified root part.\n     */\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_116.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-117",
+      "slide": 117,
+      "pdf_page": 117,
+      "title": "Views (1)",
+      "source_kind": "textual_code_panel",
+      "code": "view def 'Part Structure View' {\n  satisfy 'system structure perspective';\n  filter @SysML::PartUsage;\n}\nview 'vehicle structure view' :\n  'Part Structure View' {\n  expose vehicle::**;\n  render asTreeDiagram;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_117.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-118",
+      "slide": 118,
+      "pdf_page": 118,
+      "title": "Views (2)",
+      "source_kind": "textual_code_panel",
+      "code": "rendering asTextualNotationTable :> asElementTable {\n  view :>> columnView[1] {\n    render asTextualNotation;\n  }\n}\nview 'vehicle tabular views' {\n    view 'safety features view' : 'Part Structure View' {\n      expose vehicle::**[@Safety];\n      render asElementTable;\n    }\n    view 'non-safety features view' : 'Part Structure View' {\n      expose vehicle::**[not (@Safety)];\n      render asElementTable;\n    }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_118.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-119",
+      "slide": 119,
+      "pdf_page": 119,
+      "title": "Example View Rendering",
+      "source_kind": "textual_code_panel",
+      "code": "view 'vehicle structure view' {\n  expose vehicle::**[@SysML::PartUsage];\n  render asTreeDiagram;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_119.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-121",
+      "slide": 121,
+      "pdf_page": 121,
+      "title": "Scalar Values",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package ScalarValues {\n  private import Base::*;\n  abstract datatype ScalarValue specializes Value;\n  datatype Boolean specializes ScalarValue;\n  datatype String specializes ScalarValue;\n  abstract datatype NumericalValue specializes ScalarValue;\n\n  abstract datatype Number specializes NumericalValue;\n  datatype Complex specializes Number;\n  datatype Real specializes Complex;\n  datatype Rational specializes Real;\n  datatype Integer specializes Rational;\n  datatype Natural specializes Integer;\n  datatype Positive specializes Natural;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_121.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-122",
+      "slide": 122,
+      "pdf_page": 122,
+      "title": "Collections (1)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package Collections {\n...\nabstract datatype Collection {\n  feature elements[0..*] nonunique;\n}\nabstract datatype OrderedCollection :> Collection {\n  feature :>> elements[0..*] ordered nonunique;\n}\nabstract datatype UniqueCollection :> Collection {\n  feature :>> elements[0..*];\n}\ndatatype Array :> OrderedCollection {\n  feature dimensions: Positive[0..*] ordered nonunique;\n  feature rank: Natural[1] = size(dimensions);\n  feature flattenedSize: Positive[1] = dimensions->reduce '*' ?? 1;\n  inv { flattenedSize == size(elements) }\n}\ndatatype Bag :> Collection;\ndatatype Set :> UniqueCollection;\ndatatype OrderedSet :> OrderedCollection, UniqueCollection {\n  feature :>> elements[0..*] ordered;\n}\ndatatype List :> OrderedCollection;\n...\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-123",
+      "slide": 123,
+      "pdf_page": 123,
+      "title": "Collections (2)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package Collections {\n...\ndatatype KeyValuePair {\n  feature key: Anything[0..*] ordered nonunique;\n  feature val: Anything[0..*] ordered nonunique;\n}\ndatatype Map :> Collection {\n  feature :>> elements: KeyValuePair[0..*];\n}\ndatatype OrderedMap :> Map {\n  feature :>> elements: KeyValuePair[0..*] ordered;\n}\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-124",
+      "slide": 124,
+      "pdf_page": 124,
+      "title": "Vector Values",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package VectorValues {\nprivate import ScalarValues::NumericalValue;\nprivate import ScalarValues::Real;\nprivate import Collections::Array;\nabstract datatype VectorValue;\ndatatype NumericalVectorValue :> VectorValue, Array {\n  feature dimension[0..1] :>> dimensions;\n  feature :>> elements : NumericalValue;\n}\ndatatype CartesianVectorValue :> NumericalVectorValue {\n  feature :>> elements : Real;\n}\ndatatype ThreeVectorValue :> NumericalVectorValue {\n  feature :>> dimension = 3;\n}\ndatatype CartesianThreeVectorValue :> CartesianVectorValue, ThreeVectorValue;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_124.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-126",
+      "slide": 126,
+      "pdf_page": 126,
+      "title": "Base Functions",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package BaseFunctions {\nprivate import Base::Anything;\nprivate import ScalarValues::*;\nabstract function '==' { in x: Anything[0..1]; in y: Anything[0..1];\n  return : Boolean[1];\n}\nfunction '!=' { in x: Anything[0..1]; in y: Anything[0..1];\n  return : Boolean[1] = not (x == y)\n}\nabstract function '===' { in x: Anything[0..1]; in y: Anything[0..1];\n  return : Boolean[1];\n}\nfunction '!==' { in x: Anything[0..1]; in y: Anything[0..1];\n  return : Boolean[1] = not (x === y)\n}\nfunction ToString { in Anything[0..1];\n  return : String[1];\n}\nabstract function '['{ in x: Anything[0..*] nonunique; in y: Anything[0..*] nonunique;\n return : Anything[0..*] nonunique;\n}\nabstract function '#'{ in seq: Anything[0..*] ordered nonunique; in index: Positive[1..*] ordered nonunique;\n return : Anything[0..1];\n}\nabstract function ','{\n in seq1: Anything[0..*] ordered nonunique; seq2: Anything[0..*] ordered nonunique;\n return : Anything[0..*] ordered nonunique;\n}\n...\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-127",
+      "slide": 127,
+      "pdf_page": 127,
+      "title": "Data Functions",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package DataFunctions {\n...\nabstract function '=='specializes BaseFunctions::'=='\n {in x: DataValue[0..1]; in y: DataValue[0..1]; return : Boolean[1];}\nfunction '==='specializes BaseFunctions::'==='\n {in x: DataValue[0..1]; in y: DataValue[0..1]; return : Boolean[1];}\nabstract function '+'{in x: DataValue[1]; in y: DataValue[0..1]; return : DataValue[1];}\nabstract function '-'{in x: DataValue[1]; in y: DataValue[0..1]; return : DataValue[1];}\nabstract function '*'{in x: DataValue[1]; in y: DataValue[1]; return : DataValue[1];}\nabstract function '/'{in x: DataValue[1]; in y: DataValue[1]; return : DataValue[1];}\nabstract function '**'{in x: DataValue[1]; in y: DataValue[1]; return : DataValue[1];}\nabstract function '^'{in x: DataValue[1]; in y: DataValue[1]; return : DataValue[1];}\nabstract function '%'{in x: DataValue[1]; in y: DataValue[1]; return : DataValue[1];}\nabstract function 'not'{in x: DataValue[1]; return : DataValue[1];}\nabstract function 'xor'{in x: DataValue[1]; in y: DataValue[1]; return : DataValue[1];}\nabstract function '~'{in x: DataValue[1]; return : DataValue[1];}\nabstract function '|'{in x: DataValue[1]; in y: DataValue[1]; return : DataValue[1];}\nabstract function '&'{in x: DataValue[1]; in y: DataValue[1]; return : DataValue[1];}\nabstract function '<'{in x: DataValue[1]; in y: DataValue[1]; return : Boolean[1];}\nabstract function '>'{in x: DataValue[1]; in y: DataValue[1]; return : Boolean[1];}\nabstract function '<='{in x: DataValue[1]; in y: DataValue[1]; return : Boolean[1];}\nabstract function '>='{in x: DataValue[1]; in y: DataValue[1]; return : Boolean[1];}\nabstract function max{in x: DataValue[1]; return : DataValue[1];}\nabstract function min{in x: DataValue[1]; return : DataValue[1];}\nabstract function '..'\n {in lower:DataValue[1]; in upper:DataValue[1]; return : DataValue[0..*] ordered;\n}\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-128",
+      "slide": 128,
+      "pdf_page": 128,
+      "title": "Boolean Functions",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package BooleanFunctions {\n  public import ScalarValues::*;\n  function 'not' specializes ScalarFunctions::'not'\n    {in x: Boolean; return : Boolean;}\n  function 'xor' specializes ScalarFunctions::'xor'\n    {in x: Boolean; in y: Boolean; return : Boolean;}\n  function '|' specializes ScalarFunctions::'|'\n    {in x: Boolean; in y: Boolean; return : Boolean;}\n  function '&' specializes ScalarFunctions::'&'\n    {in x: Boolean; in y: Boolean; return : Boolean;}\n  function '==' specializes BaseFunctions::'=='\n    {in x: Boolean; in y: Boolean; return : Boolean;}\n  function ToString specializes BaseFunctions::ToString\n    {in x: Boolean; return : String;}\n  function ToBoolean(x: String): Boolean;\n    {in x: String; return : Boolean;}\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The rendered function names include typographic quote variants and/or visibly incomplete function bodies; source normalization preserves the panel for research but does not assert parser compatibility."
+      ]
+    },
+    {
+      "id": "slide-129",
+      "slide": 129,
+      "pdf_page": 129,
+      "title": "String Functions",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package StringFunctions {\n  public import ScalarValues::*;\n  function '+' specializes ScalarFunctions::'+'\n    {in x: String; in y: String; return : String;}\n  function Size {in x: String; return : Natural;}\n  function Substring\n    {in x: String; in lower: Integer; in upper: Integer; return : String;}\n  function '<' specializes ScalarFunctions::'<'\n    {in x: String; in y: String; return : Boolean;}\n  function '>' specializes ScalarFunctions::'>'\n    {in x: String; in y: String; return : Boolean;}\n  function '<=' specializes ScalarFunctions::'<='\n    {in x: String; in y: String; return : Boolean;}\n  function '>=' specializes ScalarFunctions::'>='\n    {in x: String; in y: String; return : Boolean;}\n  function '=' specializes BaseFunctions::'=='\n    {in x: String; in y: String; return : Boolean;}\n  function ToString specializes BaseFunctions::ToString\n    {in x: String; return : String;\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The rendered panel is visibly missing a closing brace for the final function/package structure; retained as printed and excluded from direct fixtures."
+      ]
+    },
+    {
+      "id": "slide-130",
+      "slide": 130,
+      "pdf_page": 130,
+      "title": "Numerical Functions",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package NumericalFunctions {\npublic import ScalarValues::*;\nfunction abs {in x: NumericalValue[1]; return : NumericalValue[1];}\nabstract function '+' specializes ScalarFunctions::'+'\n {in x: NumericalValue[1]; in y: NumericalValue[0..1]; return : NumericalValue[1];}\nabstract function '-' specializes ScalarFunctions::'-'\n {in x: NumericalValue[1]; in y: NumericalValue[0..1]; return : NumericalValue[1];}\nabstract function '*' specializes ScalarFunctions::'*'\n {in x: NumericalValue[1]; in y: NumericalValue[1]; return : NumericalValue[1];}\nabstract function '/' specializes ScalarFunctions::'/'\n {in x: NumericalValue[1]; in y: NumericalValue[0..1]; return : NumericalValue[1];}\nabstract function '**' specializes ScalarFunctions::'**'\n {in x: NumericalValue[1]; in y: NumericalValue[0..1]; return : NumericalValue[1];}\nabstract function '^' specializes ScalarFunctions::'^'\n {in x: NumericalValue[1]; in y: NumericalValue[0..1]; return : NumericalValue[1];}\nabstract function '%' specializes ScalarFunctions::'%'\n {in x: NumericalValue[1]; in y: NumericalValue[0..1]; return : NumericalValue[1];}\nabstract function '<'specializes ScalarFunctions::'<'\n {in x: NumericalValue[1]; in y: NumericalValue[0..1]; return : Boolean[1];}\nabstract function '>' specializes ScalarFunctions::'>'\n {in x: NumericalValue[1]; in y: NumericalValue[0..1]; return : Boolean[1];}\nabstract function '<=' specializes ScalarFunctions::'<='\n {in x: NumericalValue[1]; in y: NumericalValue[0..1]; return : Boolean[1];}\nabstract function '>=' specializes ScalarFunctions::'>='\n {in x: NumericalValue[1]; in y: NumericalValue[0..1]; return : Boolean[1];}\nabstract function max specializes ScalarFunctions::max\n {in x: NumericalValue[1]; in y: NumericalValue[0..1]; return : NumericalValue[1];}\nabstract function min specializes ScalarFunctions::min\n {in x: NumericalValue[1]; in y: NumericalValue[0..1]; return : NumericalValue[1];}\nabstract function sum {in collection: NumericalValue[0..*] ordered; return : NumericalValue[1];}\nabstract function product {in collection: NumericalValue[0..*] ordered; return : NumericalValue[1];}\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_130.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-131",
+      "slide": 131,
+      "pdf_page": 131,
+      "title": "Complex Functions",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package ComplexFunctions {\npublic import ScalarValues::*;\nfeature i: Complex[1] = rect(0.0, 1.0);\nfunction rect{in re: Real[1]; in im: Real[1]; return : Complex[1];}\nfunction polar{in abs: Real[1]; in arg: Real[1]; return : Complex[1];}\nfunction re{in x: Complex[1]; return : Real[1];}\nfunction im {in x: Complex[1]; return : Real[1];}\nfunction abs specializes NumericalFunctions::abs {in x: Complex[1]; return : Real[1];}\nfunction {in x: Complex[1]; return : Real[1];}\nfunction '+' specializes NumericalFunctions::'+'\n  {in x: Complex[1]; in y: Complex[0..1]; return : Complex[1];\nfunction '-' specializes NumericalFunctions::'-'\n  {in x: Complex[1]; in y: Complex[0..1]; return : Complex[1];\nfunction '*' specializes NumericalFunctions::'*'\n {in x: Complex[1]; in y: Complex[1]; return : Complex[1];\nfunction '/' specializes NumericalFunctions::'/'\n  {in x: Complex[1]; in y: Complex[1]; return : Complex[1];\nfunction '**' specializes NumericalFunctions::'**'\n  {in x: Complex[1]; in y: Complex[1]; return : Complex[1];\nfunction '^' specializes NumericalFunctions::'^'\n {in x: Complex[1]; in y: Complex[1]; return : Complex[1];\nfunction '==' specializes DataFunctions::'=='\n {in x: Complex[1]; in y: Complex[1]; return : Complex[1];\nfunction ToString specializes BaseFunctions::ToString {in x: Complex[1]; return : String[1];}\nfunction ToComplex {in x: String[1]; return : Complex[1];}\nfunction sum specializes NumericalFunctions::sum {in collection: Complex[0..*]; return : Complex[1];}\nfunction product specializes NumericalFunctions::product {in collection: Complex[0..*]; return : Complex[1];}\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The rendered panel contains an unnamed `function` and several visibly incomplete function bodies; retained as printed and excluded from direct fixtures."
+      ]
+    },
+    {
+      "id": "slide-132",
+      "slide": 132,
+      "pdf_page": 132,
+      "title": "Real Functions",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package RealFunctions {\npublic import ScalarValues::*;\nfunction abs specializes ComplexFunctions::abs {in x: Real[1]; return : Real[1];}\nfunction '+' specializes ComplexFunctions::'+' {in x: Real[1]; in y: Real[0..1]; return: Real[1];}\nfunction '-' specializes ComplexFunctions::'-' {in x: Real[1]; in y: Real[0..1]; return: Real[1];}\nfunction '*' specializes ComplexFunctions::'*' {in x: Real[1]; in y: Real[1]; return: Real[1];}\nfunction '/' specializes ComplexFunctions::'/' {in x: Real[1]; in y: Real[0..1]; return: Real[1];}\nfunction '**' specializes ComplexFunctions::'**' {in x: Real[1]; in y: Real[0..1]; return: Real[1];}\nfunction '^' specializes ComplexFunctions::'^' {in x: Real[1]; in y: Real[0..1]; return: Real[1];}\nfunction '<' specializes ComplexFunctions::'<'\n {in x: Real[1]; in y: Real[0..1]; return: Boolean[1];}\nfunction '>' specializes ComplexFunctions::'>'\n {in x: Real[1]; in y: Real[0..1]; return: Boolean[1];}\nfunction '<=' specializes ComplexFunctions::'<='\n {in x: Real[1]; in y: Real[0..1]; return: Boolean[1];}\nfunction '>=' specializes ComplexFunctions::'>='\n {in x: Real[1]; in y: Real[0..1]; return: Boolean[1];}\nfunction max specializes ComplexFunctions::max {in x: Real[1]; in y: Real[0..1]; return: Real[1];}\nfunction min specializes ComplexFunctions::min {in x: Real[1]; in y: Real[0..1]; return: Real[1];}\nfunction '==' specializes ComplexFunctions::'=='\n {in x: Real[1]; in y: Real[0..1]; return: Boolean[1];}\nfunction sqrt {in x: Real[1]; return : Real[1];}\nfunction floor {in x: Real[1]; return : Integer[1];}\nfunction round {in x: Real[1]; return : Integer[1];}\nfunction ToString specializes ComplexFunctions::ToString {in x: Real[1]; return : String[1];}\nfunction ToInteger {in x: Real[1]; return : Integer[1];}\nfunction ToRational {in x: Real[1]; return : Rational[1];}\nfunction ToReal {in x: String[1]; return : Real[1];}\nfunction ToComplex(x: Real[1]): Complex;\nfunction sum specializes ComplexFunctions::sum {in collection: Real[0..*]; return : Real[1];}\nfunction product specializes ComplexFunctions::product {in collection: Real[0..*]; return : Real[1];}\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_132.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-133",
+      "slide": 133,
+      "pdf_page": 133,
+      "title": "Rational Functions",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package RationalFunctions {\npublic import ScalarValues::*;\nfunction rat {in numer: Integer[1]; in denum: Integer[1]; return : Rational[1];}\nfunction numer{in rat: Rational[1]; return : Integer[1];}\nfunction denom {in rat: Rational[1]; return : Integer[1];}\nfunction abs specializes RealFunctions::abs {in x: Rational[1]; return : Rational[1];}\nfunction '+' specializes RealFunctions::'+' {in x: Rational[1]; in y: Rational[0..1]; return : Rational[1];}\nfunction '-' specializes RealFunctions::'-' {in x: Rational[1]; in y: Rational[0..1]; return : Rational[1];}\nfunction '*' specializes RealFunctions::'*' {in x: Rational[1]; in y: Rational[1]; return : Rational[1];}\nfunction '/' specializes RealFunctions::'/' {in x: Rational[1]; in y: Rational[1]; return : Rational[1];}\nfunction '**' specializes RealFunctions::'**' {in x: Rational[1]; in y: Rational[1]; return : Rational[1];}\nfunction '^' specializes RealFunctions::'^' {in x: Rational[1]; in y: Rational[1]; return : Rational[1];}\nfunction '<' specializes RealFunctions::'<' {in x: Rational[1]; in y: Rational[1]; return : Boolean[1];\nfunction '>' specializes RealFunctions::'>' {in x: Rational[1]; in y: Rational[1]; return : Boolean[1];\nfunction '<=' specializes RealFunctions::'<=' {in x: Rational[1]; in y: Rational[1]; return : Boolean[1];\nfunction '>=' specializes RealFunctions::'>=' {in x: Rational[1]; in y: Rational[1]; return : Boolean[1];\nfunction max specializes RealFunctions::max {in x: Rational[1]; in y: Rational[1]; return : Boolean[1];\nfunction min specializes RealFunctions::min {in x: Rational[1]; in y: Rational[1]; return : Boolean[1];\nfunction '==' specializes RealFunctions::'==' {in x: Rational[1]; in y: Rational[1]; return : Boolean[1];\nfunction gcd {in x: Rational[1]; in y: Rational[0..1]; return : Integer[1];}\nfunction floor {in x: Rational[1]; return : Integer[1];}\nfunction round {in x: Rational[1]; return : Integer[1];}\nfunction ToString specializes RealFunctions::ToString {in x: Rational[1]; return : String[1];}\nfunction ToInteger {in x: Rational[1]; return : Integer[1];}\nfunction ToRational {in x: String[1]; return : Rational[1];}\nfunction sum specializes RealFunctions::sum {in collection: Rational[0..*]; return : Rational[1];}\nfunction product specializes RealFunctions::product {in collection: Rational[0..*]; return : Rational[1];}\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The rendered function names include typographic quote variants and/or visibly incomplete function bodies; source normalization preserves the panel for research but does not assert parser compatibility."
+      ]
+    },
+    {
+      "id": "slide-134",
+      "slide": 134,
+      "pdf_page": 134,
+      "title": "Integer Functions",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package IntegerFunctions {\npublic import ScalarValues::*;\nfunction abs specializes RationalFunctions::abs {in x: Integer[1]; return : Natural[1];}\nfunction '+' specializes RationalFunctions::'+' {in x: Integer[1]; in y: Integer[0..1]; return : Integer[1];}\nfunction '-' specializes RationalFunctions::'-' {in x: Integer[1]; in y: Integer[0..1]; return : Integer[1];}\nfunction '*' specializes RationalFunctions::'*' {in x: Integer[1]; in y: Integer[1]; return : Integer[1];}\nfunction '/' specializes RationalFunctions::'/' {in x: Integer[1]; in y: Integer[1]; return : Rational[1];}\nfunction '**' specializes RationalFunctions::'**' {in x: Integer[1]; in y: Natural[1]; return : Integer[1];}\nfunction '^' specializes RationalFunctions::'^' {in x: Integer[1]; in y: Natural[1]; return : Integer[1];}\nfunction '%' specializes NumericalFunctions::'%' {in x: Integer[1]; in y: Integer[1]; return : Integer[1];}\nfunction '<' specializes RationalFunctions::'<' {in x: Integer[1]; in y: Integer[1]; return : Boolean[1];}\nfunction '>' specializes RationalFunctions::'>' {in x: Integer[1]; in y: Integer[1]; return : Boolean[1];}\nfunction '<=' specializes RationalFunctions::'<=' {in x: Integer[1]; in y: Integer[1]; return : Boolean[1];}\nfunction '>=' specializes RationalFunctions::'>=' {in x: Integer[1]; in y: Integer[1]; return : Boolean[1];}\nfunction max specializes RationalFunctions::max {in x: Integer[1]; in y: Integer[1]; return : Integer[1];}\nfunction min specializes RationalFunctions::min {in x: Integer[1]; in y: Integer[1]; return : Integer[1];}\nfunction '==' specializes DataFunctions::'==' {in x: Integer[0..1]; in y: Integer[0..1]; return : Boolean[1];}\nfunction '..' specializes ScalarFunctions::'..'\n  {in lower: Integer[1]; in upper: Integer[1]; return : Integer[0..*];}\nfunction ToString specializes RationalFunctions::ToString {in x: Integer[1]; return : String[1];}\nfunction ToNatural {in x: Integer[1]; return : Natural[1];}\nfunction ToInteger {in x: String[1]; return : Integer[1];}\nfunction sum specializes RationalFunctions::sum {in collection: Integer[0..*]; return : Integer[1];}\nfunction product specializes RationalFunctions::product {in collection: Integer[0..*]; return : Integer[1];}\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_134.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-135",
+      "slide": 135,
+      "pdf_page": 135,
+      "title": "Natural Functions",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package NaturalFunctions {\npublic import ScalarValues::*;\nfunction '+' specializes IntegerFunctions::'+' {in x: Natural[1]; in y: Natural[0..1]; return : Natural[1];}\nfunction '*' specializes IntegerFunctions::'*' {in x: Natural[1]; in y: Natural[1]; return : Natural[1];}\nfunction '/' specializes IntegerFunctions::'/' {in x: Natural[1]; in y: Natural[1]; return : Natural[1];}\nfunction '%' specializes IntegerFunctions::'%' {in x: Natural[1]; in y: Natural[1]; return : Natural[1];}\nfunction '<' specializes IntegerFunctions::'<' {in x: Natural[1]; in y: Natural[1]; return : Boolean[1];}\nfunction '>' specializes IntegerFunctions::'>' {in x: Natural[1]; in y: Natural[1]; return : Boolean[1];}\nfunction '<=' specializes IntegerFunctions::'<=' {in x: Natural[1]; in y: Natural[1]; return : Boolean[1];}\nfunction '>=' specializes IntegerFunctions::'>=' {in x: Natural[1]; in y: Natural[1]; return : Boolean[1];}\nfunction max specializes IntegerFunctions::max {in x: Natural[1]; in y: Natural[1]; return : Natural[1];}\nfunction min specializes IntegerFunctions::min { n x: Natural[1]; in y: Natural[1]; return : Natural[1];}\nfunction '==' specializes IntegerFunctions::'=='\n {in x: Natural[0..1]; in y: Natural[0..1]; return : Boolean[1];}\nfunction ToString specializes IntegerFunctions::ToString {in x: Natural[1]; return : String[1];}\nfunction ToNatural{in x: String[1]; return : Natural[1];}\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_135.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-136",
+      "slide": 136,
+      "pdf_page": 136,
+      "title": "Trigonometric Functions",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package TrigFunctions {\npublic import ScalarValues::Real;\nfeature pi : Real;\ninv piPrecision {\n  RealFunctions::round(pi * 1E20) == 314159265358979323846.0\n}\nfunction deg {in theta_rad : Real[1];return : Real[1];}\nfunction rad {in theta_deg : Real; return : Real[1];}\ndatatype UnitBoundedReal :> Real {\n  inv unitBound { -1.0 <= that & that <= 1.0 }\n}\nfunction sin {in theta : Real[1]; return : UnitBoundedReal[1];}\nfunction cos {in theta : Real[1]; return : UnitBoundedReal[1];}\nfunction tan {in theta : Real[1]; return : Real;}\nfunction cot {in theta : Real; return : Real;}\nfunction arcsin {in x : UnitBoundedReal[1]; return : Real[1];}\nfunction arccos {in x : UnitBoundedReal[1]; return : Real[1];}\nfunction arctan {in x : Real[1]; return : Real[1];}\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_136.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-137",
+      "slide": 137,
+      "pdf_page": 137,
+      "title": "Sequence Functions (1)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package SequenceFunctions {\n...\nfunction equals {in x: Anything[0..*] ordered nonunique; in y: Anything[0..*] ordered nonunique;\n return : Boolean[1];\n}\nfunction same {in x: Anything[0..*] ordered nonunique; in y: Anything[0..*] ordered nonunique;\n return : Boolean[1];\n}\nfunction size {in seq: Anything[0..*] nonunique; return : Natural[1];}\nfunction isEmpty {in seq: Anything[0..*] nonunique; return : Boolean[1];}\nfunction notEmpty {in seq: Anything[0..*] nonunique; return : Boolean[1];}\nfunction includes {in seq1: Anything[0..*] nonunique; in seq2: Anything[0..*] nonunique;\n return : Boolean[1];\n}\nfunction excludes {in seq1: Anything[0..*] nonunique; in seq2: Anything[0..*] nonunique;\n return : Boolean[1];\n}\nfunction including {in seq: Anything[0..*] ordered nonunique; in values: Anything[0..*] ordered nonunique;\n  return : Anything[0..*] ordered nonunique;\n}\nfunction includingAt{in seq: Anything[0..*] ordered nonunique; in values: Anything[0..*] ordered nonunique;\n  in index: Positive[1]; return : Anything[0..*] ordered nonunique;\n}\nfunction excluding {in seq: Anything[0..*] ordered nonunique; in values: Anything[0..*] ordered nonunique;\n  return : Anything[0..*] ordered nonunique;\n}\nfunction excludingAt{in seq: Anything[0..*] ordered nonunique; in values: Anything[0..*] ordered nonunique;\n  in index: Positive[1]; return : Anything[0..*] ordered nonunique;\n}\n...",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-138",
+      "slide": 138,
+      "pdf_page": 138,
+      "title": "Sequence Functions (2)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package SequenceFunctions {\n...\nfunction head {in seq: Anything[0..*] ordered nonunique;\n return : Anything[0..1];\n}\nfunction tail {in seq: Anything[0..*] ordered nonunique ;\n return : Anything[0..*] ordered nonunique;\n}\nfunction last {in seq: Anything[0..*] ;\n return : Anything[0..1];\n}\nfunction '#' specializes BaseFunctions::'#' {\n  in seq: Anything[0..*] ordered nonunique; in index: Natural[1]; return : Anything[0..1];\n}\nbehavior add {\n  inout seq: Anything[0..*] ordered nonunique; in values: Anything[0..*] ordered nonunique;\n}\nbehavior addAt {\n  inout seq: Anything[0..*] ordered nonunique; in values: Anything[0..*] ordered nonunique;\n  in index: Positive[1];\n}\nbehavior remove{\n  inout seq: Anything[0..*] ordered nonunique; in values: Anything[0..*];\n}\nbehavior removeAt{\n  inout seq: Anything[0..*] ordered nonunique;\n  in startIndex: Positive[1]; in endIndex: Positive[1] default startIndex;\n}\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-139",
+      "slide": 139,
+      "pdf_page": 139,
+      "title": "Collection Functions",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package CollectionFunctions {\n...\npublic import Collections::*;\nfunction '==' specializes BaseFunctions::'=='\n  {in col1: Collection[0..1]; in col2: Collection[0..1]; return : Boolean[1];}\nfunction size {in col: Collection[1]; return : Natural[1];}\nfunction isEmpty {in col: Collection[1]; return : Boolean[1];}\nfunction notEmpty {in col: Collection[1]; return : Boolean[1];}\nfunction contains {in col: Collection[1]; in values: Anything[*]; return : Boolean[1];}\nfunction containsAll {in col1: Collection[1]; in col2: Collection[2]; return : Boolean[1];}\nfunction head {in col: OrderedCollection[1]; return : Anything[0..1];}\nfunction tail {in col: OrderedCollection[1]; return : Anything[0..*] ordered nonunique;}\nfunction last {in col: OrderedCollection[1]; return : Anything[0..1];}\nfunction '#' specializes BaseFunctions::'#'\n  {in col: OrderedCollection[1]; in index: Positive[1]; return : Anything[0..1];}\nfunction 'array#' specializes BaseFunctions::'#'\n  {in arr: Array[1]; in indexes: Positive[n] ordered nonunique; return : Anything[0..1];}\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-140",
+      "slide": 140,
+      "pdf_page": 140,
+      "title": "Vector Functions (1)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package VectorFunctions {\n...\npublic import VectorValues::*;\nabstract function isZeroVector {in v: VectorValue[1]; return : Boolean[1];}\nabstract function '+' specializes DataFunctions::'+'\n {in v: VectorValue[1]; in w: VectorValue[0..1]; return u: VectorValue[1];}\nabstract function '-' specializes DataFunctions::'-'\n {in v: VectorValue[1]; in w: VectorValue[0..1]; return u: VectorValue[1];}\nfunction VectorOf {in components: NumericalValue[1..*] ordered nonunique;\n  return : NumericalVectorValue[1];}\n\nabstract function scalarVectorMult specializes DataFunctions::'*'\n {in x: NumericalValue[1]; in v: NumericalVectorValue[1]; return w: NumericalVectorValue[1];\nalias '*' for scalarVectorMult;\nabstract function vectorScalarMult specializes DataFunctions::'*'\n {in v: NumericalVectorValue[1]; in x: NumericalValue[1]; return : NumericalVectorValue[1];}\nabstract function vectorScalarDiv specializes DataFunctions::'/'\n {in v: NumericalVectorValue[1]; in x: NumericalValue[1]; return : NumericalVectorValue[1];}\nabstract function inner specializes DataFunctions::'*'\n {in v: NumericalVectorValue[1]; in w: NumericalVectorValue[1]; return x: NumericalValue[1];}\nabstract function norm {in v: NumericalVectorValue[1]; return l : NumericalValue[1];}\nabstract function angle {in v: NumericalVectorValue[1]; in w: NumericalVectorValue[1];\n return theta: NumericalValue[1];}\n...\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-141",
+      "slide": 141,
+      "pdf_page": 141,
+      "title": "Vector Functions (2)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package VectorFunctions {\n...\nfunction CartesianVectorOf\n {in components: NumericalValue[1..*] ordered nonunique; return : CartesianVectorValue[1];}\nfunction CartesianThreeVectorOf specializes CartesianVectorOf\n {in components: Real[3] ordered nonunique; return : CartesianVectorValue[1];}\nfunction isCartesianZeroVector specializes isZeroVector\n {in v: CartesianVectorValue[1]; return : Boolean[1];}\nfunction 'cartesian+' specializes '+'\n {in v: CartesianVectorValue[1]; in w: CartesianVectorValue[0..1]; return: CartesianVectorValue[1];\nfunction 'cartesian-' specializes '-'\n {in v: CartesianVectorValue[1]; in w: CartesianVectorValue[0..1]; return: CartesianVectorValue[1];\nfunction cartesianScalarVectorMult specializes scalarVectorMult\n {in x: Real[1]; in v: CartesianVectorValue[1]; return : CartesianVectorValue[1];}\nfunction cartesianVectorScalarMult specializes vectorScalarMult\n {in v: CartesianVectorValue[1]; in x: Real[1]; return : CartesianVectorValue[1];}\nfunction cartesianInner specializes inner\n {in v: CartesianVectorValue[1]; in w: CartesianVectorValue[0..1]; return : Real[1];}\nfunction cartesianNorm specializes norm\n {in v: CartesianVectorValue[1]; return : NumericalValue[1];}\nfunction cartesianAngle specializes angle\n {in v: CartesianVectorValue[1]; in w: CartesianVectorValue[0..1]; return : Real[1];}\nfunction sum {in coll: CartesianThreeVectorValue[*]; return : CartesianThreeVectorValue[0..1];}\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-142",
+      "slide": 142,
+      "pdf_page": 142,
+      "title": "Control Functions",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package ControlFunctions {\nprivate import Base::Anything;\nprivate import ScalarValues::ScalarValue;\nabstract function 'if' {in test: Boolean[1];\n in expr thenValue[0..1] {return : Anything[0..*] ordered nonunique;}\n in expr elseValue[0..1] {return : Anything[0..*] ordered nonunique;}\n return : Anything[0..*] ordered nonunique;}\nabstract function '??' {in firstValue: Anything[0..*];\n in expr secondValue[0..1] {return : Anything[0..*] ordered nonunique;}\n return : Anything[0..*] ordered nonunique;}\nfunction 'and'\n {in firstValue: Anything[0..*]; in expr secondValue[0..1] {return : Boolean[1];} return : Boolean[1];}\nfunction 'or'\n {in firstValue: Anything[0..*]; in expr secondValue[0..1] {return : Boolean[1];} return : Boolean[1];}\nfunction 'implies'\n {in firstValue: Anything[0..*]; in expr secondValue[0..1] {return : Boolean[1];} return : Boolean[1];}\nabstract function collect {in collection: Anything[0..*] ordered nonunique;\n in expr mapper[0..*] (argument: Anything[1]): Anything[0..*] ordered nonunique;\n return : Anything[0..*] ordered nonunique {\n}\nabstract function select { in collection: Anything[0..*] ordered nonunique;\n in expr selector[0..*] (argument: Anything[1]): Boolean[1];\n return : Anything[0..*] ordered nonunique {\n}\nabstract function reject { in collection: Anything[0..*] ordered nonunique;\n in expr rejector[0..*] (argument: Anything[1]): Boolean[1];\n return : Anything[0..*] ordered nonunique {\n}\n...\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-143",
+      "slide": 143,
+      "pdf_page": 143,
+      "title": "Occurrence Functions",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package OccurrenceFunctions {\n...\nfunction '==='  specializes BaseFunctions::'===' {\nin x: Occurrence[0..1]; in y: Occurrence[0..1];\nreturn : Boolean[1];\n}\nfunction isDuring {\nin occ: Occurrence[1];\nreturn : Boolean[1];\n}\nfunction create {\ninout occ: Occurrence[1];\nreturn : Occurrence[1];\n}\nfunction destroy {\ninout occ: Occurrence[0..1];\nreturn : Occurrence[0..1];\n}\nfunction addNew {\ninout group: Occurrence[0..*] nonunique; inout occ: Occurrence[1];\nreturn : Occurrence[1];\n}\nfunction addNewAt {\ninout group: Occurrence[0..*] ordered nonunique; inout occ: Occurrence[1]; in index: Positive[1];\nreturn : Occurrence[1];\n}\nbehavior removeOld {\ninout group: Occurrence[0..*] nonunique; inout occ: Occurrence[0..1];\n}\nbehavior removeOldAt {\ninout group: Occurrence[0..*] ordered nonunique; in index: Positive[1];\n}\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-145",
+      "slide": 145,
+      "pdf_page": 145,
+      "title": "Standard View Definitions",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package StandardViewDefinitions {\n   view def <gv> GeneralView;\n   view def <iv> InterconnectionView;\n   view def <afv> ActionFlowView specializes InterconnectionView;\n   view def <stv> StateTransitionView specializes InterconnectionView;\n   view def <sv> SequenceView;\n   view def <gev> GeometryView;\n   view def <gv> GridView;\n   view def <bv> BrowserView;\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_145.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-147",
+      "slide": 147,
+      "pdf_page": 147,
+      "title": "Risk Metadata",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package RiskMetadata {\nprivate import ScalarValues::Real;\nattribute def Level :> Real {\n  assert constraint { that >= 0.0 and that <= 1.0 }\n}\nenum def LevelEnum :> Level {\n  low = 0.25;\n  medium = 0.50;\n  high = 0.75;\n}\nattribute def RiskLevel {\n  attribute probability : Level;\n  attribute impact : Level [0..1];\n}\nenum def RiskLevelEnum :> RiskLevel {\n  low = RiskLevel(probability = LevelEnum::L);\n  medium = RiskLevel(probability = LevelEnum::M);\n  high = RiskLevel(probability = LevelEnum::H);\n}\nmetadata def Risk {\n  attribute totalRisk : RiskLevel [0..1];\n  attribute technicalRisk : RiskLevel [0..1];\n  attribute scheduleRisk : RiskLevel [0..1];\n  attribute costRisk : RiskLevel [0..1];\n}\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_147.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-148",
+      "slide": 148,
+      "pdf_page": 148,
+      "title": "Modeling Metadata",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package ModelingMetadata {\n...\nenum def StatusKind {\n  open;\n  tbd; // To be determined\n  tbr; // To be resolved\n  tbc; // To be confirmed\n  done;\n  closed;\n}\nmetadata def StatusInfo {\n  attribute originator : String [0..1];\n  attribute owner : String [0..1];\n  attribute status : StatusKind;\n  attribute risk : Risk [0..1];\n}\nmetadata def Rationale {\n  attribute text : String;\n  ref explanation : Anything [0..1];\n}\nmetadata def Issue {\n  attribute text : String;\n}\nmetadata def <refinement> Refinement {\n    :>> annotatedElement : SysML::Dependency;\n  }\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-149",
+      "slide": 149,
+      "pdf_page": 149,
+      "title": "Parameters of Interest Metadata",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package ParametersOfInterestMetadata {\nprivate import Metaobjects::SemanticMetadata;\nattribute measuresOfEffectiveness[*] nonunique;\nattribute measuresOfPerformance[*] nonunique;\nmetadata def <moe> MeasureOfEffectiveness :> SemanticMetadata {\n  :>> annotatedElement : SysML::Usage;\n  :>> baseType = measuresOfEffectiveness meta SysML::Usage;\n}\nmetadata def <mop> MeasureOfPerformance :> SemanticMetadata {\n  :>> annotatedElement : SysML::Usage;\n  :>> baseType = measuresOfPerformance meta SysML::Usage;\n}\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_149.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-150",
+      "slide": 150,
+      "pdf_page": 150,
+      "title": "Image Metadata",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package ImageMetadata {\nprivate import ScalarValues::String;\nattribute def Image {\n  attribute content : String[0..1];\n  attribute encoding : String[0..1];\n  attribute type : String[0..1];\n  attribute location : String[0..1];\n}\nmetadata def Icon {\n  attribute fullImage : Image[0..1];\n  attribute smallImage : Image[0..1];\n}\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_150.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-152",
+      "slide": 152,
+      "pdf_page": 152,
+      "title": "Trade Studies",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package TradeStudies {\n  private import Base::Anything;\n  private import ScalarValues::*;\n  private import ScalarFunctions::*;\n  abstract calc def EvaluationFunction(alternative) result : ScalarValue[1];\n  abstract requirement def TradeStudyObjective {\n    subject selectedAlternative : Anything;\n    in ref alternatives : Anything[1..*];\n    in calc eval : EvaluationFunction;\n    out attribute best : ScalarValue;\n    require constraint { eval(selectedAlternative) == best }\n  }\n  requirement def MinimizeObjective :> TradeStudyObjective {\n   ...\n    attribute :>> best = alternatives->minimize {in x; eval(x)};\n  }\n  requirement def MaximizeObjective :> TradeStudyObjective {\n   ...\n    attribute :>> best = alternatives->maximize {in x; eval(x)};\n  }\n  abstract analysis def TradeStudy {\n    subject studyAlternatives : Anything[1..*];\n    abstract calc evaluationFunction : EvaluationFunction;\n    objective tradeStudyObjective : TradeStudyObjective {\n     subject :>> selectedAlternative;\n      in ref :>> alternatives = studyAlternatives;\n      in calc :>> eval = evaluationFunction;\n    }\n    return selectedAlternative : Anything =\n      studyAlternatives->selectOne {in ref a; tradeStudyObjective(selectedAlternative = a)};\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-153",
+      "slide": 153,
+      "pdf_page": 153,
+      "title": "Analysis Tooling Annotations",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package AnalysisTooling {\n  private import ScalarValues::*;\n  metadata def ToolExecution {\n    attribute toolName : String;\n    attribute uri : String;\n  }\n  metadata def ToolVariable {\n    attribute name : String;\n  }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_153.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-154",
+      "slide": 154,
+      "pdf_page": 154,
+      "title": "State Space Representation (1)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package StateSpaceRepresentation {\nprivate import ISQ::DurationValue;\nprivate import Quantities::VectorQuantityValue;\nprivate import VectorCalculations::*;\nabstract attribute def StateSpace :> VectorQuantityValue;\nabstract attribute def Input :> VectorQuantityValue;\nabstract attribute def Output :> VectorQuantityValue;\nabstract calc def GetNextState\n  {in input: Input; in stateSpace: StateSpace; in timeStep: DurationValue; return : StateSpace;}\nabstract calc def GetOutput\n  {in input: Input; in stateSpace: StateSpace; return : Output;}\nabstract action def StateSpaceEventDef;\naction def ZeroCrossingEventDef :> StateSpaceEventDef;\nitem def StateSpaceItem;\nabstract action def StateSpaceDynamics {\n  in attribute input: Input;\n  abstract calc getNextState: GetNextState;\n  abstract calc getOutput: GetOutput;\n  attribute stateSpace: StateSpace;\n  out attribute output: Output = getOutput(input, stateSpace);\n}\nabstract attribute def StateDerivative :> VectorQuantityValue { ... }\nabstract calc def GetDerivative\n  {in input: Input; in stateSpace: StateSpace; return : StateDerivative;}\nabstract calc def Integrate {in getDerivative: GetDerivative; in input: Input;\n in initialState: StateSpace; in timeInterval: DurationValue; return result: StateSpace;}\n...",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-155",
+      "slide": 155,
+      "pdf_page": 155,
+      "title": "State Space Representation (2)",
+      "source_kind": "textual_code_panel",
+      "code": "...\nabstract action def ContinuousStateSpaceDynamics :> StateSpaceDynamics {\n  abstract calc getDerivative: GetDerivative;\n  calc :>> getNextState: GetNextState {\n    calc integrate: Integrate {\n     in derivative = ContinuousStateSpaceDynamics::getDerivative;\n     in input = GetNextState::input;\n     in initialState = GetNextState::stateSpace;\n     in timeInterval = GetNextState::timeStep;\n     return resultState = result;\n    }\n  }\n  event occurrence zeroCrossingEvents[0..*] : ZeroCrossingEventDef;\n}\nabstract calc def GetDifference {\n in input: Input; in stateSpace: StateSpace;\n  return : StateSpace;}\nabstract action def DiscreteStateSpaceDynamics :> StateSpaceDynamics {\n  abstract calc getifference: GetDifference;\n  calc :>> getNextState: GetNextState {\n    attribute diff: StateSpace = getDifference(input, stateSpace);\n    stateSpace + diff\n  }\n}\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-156",
+      "slide": 156,
+      "pdf_page": 156,
+      "title": "Sampled Functions",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package SampledFunctions {\n...\nattribute def SamplePair :> KeyValuePair {\n  attribute domainValue :>> key;\n  attribute rangeValue :>> val;\n}\nattribute def SampledFunction :> OrderedMap {\n  attribute samples: SamplePair[0..*] ordered :>> elements;\n  assert constraint { ... }\n}\ncalc def Domain{in fn : SampledFunction;\n return : Anything[0..*] = fn.samples.domainValue;}\ncalc def Range{in fn : SampledFunction;\n return : Anything[0..*] = fn.samples.rangeValue;}\ncalc def Sample {in calc calculation {in x;}\n  in attribute domainValues [0..*];\n  return sampling;\ncalc def Interpolate {in attribute fn : SampledFunction;\n  in attribute value;\n  return attribute result;}\ncalc interpolateLinear : Interpolate { ... }\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-158",
+      "slide": 158,
+      "pdf_page": 158,
+      "title": "Causation Connections",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package CausationConnections {\nabstract occurrence causes[*];\nabstract occurrence effects[*];\nabstract connection def Multicausation {\n  abstract constant ref occurrence causes[1..*]\n    :>> causes :> participant;\n  abstract constant ref occurrence effects[1..*]\n    :>> effects :> participant;\n...\n}\nabstract connection multicausations : Multicausation[*] {\nconnection def Causation :> Multicausation {\n  end theCauses[*] occurrence theCause\n    :>> causes :>> source;\n  end theEffects[*] occurrence theEffect\n    :>> effects :>> target;\n}\nabstract connection causations : Causation[*]\n  :> multicausations;\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-159",
+      "slide": 159,
+      "pdf_page": 159,
+      "title": "Cause and Effect Metadata",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package CauseAndEffect {\npublic import CausationConnections::*;\nprivate import ScalarValues::*;\nprivate import Metaobjects::SemanticMetadata;\nmetadata def <cause> CauseMetadata :> SemanticMetadata {\n  ref :>> annotatedElement : SysML::Usage;\n  ref :>> baseType = causes meta SysML::Usage;\n}\nmetadata def <effect> EffectMetadata :> SemanticMetadata {\n  ref :>> annotatedElement : SysML::Usage;\n  ref :>> baseType = effects meta SysML::Usage;\n}\nmetadata def CausationMetadata {\n  ref :> annotatedElement : SysML::ConnectionDefinition;\n  ref :> annotatedElement : SysML::ConnectionUsage;\n  attribute isNecessary : Boolean default false;\n  attribute isSufficient : Boolean default false;\n  attribute probability : Real[0..1];\n}\nmetadata def <multicausation> MulticausationSemanticMetadata\n  :> CausationMetadata, SemanticMetadata {\n  ref :>> baseType = multicausations meta SysML::Usage;\n}\nmetadata def <causation> CausationSemanticMetadadata\n  :> CausationMetadata, SemanticMetadata {\n  ref :>> baseType = causations meta SysML::Usage;\n}\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_159.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-161",
+      "slide": 161,
+      "pdf_page": 161,
+      "title": "Derivation Connections",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package DerivationConnections {\nrequirement originalRequirements[*];\nrequirement derivedRequirements[*];\nabstract connection def Derivation {\n  ref requirement originalRequirement[1]\n   :>> originalRequirements :> participant;\n  ref requirement :>> derivedRequirements[1..*]\n   :> participant;\n  private assert constraint originalNotDerived { ... }\n  private assert constraint originalImpliesDerived { ... }\n}\nabstract connection derivations : Derivation[*];\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-162",
+      "slide": 162,
+      "pdf_page": 162,
+      "title": "Requirement Derivation Metadata",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package RequirementDerivation {\npublic import DerivationConnections::*;\nprivate import Metaobjects::SemanticMetadata;\nmetadata def <original> OriginalRequirementMetadata\n  :> SemanticMetadata {\n  :> annotatedElement : SysML::Usage;\n  :>> baseType = originalRequirements meta SysML::Usage;\n}\nmetadata def <derive> DerivedRequirementMetadata\n  :> SemanticMetadata {\n  :> annotatedElement : SysML::Usage;\n  :>> baseType = derivedRequirements meta SysML::Usage;\n}\nmetadata def <derivation> DerivationMetadata\n  :> SemanticMetadata {\n  :> annotatedElement : SysML::ConnectionDefinition;\n  :> annotatedElement : SysML::ConnectionUsage;\n  :>> baseType = derivations meta SysML::Usage;\n}\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_162.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-164",
+      "slide": 164,
+      "pdf_page": 164,
+      "title": "Quantities",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package Quantities {\n  abstract attribute def TensorQuantityValue :> Collections::Array {\n    attribute num : ScalarValues::Number[1..*] ordered nonunique :>> elements;\n    attribute mRef : UnitsAndScales::TensorMeasurementReference;\n   attribute :>> dimensions = mRef::dimensions;\n   ...\n  }\n  abstract attribute def VectorQuantityValue :> TensorQuantityValue {\n    attribute :>> mRef : UnitsAndScales::VectorMeasurementReference;\n  }\n  abstract attribute def ScalarQuantityValue :> VectorQuantityValue {\n    attribute :>> mRef : UnitsAndScales::ScalarMeasurementReference;\n  }\n  abstract attribute tensorQuantities: TensorQuantityValue[*] nonunique;\n  abstract attribute vectorQuantities: VectorQuantityValue[*] nonunique :> tensorQuantities;\n  abstract attribute scalarQuantities: ScalarQuantityValue[*] nonunique :> vectorQuantities;\n  alias TensorQuantityValue as QuantityValue;\n  alias tensorQuantities as quantity;\n ...\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-165",
+      "slide": 165,
+      "pdf_page": 165,
+      "title": "Measurement References",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package MeasurementReferences {\n  attribute def TensorMeasurementReference :> Array {\n    attribute mRefs : ScalarMeasurementReference[1..*] :>> elements;\n   ...\n  }\n  attribute def VectorMeasurementReference\n                 :> TensorMeasurementReference {\n   attribute :>> dimensions: Positive[0..1];\n   ...\n  }\n  attribute def ScalarMeasurementReference\n                 :> VectorMeasurementReference {\n   attribute :>> dimensions = ();\n   ...\n  }\n  attribute def CoordinateFrame :> VectorMeasurementReference {\n    attribute transformation: CoordinateTransformation[0..1];\n  }\n ...\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-166",
+      "slide": 166,
+      "pdf_page": 166,
+      "title": "Units",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package Measurement {\n ...\n  abstract attribute def MeasurementUnit\n                 :> ScalarMeasurementReference {\n    attribute unitPowerFactor : UnitPowerFactor[1..*] ordered;\n    attribute unitConversion : UnitConversion[0..1];\n  }\n  abstract attribute def SimpleUnit :> MeasurementUnit {\n   attribute redefines unitPowerFactor[1] {\n     attribute redefines unit = SimpleUnit::self;\n      attribute redefines exponent = 1;\n    }\n  }\n  abstract attribute def DerivedUnit :> MeasurementUnit;\n  attribute def UnitPowerFactor {\n    attribute unit : MeasurementUnit;\n    attribute exponent : ScalarValues::Real;\n  }\n ...\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-167",
+      "slide": 167,
+      "pdf_page": 167,
+      "title": "International System of Quantities (ISQ)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package ISQ {\n  import ISQBase::*;\n  import ISQSpaceTime::*;\n ...\n}\nstandard library package ISQBase {\n  attribute def LengthUnit :> SimpleUnit {...}\n  attribute def LengthValue :> ScalarQuantityValue {\n    attribute redefines num : ScalarValues::Real;\n    attribute redefines mRef : LengthUnit;\n  }\n  attribute length: LengthValue :> quantity;\n ...\n}\npackage ISQSpaceTime {\n  import ISQBase::*;\n ...\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-168",
+      "slide": 168,
+      "pdf_page": 168,
+      "title": "International System of Units / Système International (SI)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package SI {\n  public import ISQ::*;\n  public import SIPrefixes::*;\n  attribute <g> gram : MassUnit;\n  attribute <m> metre : LengthUnit;\n  attribute <kg> kilogram : MassUnit {\n   attribute redefines unitConversion : ConversionByPrefix {\n     attribute redefines prefix = kilo;\n     attribute redefines referenceUnit = g\n    }\n  }\n  attribute <s> second : TimeUnit;\n  attribute <A> ampere : ElectricCurrentUnit;\n  attribute <K> kelvin : ThermodynamicTemperatureUnit;\n  attribute <mol> mole : AmountOfSubstanceUnit;\n  attribute <cd> candela : LuminousIntensityUnit;\n ...\n attribute <N> newton : ForceUnit = kg * m / s ^ 2;",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger.",
+        "The rendered slide visibly omits a semicolon after `referenceUnit = g`; retained as printed and marked non-fixture."
+      ]
+    },
+    {
+      "id": "slide-169",
+      "slide": 169,
+      "pdf_page": 169,
+      "title": "US Customary Units",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package USCustomaryUnits {\n  public import ISQ::*;\n  private import SI::*;\n  attribute <ft> foot : LengthUnit {\n   attribute redefines unitConversion : ConversionByConvention {\n      attribute redefines referenceUnit = m,\n      attribute redefines conversionFactor = 3048/10000;\n    }\n  }\n ...\n  attribute <mi> mile : LengthUnit {\n    attribute redefines unitConversion : ConversionByConvention {\n      attribute redefines referenceUnit = ft,\n      attribute redefines conversionFactor = 5280;\n    }\n  }\n attribute <'mi/hr'> 'mile per hour' : SpeedUnit = mi / hr;\n  alias mph for 'mi/hr';\n ...\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-170",
+      "slide": 170,
+      "pdf_page": 170,
+      "title": "Quantity Calculations (1)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package QuantityCalculations {\nprivate import ScalarValues::*;\nprivate import Quantities::ScalarQuantityValue;\nprivate import MeasurementReferences::ScalarMeasurementReference;\nprivate import MeasurementReferences::DimensionOneValue;\n\ncalc def '[' specializes BaseFunctions::'[' { in num: Number[1]; in mRef: ScalarMeasurementReference[1];\n return quantity : ScalarQuantityValue[1]; }\n...\ncalc def abs specializes NumericalFunctions::abs\n { in x: ScalarQuantityValue[1]; return : ScalarQuantityValue[1]; }\ncalc def '+' specializes NumericalFunctions::'+'\n { in x: ScalarQuantityValue[1]; in y: ScalarQuantityValue[0..1]; return : ScalarQuantityValue; }\ncalc def '-' specializes NumericalFunctions::'-'\n { in x: ScalarQuantityValue; in y: ScalarQuantityValue[0..1]; return : ScalarQuantityValue[1]; }\ncalc def '*' specializes NumericalFunctions::'*'\n { in x: ScalarQuantityValue[1]; in y: ScalarQuantityValue[1]; return : ScalarQuantityValue[1]; }\ncalc def '/' specializes NumericalFunctions::'/'\n { in x: ScalarQuantityValue[1]; in y: ScalarQuantityValue[1]; return : ScalarQuantityValue[1]; }\ncalc def '**' specializes NumericalFunctions::'**'\n { in x: ScalarQuantityValue[1]; in y: Real[1]; return : ScalarQuantityValue[1]; }\ncalc def '^' specializes NumericalFunctions::'^'\n { in x: ScalarQuantityValue[1]; in y: Real[1]; return : ScalarQuantityValue[1]; }\ncalc def '<' specializes NumericalFunctions::'<'\n { in x: ScalarQuantityValue[1]; in y: ScalarQuantityValue[1]; return : Boolean[1]; }\ncalc def '>' specializes NumericalFunctions::'>'\n { in x: ScalarQuantityValue[1]; in y: ScalarQuantityValue[1]; return : Boolean[1]; }\ncalc def '<=' specializes NumericalFunctions::'<='\n { in x: ScalarQuantityValue[1]; in y: ScalarQuantityValue[1]; return : Boolean[1]; }\ncalc def '>=' specializes NumericalFunctions::'>='\n { in x: ScalarQuantityValue[1]; in y: ScalarQuantityValue[1]; return : Boolean[1]; }\n...\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-171",
+      "slide": 171,
+      "pdf_page": 171,
+      "title": "Quantity Calculations (2)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package QuantityCalculations {\n...\ncalc def max specializes NumericalFunctions::max\n { in x: ScalarQuantityValue[1]; in y: ScalarQuantityValue[1]; return : ScalarQuantityValue[1]; }\ncalc def min specializes NumericalFunctions::min\n { in x: ScalarQuantityValue[1]; in y: ScalarQuantityValue[1]; return : ScalarQuantityValue[1]; }\ncalc def '==' specializes DataFunctions::'=='\n { in x: ScalarQuantityValue[1]; in y: ScalarQuantityValue[1]; return : Boolean[1]; }\ncalc def sqrt{ in x: ScalarQuantityValue[1]; return : ScalarQuantityValue[1]; }\ncalc def floor { in x: ScalarQuantityValue[1]; return : ScalarQuantityValue[1]; }\ncalc def round { in x: ScalarQuantityValue[1]; return : ScalarQuantityValue[1]; }\ncalc def ToString specializes BaseFunctions::ToString { in x: ScalarQuantityValue[1]; return : String; }\ncalc def ToInteger { in x: ScalarQuantityValue[1]; return : Integer[1]; }\ncalc def ToRational { in x: ScalarQuantityValue[1]; return : Rational[1]; }\ncalc def ToReal { in x: ScalarQuantityValue[1]; return : Real[1]; }\ncalc def ToDimensionOneValue { in x: Real[1]; return : DimensionOneValue[1]; }\ncalc def sum specializes NumericalFunctions::sum\n { in collection: ScalarQuantityValue[0..*]; return : ScalarQuantityValue; }\ncalc def product specializes NumericalFunctions::product\n { in collection: ScalarQuantityValue[0..*]; return : ScalarQuantityValue; }\ncalc def ConvertQuantity { in x: ScalarQuantityValue[1]; in targetMRef: ScalarMeasurementReference[1];\n return : ScalarQuantityValue[1]; }\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-172",
+      "slide": 172,
+      "pdf_page": 172,
+      "title": "Measurement Reference Calculations",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package MeasurementRefCalculations {\nprivate import ScalarValues::String;\nprivate import ScalarValues::Real;\nprivate import MeasurementReferences::MeasurementUnit;\nprivate import MeasurementReferences::ScalarMeasurementReference;\nprivate import MeasurementReferences::CoordinateFrame;\ncalc def '*' specializes DataFunctions::'*'\n  { in x: MeasurementUnit[1]; in y: MeasurementUnit[1]; return : MeasurementUnit[1]; }\ncalc def '/' specializes DataFunctions::'/'\n  { in x: MeasurementUnit[1]; in y: MeasurementUnit[1]; return : MeasurementUnit[1]; }\ncalc def '**' specializes DataFunctions::'**'\n  { in x: MeasurementUnit[1]; in y: Real[1]; return : MeasurementUnit[1]; }\ncalc def '^' specializes DataFunctions::'^'\n  { in x: MeasurementUnit[1]; in y: Real[1]; return : MeasurementUnit[1]; }\ncalc def 'CoordinateFrame*' specializes DataFunctions::'*'\n  { in x: CoordinateFrame[1]; in y: MeasurementUnit[1]; return : CoordinateFrame[1]; }\ncalc def 'CoordinateFrame/' specializes DataFunctions::'/'\n  { in x: CoordinateFrame[1]; in y: MeasurementUnit[1]; return : CoordinateFrame[1]; }\ncalc def ToString specializes BaseFunctions::ToString\n  { in x: ScalarMeasurementReference[1]; return : String[1]; }\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_172.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-173",
+      "slide": 173,
+      "pdf_page": 173,
+      "title": "Vector Calculations",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package VectorCalculations {\n  private import ScalarValues::Boolean;\n  private import ScalarValues::Number;\n  private import Quantities::VectorQuantityValue;\n calc def '+' specializes VectorFunctions::'+'\n    {in : VectorQuantityValue; in : VectorQuantityValue; return : VectorQuantityValue;}\n  calc def '-' specializes VectorFunctions::'-'\n    {in : VectorQuantityValue; in : VectorQuantityValue; return : VectorQuantityValue;}\n  calc def scalarVectorMult specializes VectorFunctions:: scalarVectorMult\n    {in : Number; in : VectorQuantityValue; return : VectorQuantityValue;}\n  calc def vectorScalarMult specializes VectorFunctions:: vectorScalarMult\n    {in : VectorQuantityValue; in : Number; return : VectorQuantityValue;}\n  calc def vectorScalarDiv specializes RealFunctions::'*'\n    {in : VectorQuantityValue; in : Number; return : VectorQuantityValue;}\n  calc def inner specializes VectorFunctions::inner\n    {in : VectorQuantityValue; in : VectorQuantityValue; return : Number;}\n  alias scalarVectorMult as '*';\n  calc def norm specializes VectorFunctions::norm\n    {in : VectorQuantityValue; return : Number;}\n  calc def angle specializes VectorFunctions::angle\n    {in : VectorQuantityValue; in : VectorQuantityValue; return : Number;}\n}",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_173.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-174",
+      "slide": 174,
+      "pdf_page": 174,
+      "title": "Tensor Calculations",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package TensorCalculations {\nprivate import ScalarValues::Boolean;\nprivate import ScalarValues::Number;\nprivate import Quantities::ScalarQuantityValue;\nprivate import Quantities::VectorQuantityValue;\nprivate import Quantities::TensorQuantityValue;\nprivate import MeasurementReferences::TensorMeasurementReference;\nprivate import MeasurementReferences::CoordinateTransformation;\ncalc def '[' specializes BaseFunctions::'[' { in elements: Number[1..n] ordered;\n in mRef: TensorMeasurementReference[1]; return quantity: TensorQuantityValue[1];\n  private attribute n = mRef.flattenedSize;\n}\n...\ncalc def '+' :> DataFunctions::'+'\n ]{ in : TensorQuantityValue[1]; in : TensorQuantityValue[1]; return : TensorQuantityValue[1]; }\ncalc def '-' :> DataFunctions::'-'\n  { in : TensorQuantityValue[1]; in : TensorQuantityValue[1]; return : TensorQuantityValue[1]; }\ncalc def scalarTensorMult { in : Number[1]; in : TensorQuantityValue[1]; return : TensorQuantityValue[1]; }\ncalc def TensorScalarMult { in : TensorQuantityValue[1]; in : Number[1]; return : TensorQuantityValue[1]; }\ncalc def scalarQuantityTensorMult\n { in : ScalarQuantityValue[1]; in : TensorQuantityValue[1]; return : TensorQuantityValue[1]; }\ncalc def TensorScalarQuantityMult\n { in : TensorQuantityValue[1]; in : ScalarQuantityValue[1]; return : TensorQuantityValue[1]; }\ncalc def tensorVectorMult\n  { in : TensorQuantityValue[1]; in : VectorQuantityValue[1]; return : VectorQuantityValue[1]; }\ncalc def vectorTensorMult\n  { in : VectorQuantityValue[1]; in : TensorQuantityValue[1]; return : VectorQuantityValue[1]; }\ncalc def tensorTensorMult\n { in : TensorQuantityValue[1]; in : TensorQuantityValue[1]; return : TensorQuantityValue[1]; }\ncalc def transform { in transformation : CoordinateTransformation; in sourceTensor : TensorQuantityValue;\n  return targetTensor : TensorQuantityValue; }\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-175",
+      "slide": 175,
+      "pdf_page": 175,
+      "title": "Time (1)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package Time {\npart universalClock : Clock[1] :>\n  Clocks::universalClock;\npart def Clock :> Clocks::Clock {\n  attribute :>> currentTime : TimeInstantValue;\n}\ncalc def TimeOf :> Clocks::TimeOf {\n  in o : Occurrence[1];\n  in clock : Clock[1] default localClock;\n  return timeInstant : TimeInstantValue[1];\n}\ncalc def DurationOf :> Clocks::DurationOf {\n  in o : Occurrence[1];\n  in clock : Clock[1] default localClock;\n  return duration : DurationValue;\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The rendered library panel is a selected excerpt whose referenced Clocks package is outside the slide; retain as a context source rather than an independent fixture."
+      ]
+    },
+    {
+      "id": "slide-176",
+      "slide": 176,
+      "pdf_page": 176,
+      "title": "Time (2)",
+      "source_kind": "textual_code_panel",
+      "code": "attribute def TimeScale :> IntervalScale {\n  attribute :>> unit: DurationUnit[1];\n  attribute definitionalEpoch: DefinitionalQuantityValue[1];\n  attribute :>> definitionalQuantityValues = definitionalEpoch;\n}\nattribute def TimeInstantValue :> ScalarQuantityValue {\n  attribute :>> num: Real[1];\n  attribute :>> mRef: TimeScale[1];\n}\nattribute timeInstant: TimeInstantValue :> scalarQuantities;\nabstract attribute def DateTime :> TimeInstantValue;\nabstract attribute def Date :> TimeInstantValue;\nabstract attribute def TimeOfDay :> TimeInstantValue;\nattribute UTC: TimeScale {\n  attribute :>> longName = \"Coordinated Universal Time\";\n  attribute :>> unit = SI::s;\n  attribute :>> definitionalEpoch: DefinitionalQuantityValue {\n    :>> num = 0;\n    :>> definition = \"UTC epoch at 1 January 1958 at 0 hour 0 minute 0 second\";\n  }\n}\nattribute def UtcTimeInstantValue :> DateTime { :>> mRef = UTC; }\nattribute utcTimeInstant: UtcTimeInstantValue;",
+      "completeness": "complete",
+      "context_fragment": false,
+      "fixture_candidate": true,
+      "fixture_name": "intro_textual_slide_176.sysml",
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": []
+    },
+    {
+      "id": "slide-177",
+      "slide": 177,
+      "pdf_page": 177,
+      "title": "Time (3)",
+      "source_kind": "textual_code_panel",
+      "code": "attribute def Iso8601DateTimeEncoding :> String;\nattribute def Iso8601DateTime :> UtcTimeInstantValue {\n  attribute :>> num = getElapsedUtcTime(val);\n  attribute val: Iso8601DateTimeEncoding;\n  private calc getElapsedUtcTime\n    {in iso8601DateTime: Iso8601DateTimeEncoding; return : Real;}\n}\nattribute def Iso8601DateTimeStructure :> UtcTimeInstantValue {\n  attribute :>> num = getElapsedUtcTime(year, month, day, hour, minute, second,\n      microsecond, hourOffset, minuteOffest);\n  attribute :>> mRef = UTC;\n  attribute year: Integer;\n  attribute month: Natural;\n  attribute day: Natural;\n  attribute hour: Natural;\n  attribute minute: Natural;\n  attribute second: Natural;\n  attribute microsecond: Natural;\n  attribute hourOffset: Integer;\n  attribute minuteOffest: Integer;\n  private calc getElapsedUtcTime(year: Integer, month: Natural, day: Natural,\n    hour: Natural, minute: Natural, second: Natural, microsecond: Natural,\n    hourOffset: Integer, minuteOffest: Integer) : Real;\n}\n...\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-179",
+      "slide": 179,
+      "pdf_page": 179,
+      "title": "Spatial Items (1)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package SpatialItems {\n ...\n  item def SpatialItem :> SpatialFrame {\n    item :>> self : SpatialItem;\n    item :>> localClock : Clock[1] default Time::universalClock;\n    attribute coordinateFrame : ThreeDCoordinateFrame[1]\n      default universalCartesianSpatial3dCoordinateFrame;\n   item originPoint : Point[1] :> spaceShots;\n    item subSpatialItems : SpatialItem[1..*] :> subitems {\n      ref item :>> SpatialItem::localClock, subitems::localClock;\n    }\n    item componentItems : SpatialItem[0..*] ordered :> subSpatialItems {\n      ref item :>> SpatialItem::localClock, subSpatialItems::localClock;\n      attribute :>> coordinateFrame {\n        attribute :>> transformation[1] default nullTransformation { ... }\n      }\n    }\n    private attribute cunionNum: Natural [1] = if isEmpty(componentItems) ? 0 else 1;\n    private attribute componentUnion[cunionNum] :> unionsOf {\n      item :>> elements : SpatialItem[1..*] = componentItems;\n    }\n   ...\n  }\n ...\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-180",
+      "slide": 180,
+      "pdf_page": 180,
+      "title": "Spatial Items (2)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package SpatialItems {\n ...\n  calc def PositionOf :> SpatialFrames::PositionOf {\n    in point : Point[1];\n    in timeInstant : TimeInstantValue[1];\n    in enclosingItem :>> 'frame' : SpatialItem[1];\n    in clock : Clock[1] default enclosingItem.localClock;\n    return positionVector : VectorQuantityValue[1];\n  }\n  calc def CurrentPositionOf :> SpatialFrames::CurrentPositionOf {\n    in point : Point[1];\n    in enclosingItem :>> 'frame' : SpatialItem[1];\n    in clock : Clock[1] default enclosingItem.localClock;\n    return positionVector : VectorQuantityValue[1];\n  }\n  calc def DisplacementOf :> SpatialFrames::DisplacementOf {\n    in point1 : Point[1];\n    in point2 : Point[1];\n    in timeInstant : TimeInstantValue[1];\n    in spacialItem :>> 'frame' : SpatialItem[1];\n    in clock : Clock[1] default spacialItem.localClock;\n    return displacementVector : VectorQuantityValue[1];\n  }\n calc def CurrentDisplacementOf :> SpatialFrames::CurrentDisplacementOf {\n    in point1 : Point[1];\n    in point2 : Point[1];\n    in spacialItem :>> 'frame' : SpatialItem[1];\n    in clock : Clock[1] default spacialItem.localClock;\n    return displacementVector : VectorQuantityValue[1];\n  }\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-181",
+      "slide": 181,
+      "pdf_page": 181,
+      "title": "Shape Items (1)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package ShapeItems {\n...\nitem def PlanarCurve :> Curve {\n  attribute :>> length [1];\n ...\n}\nitem def Line :> PlanarCurve {\n  attribute :>> length;\n  attribute :>> outerSpaceDimension = 1;\n}\nitem def PlanarSurface :> Surface {\n  attribute :>> area;\n  attribute :>> outerSpaceDimension = 2;\n item :>> shape : PlanarCurve;\n}\nabstract item def Path :> StructuredCurve;\nabstract item def Shell :> StructuredSurface;\n...\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-182",
+      "slide": 182,
+      "pdf_page": 182,
+      "title": "Shape Items (2)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package ShapeItems {\n...\nitem def ConicSection :> Path, PlanarCurve {\n ...\n}\nitem def Ellipse :> ConicSection {\n  attribute :>> semiMajorAxis;\n  attribute :>> semiMinorAxis;\n ...\n}\nitem def Circle :> Ellipse {\n  attribute :>> radius;\n attribute :>> semiMajorAxis = radius;\n attribute :>> semiMinorAxis = radius;\n ...\n}\n...\n  item def Polygon :> Path, PlanarCurve {\n    item :>> edges : Line { item :>> vertices [2]; }\n    attribute :>> isClosed = true;\n   ...\n  }\n...\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-183",
+      "slide": 183,
+      "pdf_page": 183,
+      "title": "Shape Items (3)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package ShapeItems {\n...\nitem def Disc :> Shell, PlanarSurface {\n  attribute :>> semiMajorAxis;\n  attribute :>> semiMinorAxis;\n item :>> shape : Ellipse [1] {\n    attribute :>> semiMajorAxis = Disc::semiMajorAxis;\n    attribute :>> semiMinorAxis = Disc::semiMinorAxis;\n  }\n ...\n}\nitem def CircularDisc :> Disc {\n    attribute :>> radius [1];\n    attribute :>> semiMajorAxis [1] = radius;\n    attribute :>> semiMinorAxis [1] = radius;\n    item :>> shape : Circle { ... }\n ...\n}\nitem def ConicSurface :> Shell {\n ...\n}\n...\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-184",
+      "slide": 184,
+      "pdf_page": 184,
+      "title": "Shape Items (4)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package ShapeItems {\n...\nitem def Ellipsoid :> ConicSurface {\n  attribute semiAxis1 : LengthValue [1] :> scalarQuantities;\n  attribute semiAxis2 : LengthValue [1] :> scalarQuantities;\n  attribute semiAxis3 : LengthValue [1] :> scalarQuantities;\n ...\n}\nitem def Sphere :> Ellipsoid {\n  attribute :>> radius [1];\n attribute :>> semiAxis1 [1] = radius;\n attribute :>> semiAxis2 [1] = radius;\n attribute :>> semiAxis3 [1] = radius;\n}\nitem def Paraboloid :> ConicSurface {\n attribute focalDistance : LengthValue [1] :> scalarQuantities;\n ...\n}\n...\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    },
+    {
+      "id": "slide-185",
+      "slide": 185,
+      "pdf_page": 185,
+      "title": "Shape Items (5)",
+      "source_kind": "textual_code_panel",
+      "code": "standard library package ShapeItems {\n...\nitem def ConeOrCylinder :> Shell {\n  attribute :>> semiMajorAxis [1];\n  attribute :>> semiMinorAxis [1];\n  attribute :>> height [1];\n ...\n}\nitem def Cone :> ConeOrCylinder { ... }\nitem def Cylinder :> ConeOrCylinder { ... }\n...\nitem def Polyhedron :>> Shell { ... }\nitem def CuboidOrTriangularPrism :> Polyhedron { ... }\nitem def Cuboid :> CuboidOrTriangularPrism { ... }\nitem def RectangularCuboid :> Cuboid {\n  attribute :>> length [1];\n  attribute :>> width [1];\n  attribute :>> height [1];\n ...\n}\nalias Box for RectangularCuboid;\n...\n}",
+      "completeness": "context_fragment",
+      "context_fragment": true,
+      "fixture_candidate": false,
+      "fixture_name": null,
+      "source_evidence": "visual_page_reviewed",
+      "normalization_notes": [
+        "The slide uses a typographic ellipsis to elide members; stored as ASCII ... for a stable ledger."
+      ]
+    }
+  ],
+  "non_fixture_observations": [
+    {
+      "slide": 19,
+      "pdf_page": 19,
+      "title": "Connections (2)",
+      "kind": "diagram_only",
+      "fixture_candidate": false,
+      "observation": "Connections diagram and feature-chain labels only; no textual source panel."
+    },
+    {
+      "slide": 26,
+      "pdf_page": 26,
+      "title": "Flows",
+      "kind": "diagram_only",
+      "fixture_candidate": false,
+      "observation": "Flow diagram and port labels only; no textual source panel."
+    },
+    {
+      "slide": 62,
+      "pdf_page": 62,
+      "title": "Interactions",
+      "kind": "diagram_only",
+      "fixture_candidate": false,
+      "observation": "Interaction sequence diagram labels; no textual source panel."
+    },
+    {
+      "slide": 64,
+      "pdf_page": 64,
+      "title": "Interaction Realization by Actions (2)",
+      "kind": "diagram_only",
+      "fixture_candidate": false,
+      "observation": "Interaction realization diagram labels; no textual source panel."
+    },
+    {
+      "slide": 66,
+      "pdf_page": 66,
+      "title": "Interaction Realization by Flows (2)",
+      "kind": "diagram_only",
+      "fixture_candidate": false,
+      "observation": "Interaction realization by flows diagram labels; no textual source panel."
+    }
+  ]
+}

@@ -2,11 +2,13 @@
 
 `pysysmlv2` is an open-source, pure-Python foundation for parsing and analyzing SysML v2 textual models. It provides a pinned ANTLR4 syntax frontend, a source-aware AST with model-level round-trip export, structured diagnostics, and the initial workspace boundary for future semantic linking and symbol resolution.
 
-The project deliberately separates syntax AST responsibilities from workspace and semantic identity. AST nodes retain `source_path` and `span`, preserve SysML documentation and model-owned comments, and export canonical parseable SysML through `str(node)`. Trivia-preserving formatting belongs to the formatter layer. State-machine discovery and model checking are downstream applications, not part of this foundation package.
+The package intentionally targets the SysML v2 textual language only. KerML documents and KerML-only grammar extensions are outside this parser's contract; a future KerML frontend, if needed, must be a separately scoped project rather than an implicit compatibility branch in this library.
+
+The project deliberately separates syntax AST responsibilities from workspace and semantic identity. AST nodes retain a `span`, whose optional `source_path` identifies the origin document, preserve SysML documentation and model-owned comments, and export canonical parseable SysML through `str(node)`. Trivia-preserving formatting belongs to the formatter layer. State-machine discovery and model checking are downstream applications, not part of this foundation package.
 
 ## Status
 
-This is the initial `0.1.0` foundation release. The ANTLR parser, diagnostics, handwritten source AST, canonical AST export, Click CLI, generated API documentation, and cross-platform test/build scaffolding are in place. The current handwritten AST slice models packages, documentation, states, state subactions, and transitions; full SysML/KerML semantic linking and symbol resolution remain staged work and are tracked in the project issue plan.
+This is the initial `0.1.0` foundation release. The ANTLR parser, diagnostics, handwritten source AST, canonical AST export, Click CLI, generated API documentation, and cross-platform test/build scaffolding are in place. The current handwritten AST slice models SysML packages, documentation, states, state subactions, and transitions; full SysML semantic linking and symbol resolution remain staged work and are tracked in the project issue plan.
 
 ## Install
 

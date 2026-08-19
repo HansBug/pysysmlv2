@@ -1,0 +1,134 @@
+{
+  "schema_version": 2,
+  "source": {
+    "title": "OMG Systems Modeling Language (SysML) Version 2.0, Part 1: Language Specification",
+    "document_number": "formal/2026-03-02",
+    "url": "https://www.omg.org/spec/SysML/2.0/Language/PDF",
+    "local_pdf": "/tmp/SysML-2.0-Language.pdf",
+    "sha256_local_pdf": "46e6c0476a6f1f34f367d57e039d56659bff75e41d2e4b3d37ca4cadea84a83a",
+    "review_ledger": "docs/research/manual_pdf_review/section_7_22_7_24.md"
+  },
+  "scope": {
+    "clauses": ["7.22", "7.23", "7.24"],
+    "printed_pages": [137, 144],
+    "physical_pages": [169, 176],
+    "reviewed_entry_count": 18,
+    "row_id_range": ["C22-01", "V24-10"]
+  },
+  "review_method": "Rendered PDF pages were visually inspected; layout extraction was used only for navigation and token cross-checking."
+  ,"entries": [
+    {
+      "id": "C22-01", "clause": "7.22.2", "printed_pages": [138], "physical_pages": [170],
+      "source_kind": "prose_code_block", "completeness": "complete", "fixture_eligible": true,
+      "parseability": "independently_parseable", "dependencies": ["AutomationSystem", "Person"],
+      "source_code": "case def FaultRecovery {\n    subject system : AutomationSystem;\n    actor engineer : Person;\n    objective {\n        doc\n        /* The engineer determines the cause of the system\n         * fault and resolves it returning the system to\n         * nominal operation.\n         */\n    }\n}"
+    },
+    {
+      "id": "A23-01", "clause": "7.23.1", "printed_pages": [139], "physical_pages": [171],
+      "source_kind": "table_textual_notation", "completeness": "complete", "fixture_eligible": true,
+      "parseability": "independently_parseable", "dependencies": ["Subject1", "assumption1"],
+      "source_code": "analysis def AnalysisDef1 {\n    subject s1 : Subject1;\n    objective {\n        doc /* '...' */;\n        assume assumption1;\n    }\n}"
+    },
+    {
+      "id": "A23-02", "clause": "7.23.1", "printed_pages": [139], "physical_pages": [171],
+      "source_kind": "table_textual_notation", "completeness": "complete_template", "fixture_eligible": true,
+      "parseability": "independently_parseable", "dependencies": [],
+      "source_code": "analysis def AnalysisDef1 {\n    /* members */\n}"
+    },
+    {
+      "id": "A23-03", "clause": "7.23.1", "printed_pages": [139], "physical_pages": [171],
+      "source_kind": "table_textual_notation", "completeness": "complete", "fixture_eligible": true,
+      "parseability": "independently_parseable", "dependencies": ["AnalysisDef1", "mySubject", "assumption1"],
+      "source_code": "analysis analysis1 : AnalysisDef1 {\n    subject redefines s1 = mySubject;\n    objective {\n        doc /* '...' */\n        assume assumption1;\n    }\n}"
+    },
+    {
+      "id": "A23-04", "clause": "7.23.1", "printed_pages": [139], "physical_pages": [171],
+      "source_kind": "table_textual_notation", "completeness": "complete_template", "fixture_eligible": true,
+      "parseability": "independently_parseable", "dependencies": ["AnalysisDef1"],
+      "source_code": "analysis analysis1 : AnalysisDef1 {\n    /* members */\n}"
+    },
+    {
+      "id": "A23-05", "clause": "7.23.1", "printed_pages": [139], "physical_pages": [171],
+      "source_kind": "table_textual_notation", "completeness": "incomplete_placeholder", "fixture_eligible": false,
+      "parseability": "contextual_fragment", "dependencies": ["AnalysisDef1", "AnalysisDef4"],
+      "source_code": "analysis analysis1 : AnalysisDef1 {\n    ...\n    analysis analysis4 : AnalysisDef4;\n}",
+      "exclusion_reason": "Contextual compartment fragment with a literal ellipsis placeholder."
+    },
+    {
+      "id": "A23-06", "clause": "7.23.2", "printed_pages": [140], "physical_pages": [172],
+      "source_kind": "prose_code_block", "completeness": "complete", "fixture_eligible": true,
+      "parseability": "independently_parseable", "dependencies": ["Vehicle", "DistancePerVolumeValue", "FuelEconomyRequirement"],
+      "source_code": "analysis def FuelEconomyAnalysis {\n    subject vehicle : Vehicle;\n    return fuelEconomyResult : DistancePerVolumeValue;\n\n    objective fuelEconomyAnalysisObjective {\n        doc\n        /*\n         * The objective of this analysis is to determine whether the\n         * subject vehicle can satisfy the fuel economy requirement.\n         */\n\n        requirement : FuelEconomyRequirement;\n    }\n    // ...\n}"
+    },
+    {
+      "id": "A23-07", "clause": "7.23.3", "printed_pages": [140, 141], "physical_pages": [172, 173],
+      "source_kind": "prose_code_block", "completeness": "complete", "fixture_eligible": true,
+      "parseability": "independently_parseable", "dependencies": ["TradeStudy", "Engine", "MaximizeObjective", "PowerRollup", "MassRollup", "EfficiencyRollup", "CostRollup", "Real", "EngineEvaluation", "engine4cyl", "engine6cyl"],
+      "source_code": "analysis engineTradeStudy : TradeStudy {\n    // The subject is bound to the two alternatives to be studied.\n    subject : Engine = (engine4cyl, engine6cyl);\n\n    // The objective is to find the alternative that has the\n    // maximum value for the evaluationFunction.\n    objective : MaximizeObjective;\n\n    // For each one of the alternatives, the evaluationFunction\n    // produces a numerical evaluation result.\n    calc :>> evaluationFunction {\n        in part anEngine : Engine :>> alternative;\n\n        calc powerRollup: PowerRollup {\n            in engine = anEngine;\n            return power;\n        }\n        calc massRollup: MassRollup {\n            in engine = anEngine;\n            return mass;\n        }\n        calc efficiencyRollup: EfficiencyRollup {\n            in engine = anEngine;\n            return efficiency;\n        }\n        calc costRollup: CostRollup {\n            in engine = anEngine;\n            return cost;\n        }\n\n        return :>> result : Real = EngineEvaluation(\n            power = powerRollup.power,\n            mass = massRollup.mass,\n            efficiency = efficiencyRollup.efficiency,\n            cost = costRollup.cost\n        );\n    }\n\n    // The selected alternative will be the one that has the\n    // maximum value for the evaluationFunction.\n    return part :>> selectedAlternative : Engine;\n}"
+    },
+    {
+      "id": "V24-01", "clause": "7.24.1", "printed_pages": [142], "physical_pages": [174],
+      "source_kind": "table_textual_notation", "completeness": "complete", "fixture_eligible": true,
+      "parseability": "independently_parseable", "dependencies": ["Subject1", "requirement1"],
+      "source_code": "verification def VerificationDef1 {\n    subject s1 : Subject1;\n    objective {\n        doc /* '...' */\n        verify requirement1;\n    }\n}"
+    },
+    {
+      "id": "V24-02", "clause": "7.24.1", "printed_pages": [142], "physical_pages": [174],
+      "source_kind": "table_textual_notation", "completeness": "complete_template", "fixture_eligible": true,
+      "parseability": "independently_parseable", "dependencies": [],
+      "source_code": "verification def VerificationDef1 {\n    /* members */\n}"
+    },
+    {
+      "id": "V24-03", "clause": "7.24.1", "printed_pages": [142], "physical_pages": [174],
+      "source_kind": "table_textual_notation", "completeness": "complete", "fixture_eligible": true,
+      "parseability": "independently_parseable", "dependencies": ["VerificationDef1", "mySubject", "requirement1"],
+      "source_code": "verification verification1 : VerificationDef1 {\n    subject redefines s1 = mySubject;\n    objective {\n        doc /* '...' */\n        verify requirement1;\n    }\n}"
+    },
+    {
+      "id": "V24-04", "clause": "7.24.1", "printed_pages": [142], "physical_pages": [174],
+      "source_kind": "table_textual_notation", "completeness": "complete_template", "fixture_eligible": true,
+      "parseability": "independently_parseable", "dependencies": ["VerificationDef1"],
+      "source_code": "verification verification1 : VerificationDef1 {\n    /* members */\n}"
+    },
+    {
+      "id": "V24-05", "clause": "7.24.1", "printed_pages": [143], "physical_pages": [175],
+      "source_kind": "table_textual_notation", "completeness": "context_fragment", "fixture_eligible": false,
+      "parseability": "contextual_fragment", "dependencies": ["VerificationDef1", "verification10", "verification11"],
+      "source_code": "{\n    verification verification1 : VerificationDef1 [1..*]\n        ordered nonunique;\n    /* ... */\n    perform verification verification10;\n    verification verification11 {\n        verification 'verification11.1';\n        verification 'verification11.2';\n    }\n}",
+      "exclusion_reason": "Compartment fragment with an enclosing-owner dependency and an ellipsis placeholder."
+    },
+    {
+      "id": "V24-06", "clause": "7.24.1", "printed_pages": [143], "physical_pages": [175],
+      "source_kind": "table_textual_notation", "completeness": "context_fragment", "fixture_eligible": false,
+      "parseability": "contextual_fragment", "dependencies": ["VerificationMethodKind"],
+      "source_code": "metadata VerificationMethod {\n    kind = (\n        VerificationMethodKind::inspect,\n        VerificationMethodKind::demo\n        VerificationMethodKind::analyze,\n        VerificationMethodKind::test);\n}",
+      "exclusion_reason": "Contextual compartment item retaining the visibly missing comma from the official source."
+    },
+    {
+      "id": "V24-07", "clause": "7.24.1", "printed_pages": [143], "physical_pages": [175],
+      "source_kind": "table_textual_notation", "completeness": "context_fragment", "fixture_eligible": false,
+      "parseability": "contextual_fragment", "dependencies": ["requirement1", "requirement2"],
+      "source_code": "objective {\n    verify requirement1;\n    verify requirement2;\n}",
+      "exclusion_reason": "Objective body fragment requiring an enclosing case or verification context."
+    },
+    {
+      "id": "V24-08", "clause": "7.24.1", "printed_pages": [143], "physical_pages": [175],
+      "source_kind": "table_textual_notation", "completeness": "complete", "fixture_eligible": true,
+      "parseability": "independently_parseable", "dependencies": ["Requirement1"],
+      "source_code": "requirement requirement1: Requirement1;"
+    },
+    {
+      "id": "V24-09", "clause": "7.24.1", "printed_pages": [143], "physical_pages": [175],
+      "source_kind": "table_textual_notation", "completeness": "complete", "fixture_eligible": true,
+      "parseability": "independently_parseable", "dependencies": ["VerificationCase1", "requirement1"],
+      "source_code": "verification verificationCase1 : VerificationCase1 {\n    objective {\n        verify requirement1;\n    }\n}"
+    },
+    {
+      "id": "V24-10", "clause": "7.24.2", "printed_pages": [144], "physical_pages": [176],
+      "source_kind": "prose_code_block", "completeness": "complete", "fixture_eligible": true,
+      "parseability": "independently_parseable", "dependencies": ["VerificationCases", "Vehicle", "ISQ::mass", "VerdictKind", "PassIf", "vehicleMassRequirement"],
+      "source_code": "verification def VehicleMassTest {\n    import VerificationCases::*;\n\n    subject testVehicle : Vehicle;\n    objective vehicleMassVerificationObjective {\n        // The subject of the verify is automatically bound to \"testVehicle\".\n        verify vehicleMassRequirement;\n    }\n\n    metadata VerificationMethod {\n        kind = VerificationMthodKind::test;\n    }\n\n    action collectData {\n        in part testVehicle : Vehicle = VehicleMassTest::testVehicle;\n        out massMeasured :> ISQ::mass;\n    }\n    action processData {\n        in massMeasured :> ISQ::mass = collectData.massMeasured;\n        out massProcessed :> ISQ::mass;\n    }\n    action evaluateData {\n        in massProcessed :> ISQ::mass = processData.massProcessed;\n        out verdict : VerdictKind =\n            // Check that \"testVehicle\" statisfies \"vehicleMassRequirement\"\n            // if its mass equals 'massProcessed'.\n            PassIf(vehicleMassRequirement(\n                vehicle = testVehicle,\n                massActual = massProcessed)\n            );\n    }\n\n    return verdict : VerdictKind = evaluateData.verdict;\n}"
+    }
+  ],
+  "excluded_fragments": []
+}

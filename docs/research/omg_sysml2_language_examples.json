@@ -1,0 +1,298 @@
+{
+  "schema_version": 1,
+  "source": {
+    "title": "OMG Systems Modeling Language (SysML) Version 2.0, Part 1: Language Specification",
+    "document_number": "formal/2026-03-02",
+    "version": "2.0",
+    "url": "https://www.omg.org/spec/SysML/2.0/Language/PDF",
+    "local_pdf": "/tmp/SysML-2.0-Language.pdf",
+    "local_text": "/tmp/SysML-2.0-Language.txt",
+    "sha256_local_pdf": "46e6c0476a6f1f34f367d57e039d56659bff75e41d2e4b3d37ca4cadea84a83a",
+    "pdf_physical_pages": 691,
+    "pdf_extraction": "pdftotext -layout and pdftohtml -xml; Courier font spans were retained as raw evidence",
+    "retrieved_and_http_checked": "2026-08-19",
+    "license_note": "This inventory records facts and short transcriptions from the OMG specification for conformance work; preserve the specification copyright and license notices when redistributing source excerpts."
+  },
+  "scope": {
+    "primary_scope": "Section 7 Language Description",
+    "section_7_printed_page_range": [15, 162],
+    "section_7_physical_page_range": [47, 194],
+    "current_repository_release_corpus": {
+      "root": "test/testfile/omg_release_2026_05",
+      "model_file_count": 251,
+      "extensions": [".kerml", ".sysml"],
+      "source": "Systems-Modeling/SysML-v2-Release, 2026-05, commit de1070ae8e79c21532b8004fc663d47b35d0e9fa",
+      "contains_pdf_section_7_named_state_examples": false,
+      "evidence": "The corpus contains VehicleStates-related material but no Exercising, OnOff1..OnOff6, OperationalStates, TurnedOn, or PowerUp examples by exact-name scan."
+    }
+  },
+  "interpretation": {
+    "important_distinction": "A Courier-font span is evidence that the PDF presents code-like text, not proof that the span is an independently parseable SysML model.",
+    "candidate_text_code": "A span containing a SysML/KerML declaration and syntax delimiters; it is a fixture candidate after column/continuation cleanup.",
+    "lexical_or_fragment": "A keyword, name, multiplicity, operator, diagram label, grammar token, expression, or an incomplete continuation.",
+    "manual_review": "Required for table-column interleaving, page continuations, ellipses, omitted context, external-language bodies, and examples that rely on definitions from earlier text.",
+    "independent_ast_oracle": "The PDF text is a source oracle. It is not an AST golden oracle; expected AST objects must be authored separately and compared field-for-field."
+  },
+  "section_ranges": [
+    {"section": "7.1", "title": "Language Overview", "printed_pages": [15, 15]},
+    {"section": "7.2", "title": "Elements and Relationships", "printed_pages": [16, 18]},
+    {"section": "7.3", "title": "Dependencies", "printed_pages": [18, 19]},
+    {"section": "7.4", "title": "Annotations", "printed_pages": [19, 22]},
+    {"section": "7.5", "title": "Namespaces and Packages", "printed_pages": [23, 30]},
+    {"section": "7.6", "title": "Definition and Usage", "printed_pages": [31, 44]},
+    {"section": "7.7", "title": "Attributes", "printed_pages": [45, 46]},
+    {"section": "7.8", "title": "Enumerations", "printed_pages": [47, 48]},
+    {"section": "7.9", "title": "Occurrences", "printed_pages": [49, 55]},
+    {"section": "7.10", "title": "Items", "printed_pages": [56, 57]},
+    {"section": "7.11", "title": "Parts", "printed_pages": [58, 60]},
+    {"section": "7.12", "title": "Ports", "printed_pages": [61, 63]},
+    {"section": "7.13", "title": "Connections", "printed_pages": [63, 73]},
+    {"section": "7.14", "title": "Interfaces", "printed_pages": [74, 77]},
+    {"section": "7.15", "title": "Allocations", "printed_pages": [78, 80]},
+    {"section": "7.16", "title": "Flows and Messages", "printed_pages": [80, 84]},
+    {"section": "7.17", "title": "Actions", "printed_pages": [85, 112]},
+    {"section": "7.18", "title": "States", "printed_pages": [113, 122]},
+    {"section": "7.19", "title": "Calculations", "printed_pages": [122, 125]},
+    {"section": "7.20", "title": "Constraints", "printed_pages": [125, 128]},
+    {"section": "7.21", "title": "Requirements", "printed_pages": [129, 136]},
+    {"section": "7.22", "title": "Cases", "printed_pages": [137, 137]},
+    {"section": "7.23", "title": "Analysis Cases", "printed_pages": [138, 140]},
+    {"section": "7.24", "title": "Verification Cases", "printed_pages": [141, 144]},
+    {"section": "7.25", "title": "Use Cases", "printed_pages": [145, 148]},
+    {"section": "7.26", "title": "Views and Viewpoints", "printed_pages": [149, 154]},
+    {"section": "7.27", "title": "Metadata", "printed_pages": [157, 162]}
+  ],
+  "extraction_summary": {
+    "physical_pages_scanned": 148,
+    "raw_courier_blocks": 747,
+    "candidate_text_code_blocks": 379,
+    "lexical_or_symbol_blocks": 59,
+    "fragment_or_graphical_blocks": 309,
+    "counts_are_evidence_inventory_not_fixture_count": true,
+    "automatically_parseable_count": null,
+    "automatically_parseable_count_reason": "The PDF layout interleaves graphical and textual notation and splits examples across pages; independent fixture boundaries and cleanup require human review."
+  },
+  "known_examples": [
+    {
+      "id": "s7-18-table17-state-definition-declaration",
+      "clause": "7.18.1",
+      "printed_pages": [114],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_table17_state_definition.sysml",
+      "code": "state def StateDef1;",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-table17-state-definition-body",
+      "clause": "7.18.1",
+      "printed_pages": [114],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_table17_state_definition_body.sysml",
+      "code": "state def StateDef1 {\n    /* members */\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-table17-state-usage-actions",
+      "clause": "7.18.1",
+      "printed_pages": [115],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_table17_state_actions.sysml",
+      "code": "state state1 : StateDef1 {\n    entry action1;\n    do action2;\n    exit action3;\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-table17-composite-sequential",
+      "clause": "7.18.1",
+      "printed_pages": [115],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_table17_composite_sequential.sysml",
+      "code": "state compositeState1 {\n    entry; then state1;\n    state state1;\n    transition first state1 accept trigger1 if guard1 do action1 then state2;\n    state state2;\n    then done;\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-table17-composite-parallel",
+      "clause": "7.18.1",
+      "printed_pages": [115],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_table17_composite_parallel.sysml",
+      "code": "state compositeState2 parallel {\n    state state1 {\n        entry; then 'state1.1';\n        state 'state1.1';\n    }\n    state state2 {\n        entry; then 'state2.1';\n        state 'state2.1';\n    }\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-table17-transition-explicit",
+      "clause": "7.18.1",
+      "printed_pages": [116],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_table17_transition_explicit.sysml",
+      "code": "state state1 : State1;\nstate state2 : State2;\ntransition first state1 accept trigger1 if guard1 do action1 then state2;",
+      "parse_status_current": "context_fragment",
+      "ast_oracle_status": "independent_ast_expected_value_still_required",
+      "context_note": "The table places a transition usage beside two state usages; the combined text is not a complete rootNamespace. Tests parse the three concrete productions with stateUsage and transitionUsage grammar entries."
+    },
+    {
+      "id": "s7-18-table17-exhibit-shorthand",
+      "clause": "7.18.1",
+      "printed_pages": [116],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_table17_exhibit_shorthand.sysml",
+      "code": "state def State1;\nstate state1 : State1;\npart part1 {\n    exhibit state1;\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-table17-exhibit-state",
+      "clause": "7.18.1",
+      "printed_pages": [116],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_table17_exhibit_state.sysml",
+      "code": "state def State1;\npart part1 : Part1 {\n    exhibit state state1 : State1;\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-2-exercising",
+      "clause": "7.18.2",
+      "printed_pages": [117],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_2_exercising.sysml",
+      "code": "state def Exercising {\n    entry action warmup : WarmUp;\n    do action exercise : Exercise {\n        action strengthTraining;\n        then action cardioTraining;\n    }\n    exit action cooldown : Cooldown;\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-2-operating",
+      "clause": "7.18.2",
+      "printed_pages": [118],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_2_operating.sysml",
+      "code": "state def Operating {\n    entry assign stateCode := StateCodes::Operating;\n    do send new ReadySignal() to Controller;\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-2-turned-on",
+      "clause": "7.18.2",
+      "printed_pages": [118],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_2_turned_on.sysml",
+      "code": "action monitorTemperature;\nstate def TurnedOn {\n    entry;\n    do monitorTemperature;\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-2-operational-states",
+      "clause": "7.18.2",
+      "printed_pages": [118, 119],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_2_operational_states.sysml",
+      "code": "state def OperationalStates {\n    entry action initial;\n    then off;\n    state off;\n    state starting;\n    state on;\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-2-operational-states-conditional",
+      "clause": "7.18.2",
+      "printed_pages": [118, 119],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_2_operational_states_conditional.sysml",
+      "code": "state def OperationalStates {\n    entry action initial { out attribute isStarting : Boolean; }\n    if not initial.isStarting then off;\n    if initial.isStarting then starting;\n    state off;\n    state starting;\n    state on;\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-2-vehicle-states-parallel",
+      "clause": "7.18.2",
+      "printed_pages": [119],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_2_vehicle_states_parallel.sysml",
+      "code": "state def VehicleStates parallel {\n    state OperationalStates;\n    state HealthStates;\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-3-onoff1",
+      "clause": "7.18.3",
+      "printed_pages": [119],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_3_onoff1.sysml",
+      "code": "state def OnOff1 {\n    entry;\n    then off;\n    state off;\n    state on;\n    transition off_on first off then on;\n    transition on_off first on then off;\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-3-onoff2",
+      "clause": "7.18.3",
+      "printed_pages": [119, 120],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_3_onoff2.sysml",
+      "code": "item def TurnOn;\nstate def OnOff2 {\n    port commPort;\n    entry;\n    then off;\n    state off;\n    state on;\n    transition off_on first off accept TurnOn via commPort then on;\n    transition on_off first on accept after 5[min] then off;\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-3-onoff3",
+      "clause": "7.18.3",
+      "printed_pages": [120],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_3_onoff3.sysml",
+      "code": "state def OnOff3 {\n    in attribute isInitOff : Boolean;\n    in attribute isEnabled : Boolean;\n    port commPort;\n    entry action init;\n    transition first init if isInitOff then off;\n    transition first init if not isInitOff then on;\n    state off;\n    state on;\n    transition off_on first off accept TurnOn via commPort if isEnabled then on;\n    transition on_off first on accept after 5[min] if isEnabled then off;\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-3-onoff4",
+      "clause": "7.18.3",
+      "printed_pages": [120, 121],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_3_onoff4.sysml",
+      "code": "action def PowerUp;\nitem def TimeoutSignal;\nstate def OnOff4 {\n    in attribute isInitOff;\n    in attribute isEnabled;\n    port commPort;\n    entry action init;\n    transition first init if isInitOff then off;\n    transition first init if not isInitOff then on;\n    state off;\n    state on;\n    transition off_on first off if isEnabled accept TurnOn via commPort do action powerUp : PowerUp; then on;\n    transition on_off first on if isEnabled accept after 5[min] do send new TimeoutSignal() via commPort then off;\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-3-onoff5",
+      "clause": "7.18.3",
+      "printed_pages": [121],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_3_onoff5.sysml",
+      "code": "action def PowerUp;\nitem def TimeoutSignal;\nstate def OnOff5 {\n    in attribute isInitOff;\n    in attribute isEnabled;\n    port commPort;\n    entry;\n    if isInitOff then off;\n    if not isInitOff then on;\n    state off;\n    accept TurnOn via commPort if isEnabled do action powerUp : PowerUp; then on;\n    state on;\n    accept after 5[min] if isEnabled do send new TimeoutSignal() via commPort; then off;\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-3-onoff6",
+      "clause": "7.18.3",
+      "printed_pages": [122],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_3_onoff6.sysml",
+      "code": "item def Abort;\nstate def OnOff6 {\n    port commPort;\n    entry; then off;\n    state off;\n    accept TurnOn via commPort then on;\n    accept Abort via commPort then stop;\n    state on;\n    accept after 5[min] then done;\n    action stop terminate;\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-4-vehicle-exhibit",
+      "clause": "7.18.4",
+      "printed_pages": [122],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_4_vehicle_exhibit.sysml",
+      "code": "part def Vehicle {\n    exhibit state operatingState references VehicleStates::operating;\n    abstract exhibit state monitoringState;\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    },
+    {
+      "id": "s7-18-4-vehicle-exhibit-shorthand",
+      "clause": "7.18.4",
+      "printed_pages": [122],
+      "source_status": "manually_transcribed_from_pdf",
+      "fixture_name": "section_7_18_4_vehicle_exhibit_shorthand.sysml",
+      "code": "part vehicle : Vehicle {\n    exhibit VehicleStates::monitoring :> Vehicle::monitoringState;\n}",
+      "parse_status_current": "pass",
+      "ast_oracle_status": "independent_ast_expected_value_still_required"
+    }
+  ]
+}

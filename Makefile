@@ -5,6 +5,7 @@ TEST_DIR := test
 RANGE_DIR ?= .
 UPSTREAM_GRAMMAR_DIR := upstream/sysml-v2-grammar/grammar
 GENERATED_DIR := pysysmlv2/syntax/generated
+GRAMMAR_PROVENANCE := $(GENERATED_DIR)/grammar-provenance.json
 ANTLR_DIR := .antlr
 ANTLR_VERSION := 4.13.2
 ANTLR_JAR := $(ANTLR_DIR)/antlr-$(ANTLR_VERSION)-complete.jar
@@ -50,6 +51,7 @@ help:
 	@echo ""
 	@echo "Testing and quality:"
 	@echo "  make unittest                    Run unit tests with XML and term-missing coverage"
+	@echo "                                  Full-scope runs enforce 100% branch coverage for AST/listener"
 	@echo "  make test                        Alias for make unittest"
 	@echo "  make unittest RANGE_DIR=syntax   Run only the syntax test subtree"
 	@echo "  make unittest COV_TYPES='xml term-missing'"
@@ -71,6 +73,7 @@ antlr_update:
 	mkdir -p "$(GENERATED_DIR)"
 	cp "$(UPSTREAM_GRAMMAR_DIR)/SysMLv2Lexer.g4" "$(GENERATED_DIR)/SysMLv2Lexer.g4"
 	cp "$(UPSTREAM_GRAMMAR_DIR)/SysMLv2Parser.g4" "$(GENERATED_DIR)/SysMLv2Parser.g4"
+	$(PYTHON) -m tools.grammar_overlay "$(GENERATED_DIR)/SysMLv2Parser.g4" "$(UPSTREAM_GRAMMAR_DIR)" "$(GRAMMAR_PROVENANCE)"
 	$(MAKE) antlr_build
 
 antlr_build:
@@ -99,9 +102,14 @@ rst_auto_check:
 unittest:
 	UNITTEST=1 $(PYTHON) -m pytest "$(RANGE_TEST_DIR)" -s -v -m unit \
 		--junitxml=junit.xml -o junit_family=legacy \
-		$(COV_REPORT_ARGS) --cov="$(RANGE_SRC_DIR)" \
+		--cov-branch $(COV_REPORT_ARGS) --cov="$(RANGE_SRC_DIR)" \
 		$(if $(MIN_COVERAGE),--cov-fail-under=$(MIN_COVERAGE),) \
 		$(if $(WORKERS),-n $(WORKERS),)
+	@if [ "$(RANGE_DIR)" = "." ]; then \
+		$(PYTHON) -m coverage report \
+			--include="$(SRC_DIR)/syntax/ast.py,$(SRC_DIR)/syntax/listener.py" \
+			--fail-under=100; \
+	fi
 
 test: unittest
 

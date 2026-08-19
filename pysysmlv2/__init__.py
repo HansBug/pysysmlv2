@@ -48,15 +48,27 @@ Example::
 
 from .config.meta import __VERSION__ as __version__
 from .syntax.ast import ASTNode, Model
-from .syntax.parser import Diagnostic, ParseResult, parse
+from .syntax.parser import (
+    ASTParseError,
+    Diagnostic,
+    ParseResult,
+    parse,
+    parse_as_ast_node,
+    parse_with_grammar_entry,
+    supported_grammar_entries,
+)
 from .workspace.workspace import Workspace
 
 __all__ = [
     "ASTNode",
+    "ASTParseError",
     "Diagnostic",
     "Model",
     "ParseResult",
     "Workspace",
     "__version__",
     "parse",
+    "parse_as_ast_node",
+    "parse_with_grammar_entry",
+    "supported_grammar_entries",
 ]

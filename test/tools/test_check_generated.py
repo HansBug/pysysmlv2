@@ -37,6 +37,7 @@ def test_check_uses_current_interpreter_and_runs_all_verifiers(monkeypatch):
     for name in (
         "_check_agents_link",
         "_check_generated_files",
+        "_check_grammar_provenance",
         "_check_tracked_files",
     ):
         monkeypatch.setattr(check_generated, name, lambda name=name: calls.append(name))
@@ -61,5 +62,6 @@ def test_check_uses_current_interpreter_and_runs_all_verifiers(monkeypatch):
     assert calls == [
         "_check_agents_link",
         "_check_generated_files",
+        "_check_grammar_provenance",
         "_check_tracked_files",
     ]
