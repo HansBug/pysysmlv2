@@ -17,6 +17,7 @@ pysysmlv2 API
    syntax/ast
    syntax/ast_builder
    syntax/index
+   syntax/listener
    syntax/parser
    workspace/document
    workspace/index

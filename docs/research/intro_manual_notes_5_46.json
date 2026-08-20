@@ -1,0 +1,227 @@
+{
+  "5": [
+    {"anchor": "package 'Package Example'", "text": "A package acts as a namespace for its members and a container for its owned members."},
+    {"anchor": "package 'Package Example'", "text": "A name with spaces or other special characters is surrounded in single quotes."},
+    {"anchor": "public import ISQ::TorqueValue", "text": "An import adds either a single imported member or all the members of an imported package to the importing package."},
+    {"anchor": "part def Automobile", "text": "The owned members of a package are elements directly contained in the package."},
+    {"anchor": "alias Car for Automobile", "text": "A package can introduce aliases for its owned members or for individual members of other packages."},
+    {"anchor": "alias Torque for ISQ::TorqueValue", "text": "A qualified name is a package name (which may itself be qualified) followed by the name of one of its members, separated by ::."}
+  ],
+  "6": [
+    {"anchor": "public import ISQ::TorqueValue", "text": "All members from a public import are visible (re-exported) from the importing package. Members from a private import are not."},
+    {"anchor": "public import ISQ::TorqueValue", "text": "Visibility must be shown explicitly on import declarations. Use private visibility unless re-export is required."},
+    {"anchor": "private part def Automobile", "text": "A private member is not visible outside the package (but it is visible to subpackages)."},
+    {"anchor": "public alias Car for Automobile", "text": "Members are public by default but can also be marked public explicitly."}
+  ],
+  "7": [
+    {"anchor": "comment Comment1", "text": "A comment begins with /* and ends with */."},
+    {"anchor": "comment Comment1", "text": "A comment can optionally be named."},
+    {"anchor": "comment about Automobile", "text": "What the comment annotates can be explicitly specified (it is the owning namespace by default)."},
+    {"anchor": "alias Car for Automobile", "text": "Import and alias declarations can also be commented."},
+    {"anchor": "alias Torque for ISQ::TorqueValue", "text": "A note begins with // and extends to the end of the line. (A multiline note begins with //* and ends with */.)"}
+  ],
+  "8": [
+    {"anchor": "part def Automobile", "text": "Documentation is a special kind of comment that is directly owned by the element it documents."},
+    {"anchor": "doc Document1", "text": "A documentation comment can be optionally named like a regular comment."}
+  ],
+  "9": [
+    {"anchor": "part def Vehicle", "text": "A part definition is a definition of a class of systems or parts of systems, which are mutable and exist in space and time."},
+    {"anchor": "attribute mass : ScalarValues::Real", "text": "An attribute usage usage of an attribute definition, used here as a feature of the part definition."},
+    {"anchor": "part eng : Engine", "text": "A part usage is a composite feature that is the usage of a part definition."},
+    {"anchor": "attribute def VehicleStatus", "text": "An attribute definition is a definition of attributive data that can be used to describe systems or parts."},
+    {"anchor": "private import ScalarValues::*", "text": "Definitions and usages are also namespaces that allow import."},
+    {"anchor": "ref part driver : Person", "text": "A reference part usage is a referential feature that is the usage of a part definition."},
+    {"anchor": "attribute gearSetting : Integer", "text": "An attribute definition may not have composite features. Attribute usages are always referential."}
+  ],
+  "10": [
+    {"anchor": "abstract part def Vehicle", "text": "An abstract definition is one whose instances must be members of some specialization."},
+    {"anchor": "part def HumanDrivenVehicle specializes Vehicle", "text": "A specialized definition defines a subset of the classification of its generalization."},
+    {"anchor": "part def PoweredVehicle :> Vehicle", "text": "The :> symbol is equivalent to the specializes keyword."},
+    {"anchor": "part eng : Engine", "text": "A specialization can define additional features."},
+    {"anchor": "part def HumanDrivenPoweredVehicle :>", "text": "A definition can have multiple generalizations, inheriting the features of all general definitions."}
+  ],
+  "11": [
+    {"anchor": "part eng : Engine subsets parts", "text": "Subsetting asserts that, in any common context, the values of one feature are a subset of the values of another feature."},
+    {"anchor": "part eng : Engine subsets parts", "text": "Subsetting is a kind of generalization between features."}
+  ],
+  "12": [
+    {"anchor": "part smallEng : SmallEngine redefines eng", "text": "A specialized definition can redefine a feature that would otherwise be inherited, to change its name and/or specialize its type."},
+    {"anchor": "part bigEng : BigEngine :>> eng", "text": "The :>> symbol is equivalent to the redefines keyword."},
+    {"anchor": "part cyl : Cylinder[4..6]", "text": "A feature can also specify multiplicity."},
+    {"anchor": "part eng : Engine", "text": "The default multiplicity for parts is 1..1."},
+    {"anchor": "part redefines cyl[4]", "text": "There is shorthand notation for redefining a feature with the same name."},
+    {"anchor": "part redefines cyl[6]", "text": "Redefinition can be used to constrain the multiplicity of a feature."}
+  ],
+  "13": [
+    {"anchor": "enum def TrafficLightColor", "text": "An enumeration definition is a kind of attribute definition that defines a set of enumerated values."},
+    {"anchor": "attribute currentColor : TrafficLightColor", "text": "The values of an attribute usage defined by an enumeration definition are limited to the defined set of enumerated values."},
+    {"anchor": "attribute redefines currentColor = TrafficLightColor::green", "text": "This shows an attribute being bound to a specific value (more on binding later)."}
+  ],
+  "14": [
+    {"anchor": "enum def ClassificationKind specializes ClassificationLevel", "text": "An enumeration definition can contain nothing but declarations of its enumerated values. However, it can specialize a regular attribute definition and inherit nested features."},
+    {"anchor": "enum def ClassificationKind specializes ClassificationLevel", "text": "An enumeration definition cannot specialize another enumeration definition."},
+    {"anchor": "unclassified {", "text": "The enum keyword is optional when declaring enumerated values."},
+    {"anchor": ":>> code = \"uncl\";", "text": "The nested features can then be bound to specific values in each of the enumerated values."},
+    {"anchor": "A = 4.0;", "text": "Enumerated values can also be bound directly to specific values of a specialized attribute definition or data type."}
+  ],
+  "15": [
+    {"anchor": "part smallVehicle : Vehicle", "text": "Parts can be specified outside the context of a specific part definition."},
+    {"anchor": "part smallVehicle : Vehicle", "text": "The defined by relationship is a kind of generalization."},
+    {"anchor": "part redefines eng {", "text": "Parts inherit properties from their definitions and can redefine them, to any level of nesting."}
+  ],
+  "16": [
+    {"anchor": "part vehicle : Vehicle {", "text": "Composite structure can be specified entirely on parts."},
+    {"anchor": "part smallVehicle :> vehicle", "text": "A part can specialize another part."}
+  ],
+  "17": [
+    {"anchor": "item def Fuel", "text": "An item definition defines a class of things that exist in space and time but are not necessarily considered \"parts\" of a system being modeled."},
+    {"anchor": "part def Vehicle", "text": "All parts can be treated as items, but not all items are parts. The design of a system determines what should be modeled as its \"parts\"."},
+    {"anchor": "ref item driver : Person", "text": "A system model may reference discrete items that interact with or pass through the system."},
+    {"anchor": "attribute mass : Real", "text": "The default multiplicity for attributes and items is also 1..1."},
+    {"anchor": "item fuel: Fuel", "text": "Items may also model continuous materials that are stored in and/or flow between parts of a system."},
+    {"anchor": "item fuel: Fuel", "text": "An item is continuous if any portion of it in space is the same kind of thing. A portion of fuel is still fuel. A portion of a person is generally no longer a person."}
+  ],
+  "18": [
+    {"anchor": "connection def PressureSeat", "text": "A connection definition is a part definition whose usages are connections between its ends."},
+    {"anchor": "end [1] part bead", "text": "Cross multiplicities constrain the number of connections, rather than end values. E.g., for every TireBead there must be a PressureSeat connection to exactly one TireMountingRim."},
+    {"anchor": "connection : PressureSeat", "text": "A connection is a usage of a connection definition, which connects two other features."},
+    {"anchor": "connect [0..1] lugBoltJoints to [1] hub.h", "text": "If a connection definition is not specified, a generic connection definition (called Connection) is used."},
+    {"anchor": "connect bead references t.bead", "text": "Reference subsetting (references or ::>) relates feature to a connector ends. “Dot” notation specifies paths to nested features."}
+  ],
+  "20": [
+    {"anchor": "port def FuelOutPort", "text": "A port definition defines features that can be made available via ports. (Replaces interface blocks in SysML v1)."},
+    {"anchor": "out item fuelSupply : Fuel", "text": "Ports may have attribute and reference features. A feature with a direction (in, out or inout) is a directed feature."},
+    {"anchor": "out item fuelSupply : Fuel", "text": "Directed features are always referential, so it is not necessary to explicitly use the ref keyword."},
+    {"anchor": "in item fuelSupply : Fuel", "text": "Two ports are compatible for connection if they have directed features that match with inverse directions."},
+    {"anchor": "port fuelTankPort : FuelOutPort", "text": "A port is a connection point through which a part definition makes some of its features available in a limited way. (Like a proxy port in SysML v1.)"}
+  ],
+  "21": [
+    {"anchor": "port def FuelPort", "text": "Every port definition has an implicit conjugate port definition that reverses input and output features. It has the name of the original definition with ~ prepended (e.g., ~FuelPort)."},
+    {"anchor": "port engineFuelPort : ~FuelPort", "text": "Using a ~ symbol on the port type is a shorthand for using the conjugate port definition (e.g., FuelPort::~FuelPort)."}
+  ],
+  "22": [
+    {"anchor": "interface def FuelInterface", "text": "An interface definition is a connection definition whose ends are ports."},
+    {"anchor": "end port supplierPort : FuelOutPort", "text": "The default cross multiplicity is 0..*."},
+    {"anchor": "interface : FuelInterface connect", "text": "An interface usage is a connection usage defined by an interface definition, connecting two compatible ports."}
+  ],
+  "23": [
+    {"anchor": "end [1..*] port deliveredTo : Faucet", "text": "Every suppliedBy SpigotBank must have one or more connections to deliveredTo Faucets."},
+    {"anchor": "end [1] port suppliedBy : SpigotBank", "text": "Connection ends specify the participants in the connection. They always have multiplicity 1..1 relative to the connection definition."},
+    {"anchor": "end [1..*] port deliveredTo : Faucet", "text": "Cross multiplicities correspond to navigating across connections."},
+    {"anchor": "connect suppliedBy.hot to deliveredTo.hot", "text": "Connection usages interconnect specific participants."}
+  ],
+  "24": [
+    {"anchor": "bind fuelTankPort.fuelSupply = pump.pumpOut", "text": "A binding connection is a connection that asserts the equivalence of the connected features (i.e., they have equal values in the same context)."},
+    {"anchor": "out item pumpOut : Fuel", "text": "Usages on parts can also have direction (and are automatically referential)."}
+  ],
+  "25": [
+    {"anchor": "out item redefines fuelSupply = pump.pumpOut", "text": "The feature value notation combines the definition of a feature with a binding connection."},
+    {"anchor": "out item redefines fuelSupply = pump.pumpOut", "text": "This is a binding, not an initial or default value."}
+  ],
+  "27": [
+    {"anchor": "flow of Fuel", "text": "A flow usage is a transfer of some payload from an output of a source port to an input of a target port."},
+    {"anchor": "flow of Fuel", "text": "Specifying the payload type (e.g., “of Fuel”) is optional."}
+  ],
+  "28": [
+    {"anchor": "flow supplierPort.fuelSupply to consumerPort.fuelSupply", "text": "Flows can be defined within an interface definition."},
+    {"anchor": "interface : FuelInterface connect", "text": "The flows are established when the interface is used."}
+  ],
+  "29": [
+    {"anchor": "flow def FuelFlow", "text": "A flow definition is used to assert that a flow must exist between the instances of part definitions."},
+    {"anchor": "ref :>> payload : Fuel", "text": "The definition can (optionally) constrain the payload transferred by usages."},
+    {"anchor": "end port fuelOut : FuelOutPort", "text": "Note that the default end multiplicities on this connection are 1 to 1."},
+    {"anchor": "flow : FuelFlow of Fuel", "text": "This usage realizes the required flow between the tankAssy.fuelTankPort and the eng.engineFuelPort."},
+    {"anchor": "flow : FuelFlow of Fuel", "text": "The payload should be consistent with what is declared in the flow definition (if any)."},
+    {"anchor": "from tankAssy.fuelTankPort.fuelSupply", "text": "The connection is defined to be between the ports, but the transfer is still from an output to an input."}
+  ],
+  "30": [
+    {"anchor": "action def Focus", "text": "An action definition is a definition of some action to be performed."},
+    {"anchor": "action def Focus", "text": "Directed features of an action definition are considered to be action parameters."},
+    {"anchor": "action focus : Focus", "text": "An action is a usage of an action definition performed in a specific context."},
+    {"anchor": "flow focus.image to shoot.image", "text": "A flow can be used to transfer items between actions."},
+    {"anchor": "action focus : Focus", "text": "An action has parameters corresponding to its action definition."}
+  ],
+  "31": [
+    {"anchor": "first focus then shoot", "text": "A succession asserts that the first action must complete before the second can begin."}
+  ],
+  "32": [
+    {"anchor": "succession flow focus.image to shoot.image", "text": "A succession flow requires the first action to finish producing its output before the second can begin consuming it."}
+  ],
+  "33": [
+    {"anchor": "in scene = TakePicture::scene", "text": "This qualified name refers to the scene parameter of TakePicture, rather than the parameter of focus with the same name."},
+    {"anchor": "out picture : Picture = shoot.picture", "text": "This is the same shorthand for binding used previously."},
+    {"anchor": "then action shoot : Shoot", "text": "This is a shorthand for a succession between the lexically previous action (focus) and this action (shoot)."}
+  ],
+  "34": [
+    {"anchor": "action takePicture : TakePicture", "text": "An action usage can also be directly decomposed into other actions."},
+    {"anchor": "in scene;", "text": "takePicture is a usage, so dot notation could be used here, but it is unnecessary because scene is in an outer scope, not nested."}
+  ],
+  "35": [
+    {"anchor": "if focus.image.isFocused then shoot", "text": "A conditional succession asserts that the second action must follow the first only if a guard condition is true. If the guard is false, succession is not possible."},
+    {"anchor": "if focus.image.isFocused then shoot", "text": "Note that, currently, the target action must be explicitly named (no shorthand)."}
+  ],
+  "36": [
+    {"anchor": "if focus.image.isFocused then shoot", "text": "This is a shorthand for a conditional succession following the lexically previous action."}
+  ],
+  "37": [
+    {"anchor": "first start", "text": "References the start of the action as the source of the initial succession."},
+    {"anchor": "then merge continue", "text": "A merge node waits for exactly one predecessor to happen before continuing."},
+    {"anchor": "then continue", "text": "References the merge node named “continue” as the target of the succession."}
+  ],
+  "38": [
+    {"anchor": "then decide", "text": "A decision node (decide keyword) chooses exactly one successor to happen after it."},
+    {"anchor": "if monitor.batteryCharge < 100 then addCharge", "text": "A decision node is typically followed by one or more conditional successions (the last “if … then” can be replaced by “else”)."},
+    {"anchor": "then done", "text": "References the end of the action as the target of a succession."}
+  ],
+  "39": [
+    {"anchor": "loop action charging", "text": "A loop action repeatedly performs a body action."},
+    {"anchor": "loop action charging", "text": "Control-structure actions provide a structured alternative to control nodes for conditionals and looping."},
+    {"anchor": "loop action charging", "text": "This is the body action, which is given the name charging. (The default name is body.)"},
+    {"anchor": "then if monitor.charge < 100", "text": "An if action performs its body if a Boolean condition is true. (It can also have an else part, which is performed if the condition is false.)"},
+    {"anchor": "} until charging.monitor.charge >= 100", "text": "until introduces a Boolean condition that terminates the loop when it is true."},
+    {"anchor": "then if monitor.charge < 100", "text": "if used in this way represents an action, not a succession."},
+    {"anchor": "loop action charging", "text": "A loop action can also begin with while (instead of loop), introducing a Boolean condition that terminates the loop when it is false."}
+  ],
+  "40": [
+    {"anchor": "then fork", "text": "A fork node enables all its successors to happen after it."},
+    {"anchor": "then fork", "text": "The source for all these successions is the fork node."},
+    {"anchor": "join joinNode", "text": "A join node waits for all its predecessors to happen before continuing."}
+  ],
+  "41": [
+    {"anchor": "perform action takePhoto[*] ordered", "text": "perform identifies the owner as the performer of an action."},
+    {"anchor": "perform action takePhoto[*] ordered", "text": "takePhoto is the local name of the performing action."},
+    {"anchor": "references takePicture", "text": "The performing action references the performed action takePicture."},
+    {"anchor": "perform takePhoto.focus", "text": "This shorthand simply identifies the performed action owned elsewhere without renaming it locally."}
+  ],
+  "42": [
+    {"anchor": "perform monitorCriticalActivity", "text": "monitorCriticalActivity and criticalActivity are preformed concurrently."},
+    {"anchor": "then terminate", "text": "A terminate action ends its immediately containing action. In this case, performCriticalActivity terminates even if monitorCriticalActivity is still ongoing."},
+    {"anchor": "action stop terminate", "text": "This terminates MonitoredActivity when either performCriticalActivity or waitForTimeOut completes."}
+  ],
+  "43": [
+    {"anchor": "terminate processor.workflowProcess", "text": "A terminate action can have an argument that identifies the action to be terminated (instead of the default to the containing action)."},
+    {"anchor": "terminate processor;", "text": "A terminate action can also be used to terminate (“destroy”) a part."},
+    {"anchor": "ref action workflowProcess : WorkflowProcess", "text": "A composite action is automatically terminated when its containing part is terminated, but a referential action is not. That is why workflowProcess was terminated explicitly in this example, but not internalProcess."}
+  ],
+  "44": [
+    {"anchor": "for vehiclePower in powerProfile", "text": "A for loop action repeatedly performs its body, setting a loop variable to successive values from the result of a sequence expression."},
+    {"anchor": "private attribute position := initialPosition", "text": "Using := instead of = here indicates an initial value, instead of a binding."},
+    {"anchor": "perform action dynamics : StraightLineDynamics", "text": "An action may also be performed by another action (similar to a \"call\")."},
+    {"anchor": "then assign position := dynamics.x_out", "text": "An assignment action sets the value of a feature to the result of an expression at the time of performance of the assignment."},
+    {"anchor": "positions->including(position)", "text": "The functions including comes from the SequenceFunctions library package."}
+  ],
+  "45": [
+    {"anchor": "action trigger accept scene : Scene", "text": "An accept action receives an incoming asynchronous transfer any kind of values."},
+    {"anchor": "action trigger accept scene : Scene", "text": "This is the name of the action."},
+    {"anchor": "action trigger accept scene : Scene", "text": "This is a declaration of what is being received, which can be anything."},
+    {"anchor": "then send new Show(shoot.picture) to screen", "text": "This is an expression that constructs the value to be sent."},
+    {"anchor": "then send new Show(shoot.picture) to screen", "text": "A send action is an outgoing transfer of values to a specific target."},
+    {"anchor": "then send new Show(shoot.picture) to screen", "text": "The notation “Show(...)” means to create an instance of the definition Show with the given value for its nested attribute."},
+    {"anchor": "then send new Show(shoot.picture) to screen", "text": "This is also an expression, evaluating to the target (in this case just a feature reference)."}
+  ],
+  "46": [
+    {"anchor": "action trigger accept scene : Scene via viewPort", "text": "An accept action can be via a specific port, meaning that the transfer is expected to be received by that port."},
+    {"anchor": "then send new Show(shoot.picture) via displayPort", "text": "An asynchronous transfer sent via a port has that port as its source. The target of the transfer is determined by what the port is connected to."},
+    {"anchor": "then send new Show(shoot.picture) via displayPort", "text": "A send action can also be sent via a port, meaning that the transfer is sent out from that port."}
+  ]
+}

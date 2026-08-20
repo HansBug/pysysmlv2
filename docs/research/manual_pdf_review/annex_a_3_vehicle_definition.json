@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "source": {
+    "title": "OMG Systems Modeling Language (SysML) Version 2.0, Part 1: Language Specification",
+    "document_number": "formal/2026-03-02",
+    "url": "https://www.omg.org/spec/SysML/2.0/Language/PDF",
+    "sha256_local_pdf": "46e6c0476a6f1f34f367d57e039d56659bff75e41d2e4b3d37ca4cadea84a83a"
+  },
+  "scope": {
+    "clause": "A.3 Definitions",
+    "printed_pages": [636, 637],
+    "physical_pages": [668, 669],
+    "page_mapping": "physical page = printed page + 32",
+    "notes": "This ledger covers the complete Vehicle part-definition source panel. The figure on printed page 636 is cross-checked against the textual source on printed page 637; the explanatory prose is not treated as source code."
+  },
+  "review_method": "Physical pages 668-669 were rendered and visually inspected. PDF text extraction was used only to locate the Annex and cross-check tokens; the rendered page determined the source-block boundary and line order. Formatting in the repository fixture is normalized to the project's canonical SysML indentation and spacing without changing tokens."
+  ,"entries": [
+    {
+      "id": "A3-P637-E01",
+      "clause": "A.3",
+      "printed_pages": [637],
+      "physical_pages": [669],
+      "source_kind": "prose_code_block",
+      "source_code": "part def Vehicle {\n    attribute mass :> ISQ::mass;\n    attribute dryMass :> ISQ::mass;\n    attribute cargoMass :> ISQ::mass;\n    attribute position :> ISQ::length;\n    attribute velocity :> ISQ::speed;\n    attribute acceleration :> ISQ::acceleration;\n    attribute electricalPower :> ISQ::power;\n    attribute Tmax :> ISQ::temperature;\n    attribute maintenanceTime : Time::DateTime;\n    attribute brakePedalDepressed : Boolean;\n    port ignitionCmdPort : IgnitionCmdPort;\n    port pwrCmdPort : PwrCmdPort;\n    port vehicleToRoadPort : VehicleToRoadPort;\n    perform action providePower;\n    perform action provideBraking;\n    perform action controlDirection;\n    perform action performSelfTest;\n    perform action applyParkingBrake;\n    perform action senseTemperature;\n    exhibit state vehicleStates;\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "fixture_name": "annex_a/a3_vehicle_definition.sysml",
+      "dependencies": [
+        "ISQ::mass",
+        "ISQ::length",
+        "ISQ::speed",
+        "ISQ::acceleration",
+        "ISQ::power",
+        "ISQ::temperature",
+        "Time::DateTime",
+        "IgnitionCmdPort",
+        "PwrCmdPort",
+        "VehicleToRoadPort"
+      ],
+      "notes": "Figure 57 identifies the same attributes, ports, actions, and exhibited state. The source block is closed and contains no ellipsis or omitted members."
+    }
+  ]
+}

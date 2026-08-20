@@ -16,12 +16,17 @@ compares snapshots instead of relying only on ``git diff``.
 
 from __future__ import annotations
 
-import os
+import json
 import subprocess
+import sys
+from hashlib import sha256
 from pathlib import Path
+
+from tools.grammar_overlay import OVERLAY_IDENTIFIER
 
 ROOT = Path(__file__).resolve().parents[1]
 GENERATED = ROOT / "pysysmlv2" / "syntax" / "generated"
+UPSTREAM_LICENSE = ROOT / "upstream" / "sysml-v2-grammar" / "LICENSE"
 
 GENERATED_FILES = frozenset(
     {
@@ -34,7 +39,9 @@ GENERATED_FILES = frozenset(
         "SysMLv2Parser.py",
         "SysMLv2Parser.tokens",
         "SysMLv2ParserListener.py",
+        "UPSTREAM_LICENSE.txt",
         "__init__.py",
+        "grammar-provenance.json",
     }
 )
 
@@ -72,6 +79,53 @@ def _check_generated_files() -> None:
     empty = sorted(name for name in GENERATED_FILES if (GENERATED / name).stat().st_size == 0)
     if empty:
         raise SystemExit("generated ANTLR files are empty: " + ", ".join(empty))
+
+
+def _check_grammar_provenance() -> None:
+    """Require a valid manifest for the copied grammar and local overlay.
+
+    :return: ``None`` when the manifest has the expected effective hash.
+    :rtype: None
+    :raises SystemExit: If provenance data is missing, malformed, or stale.
+    """
+    manifest_path = GENERATED / "grammar-provenance.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise SystemExit("generated grammar provenance is unreadable") from error
+    expected_hash = sha256((GENERATED / "SysMLv2Parser.g4").read_bytes()).hexdigest()
+    if manifest.get("schema_version") != 1:
+        raise SystemExit("generated grammar provenance schema is unsupported")
+    if manifest.get("overlay") != OVERLAY_IDENTIFIER:
+        raise SystemExit("generated grammar provenance has an unknown overlay")
+    upstream = manifest.get("upstream")
+    if not isinstance(upstream, dict) or not all(
+        isinstance(upstream.get(key), str) and upstream[key]
+        for key in ("revision", "describe", "parser_sha256")
+    ):
+        raise SystemExit("generated grammar provenance lacks upstream revision data")
+    if manifest.get("effective_parser_sha256") != expected_hash:
+        raise SystemExit("generated grammar provenance hash does not match parser grammar")
+
+
+def _check_upstream_license() -> None:
+    """Require the packaged grammar license to match the pinned submodule.
+
+    :return: ``None`` when the generated license copy is current after line
+        ending normalization.
+    :rtype: None
+    :raises SystemExit: If the upstream license or generated copy is missing or
+        differs.
+    """
+    packaged = GENERATED / "UPSTREAM_LICENSE.txt"
+    if not UPSTREAM_LICENSE.is_file():
+        raise SystemExit("upstream grammar license is missing")
+    if not packaged.is_file():
+        raise SystemExit("generated upstream grammar license is missing")
+    packaged_bytes = packaged.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    upstream_bytes = UPSTREAM_LICENSE.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    if packaged_bytes != upstream_bytes:
+        raise SystemExit("generated upstream grammar license is stale")
 
 
 def _snapshot() -> dict:
@@ -139,8 +193,13 @@ def check() -> None:
     """
     _check_agents_link()
     before = _snapshot()
-    subprocess.check_call([os.environ.get("MAKE", "make"), "antlr_update"], cwd=str(ROOT))
+    subprocess.check_call(
+        [sys.executable, "-m", "tools.antlr_pipeline", "update"],
+        cwd=str(ROOT),
+    )
     _check_generated_files()
+    _check_grammar_provenance()
+    _check_upstream_license()
     after = _snapshot()
     if before != after:
         raise SystemExit("generated ANTLR artifacts are not reproducible")

@@ -30,8 +30,8 @@ def format_ast(node: ASTNode) -> str:
 
     Example::
 
-        >>> from pysysmlv2.syntax.ast import Package
-        >>> format_ast(Package(name="Demo"))
-        'package Demo {}'
+        >>> from pysysmlv2 import parse
+        >>> format_ast(parse("package Demo { }").ast)
+        'package Demo { }'
     """
     return str(node)

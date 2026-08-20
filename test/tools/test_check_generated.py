@@ -1,6 +1,7 @@
 """Unit tests for generated artifact verification."""
 
 import subprocess
+import sys
 
 import pytest
 
@@ -12,6 +13,7 @@ pytestmark = pytest.mark.unit
 def test_repository_guidance_link_and_generated_tree_are_valid():
     check_generated._check_agents_link()
     check_generated._check_generated_files()
+    check_generated._check_upstream_license()
 
 
 def test_guidance_file_must_be_a_symlink(tmp_path, monkeypatch):
@@ -37,6 +39,8 @@ def test_check_uses_current_interpreter_and_runs_all_verifiers(monkeypatch):
     for name in (
         "_check_agents_link",
         "_check_generated_files",
+        "_check_grammar_provenance",
+        "_check_upstream_license",
         "_check_tracked_files",
     ):
         monkeypatch.setattr(check_generated, name, lambda name=name: calls.append(name))
@@ -55,11 +59,40 @@ def test_check_uses_current_interpreter_and_runs_all_verifiers(monkeypatch):
     check_generated.check()
 
     assert command == [
-        [check_generated.os.environ.get("MAKE", "make"), "antlr_update"],
+        [sys.executable, "-m", "tools.antlr_pipeline", "update"],
         str(check_generated.ROOT),
     ]
     assert calls == [
         "_check_agents_link",
         "_check_generated_files",
+        "_check_grammar_provenance",
+        "_check_upstream_license",
         "_check_tracked_files",
     ]
+
+
+def test_upstream_license_copy_must_match_submodule(tmp_path, monkeypatch):
+    upstream = tmp_path / "upstream" / "sysml-v2-grammar"
+    generated = tmp_path / "generated"
+    upstream.mkdir(parents=True)
+    generated.mkdir()
+    (upstream / "LICENSE").write_text("upstream license\n", encoding="utf-8")
+    (generated / "UPSTREAM_LICENSE.txt").write_text("stale license\n", encoding="utf-8")
+    monkeypatch.setattr(check_generated, "UPSTREAM_LICENSE", upstream / "LICENSE")
+    monkeypatch.setattr(check_generated, "GENERATED", generated)
+
+    with pytest.raises(SystemExit, match="stale"):
+        check_generated._check_upstream_license()
+
+
+def test_upstream_license_line_endings_are_platform_neutral(tmp_path, monkeypatch):
+    upstream = tmp_path / "upstream" / "sysml-v2-grammar"
+    generated = tmp_path / "generated"
+    upstream.mkdir(parents=True)
+    generated.mkdir()
+    (upstream / "LICENSE").write_bytes(b"license line one\r\nlicense line two\r\n")
+    (generated / "UPSTREAM_LICENSE.txt").write_bytes(b"license line one\nlicense line two\n")
+    monkeypatch.setattr(check_generated, "UPSTREAM_LICENSE", upstream / "LICENSE")
+    monkeypatch.setattr(check_generated, "GENERATED", generated)
+
+    check_generated._check_upstream_license()

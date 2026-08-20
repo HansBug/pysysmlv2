@@ -34,7 +34,14 @@ if "doc" in extra_requirements:
     extra_requirements["docs"] = extra_requirements["doc"]
 
 package_data = {
-    "pysysmlv2.syntax.generated": ["*.g4", "*.py", "*.tokens", "*.interp"],
+    "pysysmlv2.syntax.generated": [
+        "*.g4",
+        "*.py",
+        "*.tokens",
+        "*.interp",
+        "*.json",
+        "*.txt",
+    ],
 }
 
 setup(

@@ -17,6 +17,7 @@ __pycache__/
 coverage.xml
 htmlcov/
 junit.xml
+.build/
 .benchmarks/
 
 # Python environments and packaging

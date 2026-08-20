@@ -1,0 +1,51 @@
+{
+  "effective_parser_sha256": "517b96299b099c8c1c614de9065027f44de407e045b58074971894f6f2245399",
+  "overlay": "pysysmlv2-sysml-state-v2",
+  "overlay_notes": [
+    {
+      "classification": "upstream_generator_bug",
+      "id": "expression-precedence-order",
+      "official_evidence": "OMG SysML 2.0 Language formal PDF, Clause 8.2.2.1.3 Table 6 defines operator precedence from lowest to highest (https://www.omg.org/spec/SysML/2.0/Language/PDF). The pinned daltskin generator emits that list directly as ANTLR left-recursive alternatives; ANTLR requires the recursive alternatives in highest-to-lowest precedence order. The source generator and pinned grammar are recorded at https://github.com/daltskin/sysml-v2-grammar/blob/v2026.05.0/scripts/generate_grammar.py and https://github.com/daltskin/sysml-v2-grammar/blob/v2026.05.0/grammar/SysMLv2Parser.g4.",
+      "reason": "The pinned generated rule parses ``a + b * c`` as ``(a + b) * c``. Reversing the recursive precedence alternatives restores the normative Table 6 hierarchy while leaving the upstream submodule untouched.",
+      "rules": [
+        "ownedExpression"
+      ]
+    },
+    {
+      "classification": "upstream_gap",
+      "id": "transition-trigger-guard-order",
+      "official_evidence": "OMG SysML 2.0 Language formal PDF, Clause 7.18.3 (State Examples), printed pages 120-121: complete TransitionUsage in OnOff3 uses trigger-before-guard and complete TransitionUsage in OnOff4 uses guard-before-trigger (https://www.omg.org/spec/SysML/2.0/Language/PDF). The fixed Pilot source separately confirms that TargetTransitionUsage is trigger-before-guard or guard-only: https://github.com/Systems-Modeling/SysML-v2-Pilot-Implementation/blob/fa709f28dfd49dfdb7ee83e4e19da2f57e0eb3aa/org.omg.sysml.xtext/src/org/omg/sysml/xtext/SysML.xtext#L1866-L1882.",
+      "reason": "The generated full TransitionUsage rule hard-codes trigger-before-guard, although the normative full-transition examples exercise both orders.",
+      "rules": [
+        "transitionUsage"
+      ]
+    },
+    {
+      "classification": "upstream_gap",
+      "id": "transition-effect-semicolon",
+      "official_evidence": "OMG SysML 2.0 Language formal PDF, Clause 7.18.3 (State Examples), printed page 121, OnOff5 contains closed transition effects ``do action powerUp : PowerUp; then`` and ``do send new TimeoutSignal() via commPort; then`` (https://www.omg.org/spec/SysML/2.0/Language/PDF).",
+      "reason": "The shorthand effect form is a closed action terminated by ``;``; the generated rules only allow a brace body or an omitted body.",
+      "rules": [
+        "transitionPerformActionUsage",
+        "transitionAcceptActionUsage",
+        "transitionSendActionUsage",
+        "transitionAssignmentActionUsage"
+      ]
+    },
+    {
+      "classification": "upstream_gap",
+      "id": "terminate-action-shorthand",
+      "official_evidence": "OMG SysML 2.0 Language formal PDF, Clause 7.17.10 (Terminate Usages) and Clause 7.18.3 (State Examples), printed page 122 OnOff6: ``action stop terminate;`` (https://www.omg.org/spec/SysML/2.0/Language/PDF).",
+      "reason": "The generated actionUsage requires actionBody after the declaration and rejects the official terminate shorthand.",
+      "rules": [
+        "actionUsage"
+      ]
+    }
+  ],
+  "schema_version": 1,
+  "upstream": {
+    "describe": "v2026.05.0",
+    "parser_sha256": "ee173b758dd42c2944990d801e586f4f801843f11a3b750808a9c82adbf54316",
+    "revision": "7292dc39983a6d263d14f8f6689de0f3b35db5eb"
+  }
+}

@@ -1,14 +1,9 @@
-"""Build the initial source AST from a validated SysML parse tree.
+"""Build the source AST by walking an ANTLR parse tree.
 
-The full SysML metamodel is intentionally a later semantic layer. This module
-provides a conservative, loss-minimizing AST boundary: package declarations
-are typed and other valid top-level elements remain as ``RawElement`` nodes
-until their dedicated grammar mapping is implemented.
-
-The builder is deliberately conservative: the parser remains authoritative for
-syntax validity, while this module handles source spans and the first typed
-package mapping. Deeper identity and symbol traces belong to the workspace and
-semantic modules.
+This module deliberately contains no SysML text scanner. The parser owns
+syntax recognition and :class:`pysysmlv2.syntax.listener.SysMLAstListener`
+owns context-to-node assembly; this function only connects the two through
+ANTLR's standard :class:`antlr4.ParseTreeWalker`.
 
 .. list-table:: AST builder roadmap
    :header-rows: 1
@@ -16,160 +11,87 @@ semantic modules.
    * - Symbol
      - Responsibility
    * - :func:`build_ast`
-     - Convert a validated parse boundary into a source AST.
-   * - ``RawElement`` fallback
-     - Preserve valid but not-yet-typed source content.
+     - Walk a parse tree and return its fully assembled root node.
 """
 
 from __future__ import annotations
 
-import re
-from typing import List, Optional, Tuple
+from typing import Optional
 
-from .ast import ASTNode, Comment, Documentation, Model, Package, RawElement, SourceSpan
+from antlr4 import ParseTreeWalker
 
-_DECLARATION = re.compile(r"\bpackage(?:\s+([A-Za-z_][A-Za-z0-9_]*))?\s*\{")
-_DOC = re.compile(r"/\*\*(.*?)\*/", re.DOTALL)
-_COMMENT = re.compile(r"/\*(?!\*)(.*?)\*/", re.DOTALL)
+from .ast import Model, SourceElement
+from .listener import SysMLAstListener
 
 
-def _offset_to_position(text: str, offset: int) -> Tuple[int, int]:
-    before = text[:offset]
-    line = before.count("\n") + 1
-    column = offset - (before.rfind("\n") + 1) + 1
-    return line, column
+def build_ast_node(text: str, source_path: Optional[str], parse_tree) -> SourceElement:
+    """Walk an ANTLR context and return its explicitly typed AST node.
 
+    This is the shared builder for complete documents and local grammar-entry
+    parsing.  The caller is responsible for selecting a parser rule; this
+    function only performs the listener walk and attaches the entry context's
+    source provenance to the returned root node.
 
-def _span(text: str, start: int, end: int) -> SourceSpan:
-    line, column = _offset_to_position(text, start)
-    end_line, end_column = _offset_to_position(text, end)
-    return SourceSpan(line, column, end_line, end_column)
-
-
-def _matching_brace(text: str, opening: int) -> Optional[int]:
-    depth = 0
-    quote = None
-    index = opening
-    while index < len(text):
-        char = text[index]
-        if quote:
-            if char == "\\":
-                index += 2
-                continue
-            if char == quote:
-                quote = None
-        elif char in "'\"":
-            quote = char
-        elif text.startswith("/*", index):
-            close = text.find("*/", index + 2)
-            if close < 0:
-                return None
-            index = close + 1
-        elif char == "{":
-            depth += 1
-        elif char == "}":
-            depth -= 1
-            if depth == 0:
-                return index
-        index += 1
-    return None
-
-
-def _documentation(raw: str, path: Optional[str], text: str, start: int) -> Documentation:
-    body = raw[3:-2]
-    lines = []
-    for line in body.splitlines():
-        lines.append(re.sub(r"^\s*\* ?", "", line).strip())
-    return Documentation(
-        text="\n".join(lines).strip(),
-        source_path=path,
-        span=_span(text, start, start + len(raw)),
-    )
-
-
-def build_ast(text: str, source_path: Optional[str], parse_tree) -> Model:
-    """Build a source AST while retaining unmapped elements losslessly.
-
-    Package declarations are mapped to :class:`pysysmlv2.syntax.ast.Package`
-    nodes. Valid content that does not yet have a typed mapping remains a
-    :class:`pysysmlv2.syntax.ast.RawElement`, so downstream layers can inspect
-    it without silently losing source text.
-
-    :param text: Complete SysML v2 document text.
+    :param text: Source text consumed by ``parse_tree``.
     :type text: str
-    :param source_path: Original path or URI, defaults to ``None``.
+    :param source_path: Original path or URI, or ``None`` when unavailable.
     :type source_path: str, optional
-    :param parse_tree: ANTLR parse tree used as the validation boundary.
+    :param parse_tree: ANTLR parser context to walk.
     :type parse_tree: object
-    :return: Source AST root.
-    :rtype: :class:`pysysmlv2.syntax.ast.Model`
+    :return: Concrete source AST node mapped for ``parse_tree``.
+    :rtype: :class:`pysysmlv2.syntax.ast.SourceElement`
+    :raises TypeError: If the listener does not produce a source AST node.
 
     Example::
 
-        >>> tree = build_ast("package Demo { }", "demo.sysml", None)
-        >>> str(tree)
-        'package Demo {}'
+        >>> from antlr4 import CommonTokenStream, InputStream
+        >>> from pysysmlv2.syntax.generated.SysMLv2Lexer import SysMLv2Lexer
+        >>> from pysysmlv2.syntax.generated.SysMLv2Parser import SysMLv2Parser
+        >>> source = "true"
+        >>> parser = SysMLv2Parser(CommonTokenStream(SysMLv2Lexer(InputStream(source))))
+        >>> node = build_ast_node(source, None, parser.ownedExpression())
+        >>> str(node)
+        'true'
     """
-    del parse_tree
-    members: List[ASTNode] = []
-    package_match = _DECLARATION.search(text)
-    if package_match:
-        start = package_match.start()
-        close = _matching_brace(text, package_match.end() - 1)
-        if close is not None:
-            docs = [
-                _documentation(match.group(0), source_path, text, match.start())
-                for match in _DOC.finditer(text[:start])
-            ]
-            for match in _COMMENT.finditer(text[:start]):
-                if any(
-                    item.span and item.span.contains(_span(text, match.start(), match.end()))
-                    for item in docs
-                ):
-                    continue
-                members.append(
-                    Comment(
-                        text=match.group(1).strip(),
-                        source_path=source_path,
-                        span=_span(text, match.start(), match.end()),
-                    )
-                )
-            body = text[package_match.end() : close].strip()
-            body_node = RawElement(
-                text=body,
-                source_path=source_path,
-                span=_span(text, package_match.end(), close),
-            )
-            package = Package(
-                name=package_match.group(1),
-                members=[body_node] if body else [],
-                documentation=docs,
-                source_path=source_path,
-                span=_span(text, start, close + 1),
-            )
-            members.append(package)
-
-    if not members and text.strip():
-        docs = [
-            _documentation(match.group(0), source_path, text, match.start())
-            for match in _DOC.finditer(text)
-        ]
-        for match in _COMMENT.finditer(text):
-            if not any(
-                item.span and item.span.line == _offset_to_position(text, match.start())[0]
-                for item in docs
-            ):
-                members.append(
-                    Comment(
-                        text=match.group(1).strip(),
-                        source_path=source_path,
-                        span=_span(text, match.start(), match.end()),
-                    )
-                )
-        stripped = text.strip()
-        members.append(
-            RawElement(text=stripped, source_path=source_path, span=_span(text, 0, len(text)))
+    listener = SysMLAstListener(text, source_path)
+    ParseTreeWalker().walk(listener, parse_tree)
+    node = listener.node_for(parse_tree)
+    if not isinstance(node, SourceElement):
+        raise TypeError(
+            "{} did not produce a SourceElement AST node".format(type(parse_tree).__name__)
         )
-        del docs
+    node.span = listener._span(parse_tree)
+    return node
 
-    return Model(members=members, source_path=source_path, span=_span(text, 0, len(text)))
+
+def build_ast(text: str, source_path: Optional[str], parse_tree) -> Model:
+    """Walk a validated ANTLR tree and return the listener-built model root.
+
+    :param text: Complete SysML v2 source text supplied to the parser.
+    :type text: str
+    :param source_path: Original path or URI, or ``None`` when unavailable.
+    :type source_path: str, optional
+    :param parse_tree: ANTLR ``rootNamespace`` parse context.
+    :type parse_tree: object
+    :return: Root AST node containing explicit handwritten source nodes.
+    :rtype: :class:`pysysmlv2.syntax.ast.Model`
+    :raises TypeError: If the supplied tree is not the root namespace context.
+
+    Example::
+
+        >>> from antlr4 import CommonTokenStream, InputStream, ParseTreeWalker
+        >>> from pysysmlv2.syntax.generated.SysMLv2Lexer import SysMLv2Lexer
+        >>> from pysysmlv2.syntax.generated.SysMLv2Parser import SysMLv2Parser
+        >>> source = "package Demo { }"
+        >>> parser = SysMLv2Parser(CommonTokenStream(SysMLv2Lexer(InputStream(source))))
+        >>> tree = parser.rootNamespace()
+        >>> str(build_ast(source, None, tree))
+        'package Demo { }'
+    """
+    root = build_ast_node(text, source_path, parse_tree)
+    if not isinstance(root, Model):
+        raise TypeError("rootNamespace did not produce the Model AST node")
+    return root
+
+
+__all__ = ["build_ast", "build_ast_node"]

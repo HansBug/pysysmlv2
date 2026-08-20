@@ -1,0 +1,180 @@
+{
+  "121": [],
+  "122": [],
+  "123": [],
+  "124": [],
+  "126": [],
+  "127": [
+    {"anchor": "standard library package DataFunctions", "text": "ScalarFunctions package is similar but specialized for ScalarValue."}
+  ],
+  "128": [],
+  "129": [],
+  "130": [],
+  "131": [],
+  "132": [],
+  "133": [],
+  "134": [],
+  "135": [],
+  "136": [],
+  "137": [],
+  "138": [],
+  "139": [],
+  "140": [],
+  "141": [],
+  "142": [],
+  "143": [
+    {"anchor": "function '==='", "text": "Test whether two occurrences represent different portions of the same entity (i.e., whether they have the same \"identity\")."},
+    {"anchor": "function '==='", "text": "Can be invoked using the === operator."},
+    {"anchor": "function isDuring", "text": "Test whether a performance of this function happens during the input occurrence."},
+    {"anchor": "function create", "text": "Create or destroy an occurrence."},
+    {"anchor": "function addNew {", "text": "Add a newly created instance to a group of occurrences."},
+    {"anchor": "behavior removeOld {", "text": "Remove an instance from a group of occurrences and destroy it."}
+  ],
+  "145": [],
+  "147": [
+    {"anchor": "attribute def RiskLevel", "text": "General risk level in terms of probability and impact."},
+    {"anchor": "enum def RiskLevelEnum", "text": "Standard low, medium and high risk levels."},
+    {"anchor": "metadata def Risk", "text": "To be used to annotate model elements as to their risk level in typical risk areas."}
+  ],
+  "148": [
+    {"anchor": "enum def StatusKind", "text": "To be used to annotate model elements with status information."},
+    {"anchor": "metadata def Rationale", "text": "To be used to give a rationale for a model element."},
+    {"anchor": "metadata def Issue", "text": "Generic issue annotation."},
+    {"anchor": "metadata def <refinement>", "text": "To be used to model a dependency in which source elements refine target elements."},
+    {"anchor": "ref explanation", "text": "This is an optional reference to a feature that further explains this rationale (e.g., a trade study analysis)."}
+  ],
+  "149": [
+    {"anchor": "attribute measuresOfEffectiveness", "text": "Semantic metadata for identifying an attribute as a measure of effectiveness."},
+    {"anchor": "attribute measuresOfPerformance", "text": "Semantic metadata for identifying an attribute as a measure of performance."}
+  ],
+  "150": [
+    {"anchor": "attribute def Image", "text": "Provides data necessary for the physical definition of a graphical image."},
+    {"anchor": "metadata def Icon", "text": "To be used to annotate a model element with an image."},
+    {"anchor": "attribute content", "text": "Binary data for the image."},
+    {"anchor": "attribute encoding", "text": "Binary data character encoding (e.g., \"base64\")."},
+    {"anchor": "attribute type", "text": "MIME type of the content."},
+    {"anchor": "attribute location", "text": "URI for image content, alternative to embedding it in the content attribute."},
+    {"anchor": "attribute fullImage", "text": "Full-sized image for rendering the annotated element."},
+    {"anchor": "attribute smallImage", "text": "Smaller image for use as an adornment or marker."}
+  ],
+  "152": [
+    {"anchor": "abstract calc def EvaluationFunction", "text": "An EvaluationFunction is a calculation that evaluates a TradeStudy alternative."},
+    {"anchor": "abstract requirement def TradeStudyObjective", "text": "A TradeStudyObjective is the base definition for the objective of a TradeStudy, requiring the selectedAlternative to have best evaluation according to a given EvaluationFunction."},
+    {"anchor": "abstract analysis def TradeStudy", "text": "A TradeStudy is an analysis case whose subject is a set of alternatives and whose result is a selection of one of those alternatives, based on a given EvaluationFunction such that it satisfies the objective of the TradeStudy."}
+  ],
+  "153": [
+    {"anchor": "metadata def ToolExecution", "text": "ToolExecution metadata identifies an external analysis tool to be used to implement the annotated action."},
+    {"anchor": "metadata def ToolVariable", "text": "ToolVariable metadata is used in the context of an action that has been annotated with ToolExecution metadata. It is used to annotate a parameter or other feature of the action with the name of the variable in the tool that is to correspond to the annotated feature."}
+  ],
+  "154": [
+    {"anchor": "abstract action def StateSpaceDynamics", "text": "StateSpaceDynamics is the simplest form of state space representation, and getNextState directly computes the stateSpace of the next timestep."}
+  ],
+  "155": [
+    {"anchor": "abstract action def ContinuousStateSpaceDynamics", "text": "ContinuousStateSpaceDynamics represents continuous behavior. The derivative needs to return a time derivative of stateSpace, i.e. dx/dt."},
+    {"anchor": "abstract action def DiscreteStateSpaceDynamics", "text": "DiscreteStateSpaceDynamics represents discrete behavior. getDifference returns the difference of the stateSpace for each timestep."}
+  ],
+  "156": [
+    {"anchor": "attribute def SamplePair", "text": "SamplePair is a key-value pair of a domain-value and a range-value, used as a sample element in SampledFunction."},
+    {"anchor": "attribute def SampledFunction", "text": "SampleFunction is a variable-size, ordered collection of SamplePair elements representing a discretely sampled mathematical function."},
+    {"anchor": "calc def Domain", "text": "Domain and Range return all the domain values and range values of a sampled function."},
+    {"anchor": "calc def Sample", "text": "Sample a calculation on given domain values to create a SampledFunction."},
+    {"anchor": "calc def Interpolate", "text": "Interpolate a SampledFunction to compute a result for a given domain value."},
+    {"anchor": "assert constraint", "text": "The function is constrained to be strictly increasing or strictly decreasing."}
+  ],
+  "158": [
+    {"anchor": "abstract connection def Multicausation", "text": "A connection between one or more cause occurrences and one or more effect occurrences. Specializations add ends for specific causes and effects."},
+    {"anchor": "connection def Causation", "text": "A binary connection between a single cause and a single effect. (But a single cause can separately have multiple effects, and a single effect can separately have multiple causes.)"}
+  ],
+  "159": [
+    {"anchor": "metadata def <cause>", "text": "Used to tag the \"cause\" ends of a multicausation."},
+    {"anchor": "metadata def <effect>", "text": "Used to tag the \"effect\" ends of a multicausation."},
+    {"anchor": "metadata def CausationMetadata", "text": "Additional metadata about a causation connection."},
+    {"anchor": "metadata def <multicausation>", "text": "Semantic metadata for multicausation."},
+    {"anchor": "metadata def <causation>", "text": "Semantic metadata for binary cauasation."}
+  ],
+  "161": [
+    {"anchor": "abstract connection def Derivation", "text": "A connection between one original requirement and one or more derived requirements."},
+    {"anchor": "requirement originalRequirements", "text": "Specializations add ends for specific original and derived requirements."},
+    {"anchor": "private assert constraint originalNotDerived", "text": "Original requirement must not be a derived requirement."},
+    {"anchor": "private assert constraint originalImpliesDerived", "text": "Whenever the original requirement is satisfied, all the derived requirements must also be satisfied."}
+  ],
+  "162": [
+    {"anchor": "metadata def <original>", "text": "Used to tag the \"original\" ends of a derivation."},
+    {"anchor": "metadata def <derive>", "text": "Used to tag the \"derived\" ends of a derivation."},
+    {"anchor": "metadata def <derivation>", "text": "Semantic metadata for requirement derivation."}
+  ],
+  "164": [
+    {"anchor": "abstract attribute def TensorQuantityValue", "text": "A tensor quantity value represents the value of the most general kind of quantity, a tensor."},
+    {"anchor": "abstract attribute def TensorQuantityValue", "text": "The numeric value of the tensor is given as an array of numbers."},
+    {"anchor": "abstract attribute def VectorQuantityValue", "text": "A vector is a tensor with a single dimension."},
+    {"anchor": "abstract attribute def ScalarQuantityValue", "text": "A scalar is a vector with a single element. Its measurement reference may be a measurement unit if the scale is a ratio scale."},
+    {"anchor": "attribute mRef", "text": "The value of a tensor quantity is relative to a multi-dimensional tensor measurement reference."},
+    {"anchor": "alias tensorQuantities as quantity", "text": "A quantity is a usage of a quantity value to represent a feature of something."}
+  ],
+  "165": [
+    {"anchor": "attribute def TensorMeasurementReference", "text": "A tensor measurement reference is defined as an array of scalar measurement references, one for each element of the tensor."},
+    {"anchor": "attribute def CoordinateFrame", "text": "A coordinate frame is a kind of vector measurement reference that can be located and oriented relative to another frame using a coordinate transformation."}
+  ],
+  "166": [
+    {"anchor": "abstract attribute def MeasurementUnit", "text": "A measurement unit is a measurement scale defined as a sequence of unit power factors."},
+    {"anchor": "abstract attribute def SimpleUnit", "text": "A simple unit is a measurement unit with no power factor dependencies on other units."},
+    {"anchor": "abstract attribute def DerivedUnit", "text": "A derived unit is any unit that is not simple."},
+    {"anchor": "attribute def UnitPowerFactor", "text": "A unit power factor is a representation of a reference unit raised to an exponent."}
+  ],
+  "167": [
+    {"anchor": "standard library package ISQ {", "text": "The International System of Quantities defines seven abstract units (length, mass, time, electric current, temperature, amount of substance, luminous intensity) and many other units derived from those."},
+    {"anchor": "attribute def LengthUnit", "text": "A length unit is a simple unit."},
+    {"anchor": "attribute def LengthValue", "text": "A length value is a quantity value with a real magnitude and a length-unit scale."},
+    {"anchor": "attribute length", "text": "A length is a quantity with a length value."},
+    {"anchor": "package ISQSpaceTime", "text": "The ISQ standard (ISO 80000) is divided into several parts. For example, Part 3 defines units related to space and time."}
+  ],
+  "168": [
+    {"anchor": "standard library package SI", "text": "The International System of Units defines base units for the seven abstract ISQ unit types."},
+    {"anchor": "attribute <g> gram", "text": "Each unit declaration includes the full unit name and its abbreviation as an identifier."},
+    {"anchor": "attribute redefines unitConversion", "text": "A unit can be defined using prefix-based conversion from a reference unit."},
+    {"anchor": "attribute <N> newton", "text": "A derived unit can be defined from an arithmetic expression of other units."}
+  ],
+  "169": [
+    {"anchor": "standard library package USCustomaryUnits", "text": "US customary units are defined by conversion from SI units."},
+    {"anchor": "alias mph", "text": "An alias for mile per hour."}
+  ],
+  "170": [],
+  "171": [],
+  "172": [],
+  "173": [],
+  "174": [],
+  "175": [
+    {"anchor": "part universalClock", "text": "A singleton universal time reference."},
+    {"anchor": "part def Clock", "text": "Clocks is a Kernel Library model of the semantics of clocks."},
+    {"anchor": "attribute :>> currentTime", "text": "A clock provides the current time as a quantity that advances monotonically over the lifetime of the clock."},
+    {"anchor": "calc def TimeOf", "text": "TimeOf returns the time instant of the start of an occurrence relative to a given clock."},
+    {"anchor": "calc def DurationOf", "text": "DurationOf returns the duration of a given occurrence relative to a given clock (the time of its end snapshot minus the time of its start snapshot)."}
+  ],
+  "176": [
+    {"anchor": "attribute def TimeScale", "text": "Generic time scale to express a time instant."},
+    {"anchor": "attribute definitionalEpoch", "text": "Captures the specification of the time instant with value zero, also known as the (reference) epoch."},
+    {"anchor": "attribute def TimeInstantValue", "text": "Representation of a time instant quantity."},
+    {"anchor": "attribute timeInstant", "text": "Generic representation of a time instant as a calendar date and time of day."},
+    {"anchor": "attribute UTC", "text": "Coordinated Universal Time (UTC) time scale."}
+  ],
+  "177": [
+    {"anchor": "attribute def Iso8601DateTimeEncoding", "text": "Representation of an ISO 8601-1 date and time in extended string format."},
+    {"anchor": "attribute def Iso8601DateTime :>", "text": "Representation of an ISO 8601 date and time with explicit date and time component attributes."}
+  ],
+  "179": [
+    {"anchor": "item def SpatialItem", "text": "A spatial item is an Item with a three-dimensional spatial extent that also acts as a spatial frame of reference."},
+    {"anchor": "attribute coordinateFrame", "text": "A spatial item has local time and space references used within it."},
+    {"anchor": "item :>> elements", "text": "A compound spatial item is a spatial item that is a (spatial) union of a collection of component spatial items."}
+  ],
+  "180": [
+    {"anchor": "calc def PositionOf", "text": "The position of points in space can be determined relative to the space and time references of a spatial item."},
+    {"anchor": "calc def CurrentPositionOf", "text": "The position of a point can move over time, with its \"current\" position being relative to the clock reference of the spatial item."}
+  ],
+  "181": [
+    {"anchor": "standard library package ShapeItems", "text": "The ShapeItems package provides a model of items that represent basic geometric shapes."}
+  ],
+  "182": [],
+  "183": [],
+  "184": [],
+  "185": []
+}
