@@ -94,6 +94,9 @@ jobs:
       - name: Run full test target
         run: make test
 
+      - name: Run public docstring examples
+        run: make doctest
+
       - name: Upload Python coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
@@ -101,7 +104,7 @@ jobs:
           files: ./coverage.xml
           flags: python
           name: pysysmlv2-python
-          fail_ci_if_error: false
+          fail_ci_if_error: true
 
       - name: Check generated API documentation
         run: make rst_auto_check
@@ -114,6 +117,36 @@ jobs:
 
       - name: Verify generated grammar artifacts
         run: make antlr_check
+
+  generated:
+    name: Generated ANTLR (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-2022, macos-15-intel]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install generation dependencies
+        run: python -m pip install -e ".[dev,test,tooling]"
+
+      - name: Regenerate and verify ANTLR artifacts
+        run: python -m tools.check_generated
 
   docs-and-package:
     name: Documentation and package smoke

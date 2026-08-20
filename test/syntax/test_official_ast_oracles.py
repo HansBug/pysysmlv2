@@ -25,6 +25,7 @@ from pysysmlv2 import parse
 from pysysmlv2.syntax import (
     AcceptParameterPart,
     ActionBody,
+    ActionUsage,
     ActionUsageDeclaration,
     ArgumentList,
     AttributeUsage,
@@ -154,8 +155,11 @@ def _port(name: str = "commPort") -> StructureUsageMember:
     )
 
 
-def _entry_action(name: Optional[str] = None) -> EntryActionMember:
-    """Construct an entry action, either empty or named ``action`` form."""
+def _entry_action(
+    name: Optional[str] = None,
+    target: Optional[str] = None,
+) -> EntryActionMember:
+    """Construct an entry action, optionally followed by a target succession."""
     if name is None:
         action = EmptyActionUsage()
     else:
@@ -166,7 +170,10 @@ def _entry_action(name: Optional[str] = None) -> EntryActionMember:
             ),
             _empty_action_body(),
         )
-    return EntryActionMember(action)
+    transitions = []
+    if target is not None:
+        transitions.append(EntryTransitionMember(TransitionSuccession(_q(target))))
+    return EntryActionMember(action, entry_transition_members=transitions)
 
 
 def _state(name: str, body: Optional[StateUsageBody] = None) -> StateUsage:
@@ -348,6 +355,40 @@ def _onoff3_oracle() -> StateDefinition:
     )
 
 
+def _onoff1_oracle() -> StateDefinition:
+    """Return the hand-authored AST for the transition-only OnOff1 model."""
+    return _state_definition(
+        "OnOff1",
+        [
+            _entry_action(target="off"),
+            _state_member("off"),
+            _state_member("on"),
+            _transition("off", "on", name="off_on"),
+            _transition("on", "off", name="on_off"),
+        ],
+    )
+
+
+def _onoff2_oracle() -> StateDefinition:
+    """Return the hand-authored AST for the triggered OnOff2 model."""
+    return _state_definition(
+        "OnOff2",
+        [
+            _port(),
+            _entry_action(target="off"),
+            _state_member("off"),
+            _state_member("on"),
+            _transition(
+                "off",
+                "on",
+                name="off_on",
+                trigger=_signal_trigger("TurnOn", "commPort"),
+            ),
+            _transition("on", "off", name="on_off", trigger=_after_trigger()),
+        ],
+    )
+
+
 def _onoff4_oracle() -> StateDefinition:
     """Return the hand-authored AST for full-transition guard-first OnOff4."""
     return _state_definition(
@@ -436,6 +477,35 @@ def _onoff5_oracle_with_transitions() -> StateDefinition:
         ],
     )
     return state
+
+
+def _onoff6_oracle() -> StateDefinition:
+    """Return the hand-authored AST for OnOff6 terminate and target forms."""
+    stop = ActionUsage(
+        OccurrenceUsagePrefix(),
+        ActionUsageDeclaration(_decl("stop")),
+        _empty_action_body(),
+        is_terminate=True,
+    )
+    return _state_definition(
+        "OnOff6",
+        [
+            _port(),
+            _entry_action(target="off"),
+            BehaviorUsageStateMember(
+                BehaviorUsageMember(_state("off")),
+                target_transition_members=[
+                    _target("on", trigger=_signal_trigger("TurnOn", "commPort")),
+                    _target("stop", trigger=_signal_trigger("Abort", "commPort")),
+                ],
+            ),
+            BehaviorUsageStateMember(
+                BehaviorUsageMember(_state("on")),
+                target_transition_members=[_target("done", trigger=_after_trigger())],
+            ),
+            BehaviorUsageStateMember(BehaviorUsageMember(stop)),
+        ],
+    )
 
 
 def _table_state_actions_oracle() -> StateUsage:
@@ -544,11 +614,14 @@ def _parse_state(path_name: str) -> StateDefinition | StateUsage:
 @pytest.mark.parametrize(
     ("fixture_name", "oracle"),
     (
+        ("section_7_18_3_onoff1.sysml", _onoff1_oracle),
+        ("section_7_18_3_onoff2.sysml", _onoff2_oracle),
         ("section_7_18_3_onoff3.sysml", _onoff3_oracle),
         ("section_7_18_3_onoff4.sysml", _onoff4_oracle),
         ("section_7_18_3_onoff5.sysml", _onoff5_oracle_with_transitions),
+        ("section_7_18_3_onoff6.sysml", _onoff6_oracle),
     ),
-    ids=("OnOff3", "OnOff4", "OnOff5"),
+    ids=("OnOff1", "OnOff2", "OnOff3", "OnOff4", "OnOff5", "OnOff6"),
 )
 def test_state_example_matches_an_independent_handwritten_ast_oracle(fixture_name, oracle):
     """Compare every field of each OnOff state AST against hand-built nodes."""

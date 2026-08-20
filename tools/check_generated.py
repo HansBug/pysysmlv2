@@ -17,8 +17,8 @@ compares snapshots instead of relying only on ``git diff``.
 from __future__ import annotations
 
 import json
-import os
 import subprocess
+import sys
 from hashlib import sha256
 from pathlib import Path
 
@@ -190,7 +190,10 @@ def check() -> None:
     """
     _check_agents_link()
     before = _snapshot()
-    subprocess.check_call([os.environ.get("MAKE", "make"), "antlr_update"], cwd=str(ROOT))
+    subprocess.check_call(
+        [sys.executable, "-m", "tools.antlr_pipeline", "update"],
+        cwd=str(ROOT),
+    )
     _check_generated_files()
     _check_grammar_provenance()
     _check_upstream_license()

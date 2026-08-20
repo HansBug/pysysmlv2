@@ -5,7 +5,7 @@ from inspect import Parameter, signature
 
 import pytest
 
-from pysysmlv2 import parse
+from pysysmlv2 import parse, parse_as_ast_node
 from pysysmlv2.syntax import (
     ActionNodeMember,
     ActionUsageNode,
@@ -45,10 +45,102 @@ def _element(package, index=0):
     return member.element
 
 
+def test_feature_declaration_keeps_relationship_productions_typed_and_round_trippable():
+    """Compare every feature relationship alternative as a full AST value."""
+    q = ast_module.QualifiedReference
+
+    def dotted(*parts):
+        """Build one dotted reference expected by the relation nodes."""
+        return ast_module.DottedQualifiedReference([q([part]) for part in parts])
+
+    cases = [
+        (
+            "a ~ B.C",
+            ast_module.FeatureDeclaration(
+                identification=ast_module.FeatureIdentification(declared_name="a"),
+                conjugation_part=ast_module.ConjugationPart("~", dotted("B", "C")),
+            ),
+        ),
+        (
+            "a conjugates B.C",
+            ast_module.FeatureDeclaration(
+                identification=ast_module.FeatureIdentification(declared_name="a"),
+                conjugation_part=ast_module.ConjugationPart("conjugates", dotted("B", "C")),
+            ),
+        ),
+        (
+            "a chains B.C",
+            ast_module.FeatureDeclaration(
+                identification=ast_module.FeatureIdentification(declared_name="a"),
+                relationship_parts=[ast_module.ChainingPart([q(["B"]), q(["C"])])],
+            ),
+        ),
+        (
+            "a inverse of B.C",
+            ast_module.FeatureDeclaration(
+                identification=ast_module.FeatureIdentification(declared_name="a"),
+                relationship_parts=[ast_module.InvertingPart(dotted("B", "C"))],
+            ),
+        ),
+        (
+            "a featured by B, C",
+            ast_module.FeatureDeclaration(
+                identification=ast_module.FeatureIdentification(declared_name="a"),
+                relationship_parts=[ast_module.TypeFeaturingPart([q(["B"]), q(["C"])])],
+            ),
+        ),
+        (
+            "a disjoint from B.C, C",
+            ast_module.FeatureDeclaration(
+                identification=ast_module.FeatureIdentification(declared_name="a"),
+                relationship_parts=[ast_module.DisjoiningPart([dotted("B", "C"), dotted("C")])],
+            ),
+        ),
+        (
+            "a unions B.C, C",
+            ast_module.FeatureDeclaration(
+                identification=ast_module.FeatureIdentification(declared_name="a"),
+                relationship_parts=[ast_module.UnioningPart([dotted("B", "C"), dotted("C")])],
+            ),
+        ),
+        (
+            "a intersects B.C, C",
+            ast_module.FeatureDeclaration(
+                identification=ast_module.FeatureIdentification(declared_name="a"),
+                relationship_parts=[ast_module.IntersectingPart([dotted("B", "C"), dotted("C")])],
+            ),
+        ),
+        (
+            "a differences B.C, C",
+            ast_module.FeatureDeclaration(
+                identification=ast_module.FeatureIdentification(declared_name="a"),
+                relationship_parts=[ast_module.DifferencingPart([dotted("B", "C"), dotted("C")])],
+            ),
+        ),
+    ]
+    for source, expected in cases:
+        actual = parse_as_ast_node(source, grammar_node="featureDeclaration")
+        assert actual == expected
+        rendered = str(actual)
+        assert parse_as_ast_node(rendered, grammar_node="featureDeclaration") == expected
+
+
 def test_source_span_contains_child_and_keeps_source_path():
     span = SourceSpan(1, 1, 1, 20, "demo.sysml")
     assert span.contains(SourceSpan(1, 2, 1, 5, "demo.sysml"))
+    assert not span.contains(SourceSpan(1, 2, 1, 5, "other.sysml"))
+    assert span.contains(SourceSpan(1, 2, 1, 5))
     assert span.source_path == "demo.sysml"
+
+
+def test_source_span_contains_uses_known_paths_and_allows_unknown_paths():
+    """Compare paths when available without rejecting partially annotated spans."""
+    known = SourceSpan(1, 1, 3, 1, "demo.sysml")
+    unknown = SourceSpan(1, 1, 3, 1)
+    other = SourceSpan(1, 2, 2, 4, "other.sysml")
+    assert known.contains(unknown)
+    assert unknown.contains(known)
+    assert not known.contains(other)
 
 
 def test_ast_base_only_carries_provenance_and_requires_concrete_exporter():
@@ -361,6 +453,16 @@ def test_ast_exporters_cover_remaining_optional_rendering_branches():
     assert str(a.TransitionPerformActionUsage(a.PerformActionUsageDeclaration())) == ""
 
 
+def test_view_rendering_usage_round_trips_reference_target():
+    """Render a view rendering reference and its declaration-only body."""
+    node = ast_module.ViewRenderingUsage(
+        body=ast_module.DefinitionBody(declaration_only=True),
+        reference=ast_module.QualifiedReference(["View"]),
+    )
+    assert node.usage is None
+    assert str(node) == "View;"
+
+
 def test_expression_precedence_handles_conditional_and_coalesce_nodes():
     """Cover precedence lookup for the two non-binary expression subclasses."""
     a = ast_module
@@ -395,18 +497,167 @@ def test_new_usage_nodes_cover_optional_prefix_and_completion_rendering():
     assert str(a.AttributeDefinition(a.DefinitionPrefix(), declaration)) == "attribute def;"
     assert str(a.AttributeUsage(a.UsagePrefix(), usage)) == "attribute;"
     assert str(a.PortUsage(prefix, usage)) == "port;"
-    assert (
-        str(
-            a.PortDefinition(
-                a.DefinitionPrefix(),
-                declaration,
-                a.ConjugatedPortTyping(a.QualifiedReference(["P"])),
-            )
-        )
-        == "port def; ~P"
+    derived_conjugate = a.PortDefinition(
+        a.DefinitionPrefix(),
+        declaration,
+        a.ConjugatedPortTyping(a.QualifiedReference(["P"])),
     )
+    assert str(derived_conjugate) == "port def;"
+    assert parse("package P { " + str(derived_conjugate) + " }").ok
 
     block_usage = a.Usage(a.DefinitionBody())
     assert str(a.EventOccurrenceUsage(prefix, block_usage)) == "event { }"
     payload_usage = a.Usage(a.RawElement("value"))
     assert str(a.EventOccurrenceUsage(prefix, payload_usage)) == "event value"
+
+
+@pytest.mark.parametrize(
+    ("source", "grammar_node"),
+    [
+        ("part def;", "partDefinition"),
+        ("part def {}", "partDefinition"),
+        ("occurrence def;", "occurrenceDefinition"),
+        ("occurrence def {}", "occurrenceDefinition"),
+        ("port def;", "portDefinition"),
+        ("port def {}", "portDefinition"),
+        ("attribute def;", "attributeDefinition"),
+        ("attribute def {}", "attributeDefinition"),
+        ("part;", "partUsage"),
+        ("part {}", "partUsage"),
+        ("occurrence;", "occurrenceUsage"),
+        ("occurrence {}", "occurrenceUsage"),
+        ("port;", "portUsage"),
+        ("port {}", "portUsage"),
+        ("attribute;", "attributeUsage"),
+        ("attribute {}", "attributeUsage"),
+    ],
+)
+def test_anonymous_definition_and_usage_forms_round_trip(source, grammar_node):
+    """Keep anonymous semicolon and brace completions source-parseable."""
+    del grammar_node  # The root parser is the supported entry for these families.
+    node = _element(_package(parse("package P { " + source + " }")))
+    rendered = str(node)
+    reparsed = _element(_package(parse("package P { " + rendered + " }")))
+    assert reparsed == node
+    assert parse("package P { " + rendered + " }").ok
+
+
+def test_connection_and_interface_ast_nodes_render_every_explicit_alternative():
+    """Exercise the complete connection/interface AST exporter surface."""
+    a = ast_module
+    reference = a.QualifiedReference(["Port"])
+    specialization = a.FeatureSpecializationPart()
+
+    assert str(a.FeatureIdentification("short", "Long")) == "<short> Long"
+    assert str(a.FeatureIdentification("short")) == "<short>"
+    assert str(a.FeatureIdentification()) == ""
+    feature = a.FeatureDeclaration(
+        identification=a.FeatureIdentification(declared_name="end"),
+        specialization=specialization,
+        is_all=True,
+        conjugation_part=a.ConjugationPart(
+            "~",
+            a.DottedQualifiedReference([a.QualifiedReference(["Port"])]),
+        ),
+        relationship_parts=[
+            a.ChainingPart([a.QualifiedReference(["Source"]), a.QualifiedReference(["Target"])]),
+        ],
+    )
+    assert str(feature) == "all end ~ Port chains Source.Target"
+
+    cross = a.OwnedCrossFeature(
+        basic_feature_prefix="ref",
+        feature_declaration=feature,
+        basic_usage_prefix=a.UsagePrefix(feature_direction="in"),
+        usage_declaration=a.UsageDeclaration(a.Identification(declared_name="usage")),
+    )
+    assert str(a.OwnedCrossFeature()) == ""
+    assert str(a.EndUsagePrefix(cross)).startswith("end ref")
+    usage = a.Usage(a.DefinitionBody(declaration_only=True))
+    assert str(a.EndFeatureUsage(a.EndUsagePrefix(cross), feature, usage)).endswith(";")
+
+    connector_a = a.ConnectorEnd(reference, "[1]", "source", "::>")
+    connector_b = a.ConnectorEnd(a.QualifiedReference(["Target"]), name="target")
+    binary_connector = a.BinaryConnectorPart(connector_a, connector_b)
+    nary_connector = a.NaryConnectorPart([connector_a, connector_b])
+    assert str(binary_connector) == "[1] source ::> Port to target Target"
+    assert str(nary_connector) == "([1] source ::> Port, target Target)"
+
+    definition = a.Definition(
+        a.DefinitionDeclaration(a.Identification(declared_name="C")),
+        a.DefinitionBody(declaration_only=True),
+    )
+    assert str(a.ConnectionDefinition(a.OccurrenceDefinitionPrefix(), definition)) == (
+        "connection def C;"
+    )
+    named_connection = a.ConnectionUsage(
+        a.OccurrenceUsagePrefix(),
+        a.DefinitionBody(declaration_only=True),
+        usage_declaration=a.UsageDeclaration(a.Identification(declared_name="c")),
+        connector_part=binary_connector,
+    )
+    shorthand_connection = a.ConnectionUsage(
+        a.OccurrenceUsagePrefix(),
+        a.DefinitionBody(declaration_only=True),
+        connector_part=nary_connector,
+        has_connection_keyword=False,
+    )
+    assert str(named_connection) == "connection c connect [1] source ::> Port to target Target;"
+    assert str(shorthand_connection) == "connect ([1] source ::> Port, target Target);"
+    assert (
+        str(a.ConnectionUsage(a.OccurrenceUsagePrefix(), a.DefinitionBody(True))) == "connection;"
+    )
+
+    interface_a = a.InterfaceEnd(reference, "[1]", "source", "references")
+    interface_b = a.InterfaceEnd(a.QualifiedReference(["Target"]), name="target")
+    binary_interface = a.BinaryInterfacePart(interface_a, interface_b)
+    nary_interface = a.NaryInterfacePart([interface_a, interface_b])
+    assert str(binary_interface) == "[1] source references Port to target Target"
+    assert str(nary_interface) == "([1] source references Port, target Target)"
+    interface_body = a.InterfaceBody(
+        items=[a.InterfaceNonOccurrenceUsageMember(a.RawElement("attribute a;"), "private")]
+    )
+    assert "private attribute a;" in str(interface_body)
+    assert str(a.InterfaceBody(declaration_only=True)) == ";"
+    assert str(a.DefaultInterfaceEnd(usage)) == "end;"
+    occurrence_member = a.InterfaceOccurrenceUsageMember(
+        a.RawElement("part p;"), "public", a.SourceSuccession()
+    )
+    assert str(occurrence_member) == "then public part p;"
+    assert str(a.InterfaceOccurrenceUsageMember(a.RawElement("part p;"))) == "part p;"
+    assert str(a.InterfaceNonOccurrenceUsageMember(a.RawElement("attribute a;"))) == (
+        "attribute a;"
+    )
+    assert str(a.VariantUsageMember(a.RawElement("part p;"), "private")) == (
+        "private variant part p;"
+    )
+
+    connected_declaration = a.InterfaceUsageDeclaration(
+        usage_declaration=a.UsageDeclaration(a.Identification(declared_name="i")),
+        interface_part=binary_interface,
+        has_connect_keyword=True,
+    )
+    direct_declaration = a.InterfaceUsageDeclaration(interface_part=nary_interface)
+    assert str(connected_declaration) == ("i connect [1] source references Port to target Target")
+    assert str(direct_declaration) == "([1] source references Port, target Target)"
+    assert str(a.InterfaceUsageDeclaration()) == ""
+    assert (
+        str(
+            a.InterfaceDefinition(
+                a.OccurrenceDefinitionPrefix(),
+                a.DefinitionDeclaration(a.Identification(declared_name="I")),
+                a.InterfaceBody(declaration_only=True),
+            )
+        )
+        == "interface def I;"
+    )
+    assert (
+        str(
+            a.InterfaceUsage(
+                a.OccurrenceUsagePrefix(),
+                connected_declaration,
+                a.InterfaceBody(declaration_only=True),
+            )
+        )
+        == "interface i connect [1] source references Port to target Target;"
+    )

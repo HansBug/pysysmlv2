@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "purpose": "Audit the private lossless RawElement bridge until the remaining non-core SysML productions receive handwritten AST nodes.",
+  "public_contract": "RawElement is not a semantic model node. It is permitted only for the deferred productions listed here or parser-recovery fragments; downstream semantic code must reject or explicitly account for it.",
+  "source": "pysysmlv2/syntax/listener.py",
+  "entries": [
+    {
+      "id": "type-feature-member",
+      "production": "typeFeatureMember",
+      "callback": "exitTypeFeatureMember",
+      "scope": "generic feature/member syntax",
+      "reason": "featureElement still covers the broad feature, step, expression, invariant, connector, binding, succession, flow, and succession-flow family; those alternatives need distinct typed nodes and cannot be represented by a single guessed field layout.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_ledger_is_complete",
+      "follow_up": "Introduce explicit nodes for each featureElement alternative and remove this bridge only after field-level equality and round-trip tests exist.",
+      "status": "deferred"
+    },
+    {
+      "id": "owned-feature-member",
+      "production": "ownedFeatureMember",
+      "callback": "exitOwnedFeatureMember",
+      "scope": "generic feature/member syntax",
+      "reason": "Shares the same unresolved featureElement alternatives as typeFeatureMember while preserving a different grammar-owned prefix.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_ledger_is_complete",
+      "follow_up": "Add explicit owned-feature nodes with the required prefix ownership before deleting the fallback.",
+      "status": "deferred"
+    },
+    {
+      "id": "feature-element",
+      "production": "featureElement",
+      "callback": "exitFeatureElement",
+      "scope": "generic feature alternatives and return-feature bridge",
+      "reason": "The production is a dispatcher for several broad non-state families; ReturnFeatureMember intentionally retains its source until those families are typed.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_ledger_is_complete",
+      "follow_up": "Replace the dispatcher fallback with explicit feature/step/connector/flow nodes and update ReturnFeatureMember's field type.",
+      "status": "deferred"
+    },
+    {
+      "id": "calculation-body-item",
+      "production": "calculationBodyItem",
+      "callback": "exitCalculationBodyItem",
+      "scope": "calculation body",
+      "reason": "Only actionBodyItem and returnParameterMember are currently assembled; malformed or newly introduced body alternatives must remain lossless instead of being dropped.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_ledger_is_complete",
+      "follow_up": "Add typed calculation-body members for every grammar alternative and turn missing child assembly into an explicit diagnostic.",
+      "status": "deferred"
+    },
+    {
+      "id": "case-body-item",
+      "production": "caseBodyItem",
+      "callback": "exitCaseBodyItem",
+      "scope": "case body",
+      "reason": "subjectMember, actorMember, objectiveMember, and related requirement vocabulary are outside the current typed AST slice.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_ledger_is_complete",
+      "follow_up": "Model each case-member relationship explicitly and preserve its source mapping.",
+      "status": "deferred"
+    },
+    {
+      "id": "requirement-body-item",
+      "production": "requirementBodyItem",
+      "callback": "exitRequirementBodyItem",
+      "scope": "requirement body",
+      "reason": "Requirement-specific constraint, concern, verification, actor, and stakeholder members are not yet part of the source AST contract.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_ledger_is_complete",
+      "follow_up": "Introduce explicit requirement relationship nodes before exposing requirement members to semantic analysis.",
+      "status": "deferred"
+    },
+    {
+      "id": "view-definition-body-item",
+      "production": "viewDefinitionBodyItem",
+      "callback": "exitViewDefinitionBodyItem",
+      "scope": "view definition body",
+      "reason": "viewRenderingMember is not yet typed; retaining the complete fragment protects round-trip behavior.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_ledger_is_complete",
+      "follow_up": "Add typed view-rendering and filter relationship nodes.",
+      "status": "deferred"
+    },
+    {
+      "id": "view-body-item",
+      "production": "viewBodyItem",
+      "callback": "exitViewBodyItem",
+      "scope": "view usage body",
+      "reason": "expose and viewRenderingMember alternatives are not yet typed in the public source AST.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_ledger_is_complete",
+      "follow_up": "Model expose and rendering members with explicit fields and source spans.",
+      "status": "deferred"
+    },
+    {
+      "id": "interface-non-occurrence-usage-element",
+      "production": "interfaceNonOccurrenceUsageElement",
+      "callback": "exitInterfaceNonOccurrenceUsageElement",
+      "scope": "interface body",
+      "reason": "The typed reference, attribute, enumeration, binding, and succession alternatives are passed through when assembled; an unassembled child remains lossless during staged coverage.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_core_interface_paths_are_typed",
+      "follow_up": "Convert any remaining unassembled interface alternative into a dedicated node and make the fallback unreachable for valid input.",
+      "status": "deferred"
+    },
+    {
+      "id": "interface-occurrence-usage-element",
+      "production": "interfaceOccurrenceUsageElement",
+      "callback": "exitInterfaceOccurrenceUsageElement",
+      "scope": "interface body",
+      "reason": "Default ends, end occurrences, structure usages, and behavior usages are typed when their child callback succeeds; parser recovery or an unimplemented child is retained losslessly.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_core_interface_paths_are_typed",
+      "follow_up": "Remove the recovery fallback after all interface occurrence alternatives have explicit callbacks.",
+      "status": "deferred"
+    },
+    {
+      "id": "behavior-usage-element",
+      "production": "behaviorUsageElement",
+      "callback": "exitBehaviorUsageElement",
+      "scope": "behavior usage dispatcher",
+      "reason": "The listed action/state/requirement/case/viewpoint alternatives are dispatched explicitly; an absent assembled child is retained rather than silently omitted.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_core_state_paths_are_typed",
+      "follow_up": "Make every behavior alternative typed and replace the fallback with a structured unsupported-production diagnostic.",
+      "status": "deferred"
+    },
+    {
+      "id": "definition-body-item-content",
+      "production": "definitionBodyItemContent",
+      "callback": "exitDefinitionBodyItemContent",
+      "scope": "definition body dispatcher",
+      "reason": "A parser-recovered or not-yet-typed definition/non-occurrence alternative cannot be safely coerced into a concrete definition node.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_ledger_is_complete",
+      "follow_up": "Cover every definitionBodyItemContent alternative with a typed node and preserve visibility/prefix ownership.",
+      "status": "deferred"
+    },
+    {
+      "id": "variant-usage-element",
+      "production": "variantUsageElement",
+      "callback": "exitVariantUsageElement",
+      "scope": "variant usage dispatcher",
+      "reason": "variantReference and any child whose explicit callback is not yet assembled remain lossless; ordinary typed variant children are passed through.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_core_state_paths_are_typed",
+      "follow_up": "Add the missing variant-reference and relationship nodes.",
+      "status": "deferred"
+    },
+    {
+      "id": "structure-usage-element",
+      "production": "structureUsageElement",
+      "callback": "exitStructureUsageElement",
+      "scope": "structure usage dispatcher",
+      "reason": "All currently implemented structure alternatives pass through; an unassembled alternative is retained until its concrete node exists.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_core_connection_and_interface_paths_are_typed",
+      "follow_up": "Complete typed coverage for the remaining structure usages and delete the fallback.",
+      "status": "deferred"
+    },
+    {
+      "id": "annotating-element",
+      "production": "annotatingElement",
+      "callback": "exitAnnotatingElement",
+      "scope": "model-owned annotation elements",
+      "reason": "Comment, documentation, and metadataFeature are typed; textualRepresentation is intentionally deferred and must not be confused with ordinary trivia.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_model_owned_annotations_are_typed",
+      "follow_up": "Add a typed TextualRepresentation node with its model-owned fields.",
+      "status": "deferred"
+    },
+    {
+      "id": "definition-element",
+      "production": "definitionElement",
+      "callback": "exitDefinitionElement",
+      "scope": "definition dispatcher",
+      "reason": "Definitions are passed through only after their concrete callback assembles a SourceElement; unknown or recovered alternatives are retained instead of dropped.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_core_definition_paths_are_typed",
+      "follow_up": "Close the fallback once every pinned grammar definition alternative has a typed AST node and oracle.",
+      "status": "deferred"
+    },
+    {
+      "id": "non-occurrence-usage-element",
+      "production": "nonOccurrenceUsageElement",
+      "callback": "exitNonOccurrenceUsageElement",
+      "scope": "non-occurrence usage dispatcher",
+      "reason": "Reference, end feature, default reference, attribute, and enumeration usages are passed through; extendedUsage remains outside the current typed slice.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_core_non_occurrence_paths_are_typed",
+      "follow_up": "Add typed extended-usage support and remove the dispatcher fallback.",
+      "status": "deferred"
+    },
+    {
+      "id": "occurrence-usage-element",
+      "production": "occurrenceUsageElement",
+      "callback": "exitOccurrenceUsageElement",
+      "scope": "occurrence usage dispatcher",
+      "reason": "Structure and behavior usage children are passed through when assembled; malformed/recovered alternatives are retained losslessly.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_core_state_paths_are_typed",
+      "follow_up": "Make the fallback unreachable for valid input after all occurrence alternatives are typed.",
+      "status": "deferred"
+    },
+    {
+      "id": "non-behavior-body-item",
+      "production": "nonBehaviorBodyItem",
+      "callback": "exitNonBehaviorBodyItem",
+      "scope": "state/non-behavior body",
+      "reason": "Known import, alias, definition, structure, and non-occurrence members are passed explicitly; an unexpected member is retained rather than dropped.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_core_state_paths_are_typed",
+      "follow_up": "Add explicit nodes for any newly introduced non-behavior member alternatives.",
+      "status": "deferred"
+    },
+    {
+      "id": "package-body-element",
+      "production": "packageBodyElement",
+      "callback": "exitPackageBodyElement",
+      "scope": "parser recovery only",
+      "reason": "Valid package members, filters, aliases, and imports are passed through; the raw branch is reached only when ANTLR recovery leaves an incomplete dispatcher child.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_core_package_paths_are_typed",
+      "follow_up": "Keep until malformed-input recovery has a structured error node/diagnostic contract.",
+      "status": "recovery-only"
+    }
+  ]
+}

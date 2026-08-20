@@ -16,6 +16,12 @@ optional source path, is attached after each concrete node is constructed so
 grammar-required dataclass fields remain required while provenance can be
 omitted by callers constructing a node directly.
 
+The few private lossless compatibility branches are enumerated in
+``docs/research/raw_element_compatibility_ledger.json``.  They are limited to
+deferred non-core productions and parser-recovery fragments; a valid core
+expression, action, state, transition, import, alias, filter, connection, or
+interface must be assembled as its explicit typed node.
+
 .. list-table:: Listener roadmap
    :header-rows: 1
 
@@ -65,7 +71,13 @@ from .ast import (
     ActionUsageNode,
     AliasMember,
     AllExpression,
+    AllocationDefinition,
+    AllocationUsage,
+    AllocationUsageDeclaration,
+    AnalysisCaseDefinition,
+    AnalysisCaseUsage,
     ArgumentList,
+    AssertConstraintUsage,
     AssignmentActionUsage,
     AssignmentNode,
     AssignmentNodeDeclaration,
@@ -73,45 +85,82 @@ from .ast import (
     AttributeUsage,
     BehaviorUsageMember,
     BehaviorUsageStateMember,
+    BinaryConnectorPart,
     BinaryExpression,
+    BinaryInterfacePart,
     BodyExpression,
     BooleanLiteral,
     BracketExpression,
+    CalculationBody,
+    CalculationDefinition,
+    CalculationUsage,
+    CaseBody,
+    CaseDefinition,
+    CaseUsage,
     CastExpression,
+    ChainingPart,
     CoalesceExpression,
     Comment,
     CommentExpression,
+    ConcernDefinition,
+    ConcernUsage,
     ConditionalExpression,
     ConjugatedPortTyping,
+    ConjugationPart,
+    ConnectionDefinition,
+    ConnectionUsage,
+    ConnectorEnd,
+    ConnectorPart,
+    ConstraintDefinition,
+    ConstraintUsage,
+    ConstraintUsageDeclaration,
     ConstructorExpression,
     ControlNodePrefix,
     DecisionNode,
     DeclaredFeatureTyping,
+    DefaultInterfaceEnd,
     DefaultTargetSuccession,
     Definition,
     DefinitionBody,
     DefinitionBodyItem,
     DefinitionDeclaration,
     DefinitionPrefix,
+    Dependency,
+    DifferencingPart,
+    DisjoiningPart,
     DoActionMember,
     Documentation,
     DottedQualifiedReference,
     EffectBehaviorMember,
     ElementFilterMember,
     EmptyActionUsage,
+    EndFeatureUsage,
     EndOccurrenceUsageElement,
+    EndUsagePrefix,
     EntryActionMember,
     EntryTransitionMember,
+    EnumeratedValue,
+    EnumerationBody,
+    EnumerationDefinition,
+    EnumerationUsage,
+    EnumerationUsageMember,
     EventOccurrenceUsage,
     ExhibitStateUsage,
     ExitActionMember,
     Expression,
+    ExtendedDefinition,
     FeatureChain,
     FeatureChainExpression,
+    FeatureDeclaration,
+    FeatureIdentification,
     FeatureReferenceExpression,
+    FeatureRelationshipPart,
     FeatureSpecialization,
     FeatureSpecializationPart,
     FilterPackage,
+    FlowDeclaration,
+    FlowDefinition,
+    FlowUsage,
     ForkNode,
     ForLoopNode,
     FunctionBodyItem,
@@ -124,28 +173,44 @@ from .ast import (
     IfNode,
     ImportDeclaration,
     ImportRule,
+    IncludeUseCaseUsage,
     IndexExpression,
     IndividualDefinition,
     IndividualUsage,
     InfinityLiteral,
     InitialNodeMember,
     IntegerLiteral,
+    InterfaceBody,
+    InterfaceDefinition,
+    InterfaceEnd,
+    InterfaceNonOccurrenceUsageMember,
+    InterfaceOccurrenceUsageMember,
+    InterfacePart,
+    InterfaceUsage,
+    InterfaceUsageDeclaration,
+    IntersectingPart,
+    InvertingPart,
     InvocationExpression,
     ItemDefinition,
     ItemUsage,
     JoinNode,
     MembershipImport,
     MergeNode,
+    Message,
+    MessageDeclaration,
     MetadataAccessExpression,
     MetadataBody,
     MetadataBodyFeature,
     MetadataBodyUsage,
     MetadataCastExpression,
+    MetadataDefinition,
     MetadataFeature,
     MetadataFeatureDeclaration,
     Model,
     NamedArgument,
     NamespaceImport,
+    NaryConnectorPart,
+    NaryInterfacePart,
     NodeParameter,
     NonFeatureMember,
     NonOccurrenceUsageMember,
@@ -154,6 +219,7 @@ from .ast import (
     OccurrenceDefinitionPrefix,
     OccurrenceUsage,
     OccurrenceUsagePrefix,
+    OwnedCrossFeature,
     OwnedFeatureTyping,
     Package,
     PackageMember,
@@ -173,8 +239,15 @@ from .ast import (
     Reference,
     ReferenceUsage,
     RelationshipBody,
+    RenderingDefinition,
+    RenderingUsage,
+    RequirementBody,
+    RequirementDefinition,
+    RequirementUsage,
     ResultExpressionMember,
     ReturnFeatureMember,
+    ReturnParameterMember,
+    SatisfyRequirementUsage,
     SelectExpression,
     SendActionUsage,
     SenderReceiverPart,
@@ -193,6 +266,7 @@ from .ast import (
     StringLiteral,
     StructureUsageMember,
     SubclassificationPart,
+    SuccessionFlowUsage,
     TargetSuccession,
     TargetTransitionForm,
     TargetTransitionUsage,
@@ -204,13 +278,26 @@ from .ast import (
     TransitionUsageMember,
     TriggerActionMember,
     TriggerExpression,
+    TypeFeaturingPart,
     TypeOperationExpression,
     UnaryExpression,
+    UnioningPart,
     Usage,
     UsageDeclaration,
     UsagePrefix,
+    UseCaseDefinition,
+    UseCaseUsage,
     ValuePart,
     VariantUsage,
+    VerificationCaseDefinition,
+    VerificationCaseUsage,
+    ViewBody,
+    ViewDefinition,
+    ViewDefinitionBody,
+    ViewpointDefinition,
+    ViewpointUsage,
+    ViewRenderingUsage,
+    ViewUsage,
     WhileLoopNode,
     _relative_source,
 )
@@ -473,6 +560,224 @@ class SysMLAstListener(SysMLv2ParserListener):
                 is_absolute=ctx.DOLLAR() is not None,
             ),
         )
+
+    def exitBasicFeaturePrefix(self, ctx: SysMLv2Parser.BasicFeaturePrefixContext) -> None:
+        """Record one owned-cross-feature prefix without flattening its owner."""
+        self.values[ctx] = self._text(ctx).strip()
+
+    def exitFeatureIdentification(self, ctx: SysMLv2Parser.FeatureIdentificationContext) -> None:
+        """Assemble the short and declared names of a feature declaration."""
+        names = [self._name_value(item) for item in ctx.name()]
+        if not names:
+            raise ValueError("featureIdentification requires a name")
+        self._store(
+            ctx,
+            FeatureIdentification(
+                short_name=names[0] if ctx.LT() is not None else None,
+                declared_name=names[-1],
+            ),
+        )
+
+    def exitOwnedConjugation(self, ctx: SysMLv2Parser.OwnedConjugationContext) -> None:
+        """Assemble the dotted qualified name owned by a conjugation part."""
+        self._store(ctx, self._dotted_node(ctx))
+
+    def exitConjugationPart(self, ctx: SysMLv2Parser.ConjugationPartContext) -> None:
+        """Assemble the explicit conjugation operator and target reference."""
+        target = self._child(ctx.ownedConjugation())
+        if not isinstance(target, DottedQualifiedReference):
+            raise ValueError("conjugationPart requires ownedConjugation")
+        operator = "~" if ctx.TILDE() is not None else "conjugates"
+        self._store(ctx, ConjugationPart(operator, target))
+
+    def exitOwnedFeatureInverting(self, ctx: SysMLv2Parser.OwnedFeatureInvertingContext) -> None:
+        """Assemble the dotted qualified name owned by an inverse relation."""
+        self._store(ctx, self._dotted_node(ctx))
+
+    def exitChainingPart(self, ctx: SysMLv2Parser.ChainingPartContext) -> None:
+        """Assemble ``chains`` and its ordered qualified-name targets."""
+        self._store(ctx, ChainingPart(self._dotted_node(ctx).qualified_names))
+
+    def exitInvertingPart(self, ctx: SysMLv2Parser.InvertingPartContext) -> None:
+        """Assemble ``inverse of`` and its owned feature reference."""
+        target = self._child(ctx.ownedFeatureInverting())
+        if not isinstance(target, DottedQualifiedReference):
+            raise ValueError("invertingPart requires ownedFeatureInverting")
+        self._store(ctx, InvertingPart(target))
+
+    def exitOwnedTypeFeaturing(self, ctx: SysMLv2Parser.OwnedTypeFeaturingContext) -> None:
+        """Pass an owned type-featuring qualified name through its wrapper."""
+        self._pass(ctx, ctx.qualifiedName())
+
+    def exitTypeFeaturingPart(self, ctx: SysMLv2Parser.TypeFeaturingPartContext) -> None:
+        """Assemble ``featured by`` and its ordered type targets."""
+        targets = [self._child(item) for item in ctx.ownedTypeFeaturing()]
+        if not targets or not all(isinstance(item, QualifiedReference) for item in targets):
+            raise ValueError("typeFeaturingPart requires owned type references")
+        self._store(ctx, TypeFeaturingPart(targets))
+
+    def exitOwnedDisjoining(self, ctx: SysMLv2Parser.OwnedDisjoiningContext) -> None:
+        """Assemble one dotted disjointed qualified name."""
+        self._store(ctx, self._dotted_node(ctx))
+
+    def exitDisjoiningPart(self, ctx: SysMLv2Parser.DisjoiningPartContext) -> None:
+        """Assemble ``disjoint from`` and its ordered type targets."""
+        targets = [self._child(item) for item in ctx.ownedDisjoining()]
+        if not targets or not all(isinstance(item, DottedQualifiedReference) for item in targets):
+            raise ValueError("disjoiningPart requires owned disjoining references")
+        self._store(ctx, DisjoiningPart(targets))
+
+    def exitUnioning(self, ctx: SysMLv2Parser.UnioningContext) -> None:
+        """Assemble one dotted unioned qualified name."""
+        self._store(ctx, self._dotted_node(ctx))
+
+    def exitUnioningPart(self, ctx: SysMLv2Parser.UnioningPartContext) -> None:
+        """Assemble ``unions`` and its ordered type targets."""
+        targets = [self._child(item) for item in ctx.unioning()]
+        if not targets or not all(isinstance(item, DottedQualifiedReference) for item in targets):
+            raise ValueError("unioningPart requires unioning references")
+        self._store(ctx, UnioningPart(targets))
+
+    def exitIntersecting(self, ctx: SysMLv2Parser.IntersectingContext) -> None:
+        """Assemble one dotted intersected qualified name."""
+        self._store(ctx, self._dotted_node(ctx))
+
+    def exitIntersectingPart(self, ctx: SysMLv2Parser.IntersectingPartContext) -> None:
+        """Assemble ``intersects`` and its ordered type targets."""
+        targets = [self._child(item) for item in ctx.intersecting()]
+        if not targets or not all(isinstance(item, DottedQualifiedReference) for item in targets):
+            raise ValueError("intersectingPart requires intersecting references")
+        self._store(ctx, IntersectingPart(targets))
+
+    def exitDifferencing(self, ctx: SysMLv2Parser.DifferencingContext) -> None:
+        """Assemble one dotted differenced qualified name."""
+        self._store(ctx, self._dotted_node(ctx))
+
+    def exitDifferencingPart(self, ctx: SysMLv2Parser.DifferencingPartContext) -> None:
+        """Assemble ``differences`` and its ordered type targets."""
+        targets = [self._child(item) for item in ctx.differencing()]
+        if not targets or not all(isinstance(item, DottedQualifiedReference) for item in targets):
+            raise ValueError("differencingPart requires differencing references")
+        self._store(ctx, DifferencingPart(targets))
+
+    def exitTypeRelationshipPart(self, ctx: SysMLv2Parser.TypeRelationshipPartContext) -> None:
+        """Pass one explicit type-relationship alternative."""
+        child = (
+            ctx.disjoiningPart()
+            or ctx.unioningPart()
+            or ctx.intersectingPart()
+            or ctx.differencingPart()
+        )
+        if child is None:
+            raise ValueError("typeRelationshipPart has no alternative")
+        self._pass(ctx, child)
+
+    def exitFeatureRelationshipPart(
+        self, ctx: SysMLv2Parser.FeatureRelationshipPartContext
+    ) -> None:
+        """Pass one explicit feature-relationship alternative."""
+        child = (
+            ctx.typeRelationshipPart()
+            or ctx.chainingPart()
+            or ctx.invertingPart()
+            or ctx.typeFeaturingPart()
+        )
+        if child is None:
+            raise ValueError("featureRelationshipPart has no alternative")
+        self._pass(ctx, child)
+
+    def exitFeatureDeclaration(self, ctx: SysMLv2Parser.FeatureDeclarationContext) -> None:
+        """Assemble feature name, specialization, conjugation, and relationships."""
+        identification = (
+            self._child(ctx.featureIdentification()) if ctx.featureIdentification() else None
+        )
+        specialization = (
+            self._child(ctx.featureSpecializationPart())
+            if ctx.featureSpecializationPart()
+            else None
+        )
+        conjugation = self._child(ctx.conjugationPart()) if ctx.conjugationPart() else None
+        relationships = [self._child(item) for item in ctx.featureRelationshipPart()]
+        if identification is not None and not isinstance(identification, FeatureIdentification):
+            raise ValueError("featureDeclaration identification was not assembled")
+        if specialization is not None and not isinstance(specialization, FeatureSpecializationPart):
+            raise ValueError("featureDeclaration specialization was not assembled")
+        if conjugation is not None and not isinstance(conjugation, ConjugationPart):
+            raise ValueError("featureDeclaration conjugation was not assembled")
+        if not all(isinstance(item, FeatureRelationshipPart) for item in relationships):
+            raise ValueError("featureDeclaration relationship was not assembled")
+        self._store(
+            ctx,
+            FeatureDeclaration(
+                identification=(
+                    identification if isinstance(identification, FeatureIdentification) else None
+                ),
+                specialization=(
+                    specialization
+                    if isinstance(specialization, FeatureSpecializationPart)
+                    else None
+                ),
+                is_all=ctx.ALL() is not None,
+                conjugation_part=conjugation if isinstance(conjugation, ConjugationPart) else None,
+                relationship_parts=[
+                    item for item in relationships if isinstance(item, FeatureRelationshipPart)
+                ],
+            ),
+        )
+
+    def exitOwnedCrossFeatureMember(
+        self, ctx: SysMLv2Parser.OwnedCrossFeatureMemberContext
+    ) -> None:
+        """Pass the owned cross-feature through its one-child wrapper."""
+        self._pass(ctx, ctx.ownedCrossFeature())
+
+    def exitOwnedCrossFeature(self, ctx: SysMLv2Parser.OwnedCrossFeatureContext) -> None:
+        """Assemble the feature and usage alternatives of an owned cross feature."""
+        if ctx.basicFeaturePrefix() is not None:
+            declaration = self._child(ctx.featureDeclaration())
+            if not isinstance(declaration, FeatureDeclaration):
+                raise ValueError("ownedCrossFeature requires featureDeclaration")
+            self._store(
+                ctx,
+                OwnedCrossFeature(
+                    basic_feature_prefix=self.values.get(ctx.basicFeaturePrefix(), ""),
+                    feature_declaration=declaration,
+                ),
+            )
+            return
+        basic = ctx.basicUsagePrefix()
+        if basic is None:
+            raise ValueError("ownedCrossFeature has no alternative")
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        self._store(
+            ctx,
+            OwnedCrossFeature(
+                basic_usage_prefix=self._usage_prefix_from_ref_prefix(basic),
+                usage_declaration=(
+                    declaration if isinstance(declaration, UsageDeclaration) else None
+                ),
+            ),
+        )
+
+    def exitEndUsagePrefix(self, ctx: SysMLv2Parser.EndUsagePrefixContext) -> None:
+        """Assemble the required ``end`` prefix and cross-feature child."""
+        cross_feature = self._child(ctx.ownedCrossFeatureMember())
+        if not isinstance(cross_feature, OwnedCrossFeature):
+            raise ValueError("endUsagePrefix requires ownedCrossFeature")
+        self._store(ctx, EndUsagePrefix(cross_feature))
+
+    def exitEndFeatureUsage(self, ctx: SysMLv2Parser.EndFeatureUsageContext) -> None:
+        """Assemble an end feature declaration and its usage completion."""
+        prefix = self._child(ctx.endUsagePrefix())
+        declaration = self._child(ctx.featureDeclaration())
+        completion = self._child(ctx.usageCompletion())
+        if not isinstance(prefix, EndUsagePrefix):
+            raise ValueError("endFeatureUsage requires EndUsagePrefix")
+        if not isinstance(declaration, FeatureDeclaration):
+            raise ValueError("endFeatureUsage requires FeatureDeclaration")
+        if not isinstance(completion, Usage):
+            raise ValueError("endFeatureUsage requires usage completion")
+        self._store(ctx, EndFeatureUsage(prefix, declaration, completion))
 
     def exitAliasMember(self, ctx: SysMLv2Parser.AliasMemberContext) -> None:
         """Assemble an alias member with its explicit names and target."""
@@ -1513,6 +1818,175 @@ class SysMLAstListener(SysMLv2ParserListener):
             return
         self._store(ctx, ActionBody(items=self._source_items(ctx.actionBodyItem())))
 
+    def exitReturnParameterMember(self, ctx: SysMLv2Parser.ReturnParameterMemberContext) -> None:
+        """Assemble a calculation/case return parameter member."""
+        usage = self._child(ctx.usageElement())
+        if not isinstance(usage, SourceElement):
+            raise ValueError("returnParameterMember requires usageElement")
+        self._store(
+            ctx,
+            ReturnParameterMember(
+                usage_element=usage,
+                member_prefix=self._member_prefix(ctx.memberPrefix()),
+            ),
+        )
+
+    def exitCalculationBodyItem(self, ctx: SysMLv2Parser.CalculationBodyItemContext) -> None:
+        """Pass action or return members through ``calculationBodyItem``."""
+        child = ctx.actionBodyItem() or ctx.returnParameterMember()
+        if child is None:
+            raise ValueError("calculationBodyItem has no alternative")
+        if self._child(child) is None:
+            self._raw_store(ctx)
+        else:
+            self._pass(ctx, child)
+
+    def _calculation_body(self, ctx: Any, body_type: Any) -> None:
+        """Build calculation/case bodies from their explicit child rules."""
+        if ctx.SEMI() is not None:
+            self._store(ctx, body_type(declaration_only=True))
+            return
+        part = ctx.calculationBodyPart() if hasattr(ctx, "calculationBodyPart") else None
+        items = []
+        result = None
+        if part is not None:
+            items = [self._child(item) for item in part.calculationBodyItem()]
+            result = (
+                self._child(part.resultExpressionMember())
+                if part.resultExpressionMember()
+                else None
+            )
+        self._store(
+            ctx,
+            body_type(
+                items=[item for item in items if isinstance(item, SourceElement)],
+                result_expression_member=(
+                    result if isinstance(result, ResultExpressionMember) else None
+                ),
+            ),
+        )
+
+    def exitCalculationBody(self, ctx: SysMLv2Parser.CalculationBodyContext) -> None:
+        """Assemble a calculation body."""
+        self._calculation_body(ctx, CalculationBody)
+
+    def exitCaseBody(self, ctx: SysMLv2Parser.CaseBodyContext) -> None:
+        """Assemble a case body."""
+        self._calculation_body(ctx, CaseBody)
+
+    def exitCaseBodyItem(self, ctx: SysMLv2Parser.CaseBodyItemContext) -> None:
+        """Pass case action/return members or retain a typed fragment."""
+        child = (
+            ctx.actionBodyItem()
+            or ctx.returnParameterMember()
+            or ctx.subjectMember()
+            or ctx.actorMember()
+            or ctx.objectiveMember()
+        )
+        if child is None:
+            raise ValueError("caseBodyItem has no alternative")
+        if self._child(child) is None:
+            self._raw_store(ctx)
+        else:
+            self._pass(ctx, child)
+
+    def exitRequirementBodyItem(self, ctx: SysMLv2Parser.RequirementBodyItemContext) -> None:
+        """Pass definition members or preserve a requirement-specific member."""
+        child = (
+            ctx.definitionBodyItem()
+            or ctx.subjectMember()
+            or ctx.requirementConstraintMember()
+            or ctx.framedConcernMember()
+            or ctx.requirementVerificationMember()
+            or ctx.actorMember()
+            or ctx.stakeholderMember()
+        )
+        if child is None:
+            raise ValueError("requirementBodyItem has no alternative")
+        if self._child(child) is None:
+            self._raw_store(ctx)
+        else:
+            self._pass(ctx, child)
+
+    def exitRequirementBody(self, ctx: SysMLv2Parser.RequirementBodyContext) -> None:
+        """Assemble a requirement body with ordered members."""
+        if ctx.SEMI() is not None:
+            self._store(ctx, RequirementBody(declaration_only=True))
+            return
+        self._store(ctx, RequirementBody(items=self._source_items(ctx.requirementBodyItem())))
+
+    def exitViewDefinitionBodyItem(self, ctx: SysMLv2Parser.ViewDefinitionBodyItemContext) -> None:
+        """Pass view definition members through their explicit alternatives."""
+        child = ctx.definitionBodyItem() or ctx.elementFilterMember() or ctx.viewRenderingMember()
+        if child is None:
+            raise ValueError("viewDefinitionBodyItem has no alternative")
+        if self._child(child) is None:
+            self._raw_store(ctx)
+        else:
+            self._pass(ctx, child)
+
+    def exitViewDefinitionBody(self, ctx: SysMLv2Parser.ViewDefinitionBodyContext) -> None:
+        """Assemble a view-definition body."""
+        if ctx.SEMI() is not None:
+            self._store(ctx, ViewDefinitionBody(declaration_only=True))
+            return
+        self._store(ctx, ViewDefinitionBody(items=self._source_items(ctx.viewDefinitionBodyItem())))
+
+    def exitViewBodyItem(self, ctx: SysMLv2Parser.ViewBodyItemContext) -> None:
+        """Pass view-body members through their explicit alternatives."""
+        child = (
+            ctx.definitionBodyItem()
+            or ctx.elementFilterMember()
+            or ctx.viewRenderingMember()
+            or ctx.expose()
+        )
+        if child is None:
+            raise ValueError("viewBodyItem has no alternative")
+        if self._child(child) is None:
+            self._raw_store(ctx)
+        else:
+            self._pass(ctx, child)
+
+    def exitViewBody(self, ctx: SysMLv2Parser.ViewBodyContext) -> None:
+        """Assemble a view usage body."""
+        if ctx.SEMI() is not None:
+            self._store(ctx, ViewBody(declaration_only=True))
+            return
+        self._store(ctx, ViewBody(items=self._source_items(ctx.viewBodyItem())))
+
+    def exitEnumerationUsageMember(self, ctx: SysMLv2Parser.EnumerationUsageMemberContext) -> None:
+        """Assemble metadata, visibility, and an enumerated value."""
+        value = self._child(ctx.enumeratedValue())
+        if not isinstance(value, EnumeratedValue):
+            raise ValueError("enumerationUsageMember requires enumeratedValue")
+        self._store(
+            ctx,
+            EnumerationUsageMember(
+                enumerated_value=value,
+                member_prefix=self._member_prefix(ctx.memberPrefix()),
+                prefix_metadata=[self._text(item).strip() for item in ctx.prefixMetadataMember()],
+            ),
+        )
+
+    def exitEnumeratedValue(self, ctx: SysMLv2Parser.EnumeratedValueContext) -> None:
+        """Assemble an enumerated value from its usage completion."""
+        usage = self._child(ctx.usage())
+        if not isinstance(usage, Usage):
+            raise ValueError("enumeratedValue requires usage")
+        self._store(ctx, EnumeratedValue(usage=usage, is_enum=ctx.ENUM() is not None))
+
+    def exitEnumerationBody(self, ctx: SysMLv2Parser.EnumerationBodyContext) -> None:
+        """Assemble an enumeration body."""
+        if ctx.SEMI() is not None:
+            self._store(ctx, EnumerationBody(declaration_only=True))
+            return
+        members = []
+        for child in ctx.children or []:
+            node = self._child(child)
+            if isinstance(node, SourceElement):
+                members.append(node)
+        self._store(ctx, EnumerationBody(items=members))
+
     def exitActionBodyItem(self, ctx: SysMLv2Parser.ActionBodyItemContext) -> None:
         """Pass or assemble one action-body alternative without text collapse."""
         if ctx.nonBehaviorBodyItem():
@@ -1896,6 +2370,8 @@ class SysMLAstListener(SysMLv2ParserListener):
     def exitTargetSuccession(self, ctx: SysMLv2Parser.TargetSuccessionContext) -> None:
         """Assemble an ordinary source-end to target succession."""
         connector = self._child(ctx.connectorEndMember())
+        if isinstance(connector, ConnectorEnd):
+            connector = connector.reference
         if not self._is_reference(connector):
             raise ValueError("targetSuccession requires connector-end reference")
         self._store(
@@ -2517,6 +2993,8 @@ class SysMLAstListener(SysMLv2ParserListener):
     def exitTransitionSuccession(self, ctx: SysMLv2Parser.TransitionSuccessionContext) -> None:
         """Assemble the target connector-end reference."""
         connector = self._child(ctx.connectorEndMember())
+        if isinstance(connector, ConnectorEnd):
+            connector = connector.reference
         if not self._is_reference(connector):
             raise ValueError("transitionSuccession requires connectorEndMember")
         self._store(ctx, TransitionSuccession(connector))
@@ -2526,11 +3004,319 @@ class SysMLAstListener(SysMLv2ParserListener):
         self._pass(ctx, ctx.connectorEnd())
 
     def exitConnectorEnd(self, ctx: SysMLv2Parser.ConnectorEndContext) -> None:
-        """Preserve the owned reference at a connector end."""
+        """Assemble endpoint reference, multiplicity, and relation fields."""
         reference = self._child(ctx.ownedReferenceSubsetting())
         if not self._is_reference(reference):
             raise ValueError("connectorEnd requires ownedReferenceSubsetting")
-        self._pass(ctx, ctx.ownedReferenceSubsetting())
+        self._store(
+            ctx,
+            ConnectorEnd(
+                reference=reference,
+                cross_multiplicity=(
+                    self._text(ctx.ownedCrossMultiplicityMember()).strip()
+                    if ctx.ownedCrossMultiplicityMember()
+                    else None
+                ),
+                name=self._name_value(ctx.name()) if ctx.name() else None,
+                name_operator=(
+                    self._token_text(ctx.COLON_COLON_GT())
+                    if ctx.COLON_COLON_GT()
+                    else self._token_text(ctx.REFERENCES())
+                    if ctx.REFERENCES()
+                    else None
+                ),
+            ),
+        )
+
+    def exitConnectorPart(self, ctx: SysMLv2Parser.ConnectorPartContext) -> None:
+        """Pass the selected binary or n-ary connector-part alternative."""
+        child = ctx.binaryConnectorPart() or ctx.naryConnectorPart()
+        if child is None:
+            raise ValueError("connectorPart has no alternative")
+        self._pass(ctx, child)
+
+    def exitBinaryConnectorPart(self, ctx: SysMLv2Parser.BinaryConnectorPartContext) -> None:
+        """Assemble two connector ends joined by ``to``."""
+        ends = [self._child(item) for item in ctx.connectorEndMember()]
+        if len(ends) != 2 or not all(isinstance(item, ConnectorEnd) for item in ends):
+            raise ValueError("binaryConnectorPart requires two ConnectorEnd nodes")
+        self._store(ctx, BinaryConnectorPart(ends[0], ends[1]))
+
+    def exitNaryConnectorPart(self, ctx: SysMLv2Parser.NaryConnectorPartContext) -> None:
+        """Assemble the ordered connector ends in an n-ary part."""
+        ends = [self._child(item) for item in ctx.connectorEndMember()]
+        if len(ends) < 2 or not all(isinstance(item, ConnectorEnd) for item in ends):
+            raise ValueError("naryConnectorPart requires at least two ConnectorEnd nodes")
+        self._store(
+            ctx,
+            NaryConnectorPart([item for item in ends if isinstance(item, ConnectorEnd)]),
+        )
+
+    def exitConnectionDefinition(self, ctx: SysMLv2Parser.ConnectionDefinitionContext) -> None:
+        """Assemble ``connection def`` from its occurrence prefix and definition."""
+        prefix = self._child(ctx.occurrenceDefinitionPrefix())
+        definition = self._child(ctx.definition())
+        if not isinstance(prefix, OccurrenceDefinitionPrefix) or not isinstance(
+            definition, Definition
+        ):
+            raise ValueError("connectionDefinition has incomplete required fields")
+        self._store(ctx, ConnectionDefinition(prefix, definition))
+
+    def exitConnectionUsage(self, ctx: SysMLv2Parser.ConnectionUsageContext) -> None:
+        """Assemble named and shorthand connection usages."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        body = self._child(ctx.usageBody())
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        value = self._child(ctx.valuePart()) if ctx.valuePart() else None
+        connector = self._child(ctx.connectorPart()) if ctx.connectorPart() else None
+        if not isinstance(prefix, OccurrenceUsagePrefix) or not isinstance(body, DefinitionBody):
+            raise ValueError("connectionUsage has incomplete required fields")
+        if declaration is not None and not isinstance(declaration, UsageDeclaration):
+            raise ValueError("connectionUsage declaration was not assembled")
+        if value is not None and not isinstance(value, ValuePart):
+            raise ValueError("connectionUsage value was not assembled")
+        if connector is not None and not isinstance(connector, ConnectorPart):
+            raise ValueError("connectionUsage connector part was not assembled")
+        self._store(
+            ctx,
+            ConnectionUsage(
+                occurrence_usage_prefix=prefix,
+                usage_body=body,
+                usage_declaration=declaration
+                if isinstance(declaration, UsageDeclaration)
+                else None,
+                value_part=value if isinstance(value, ValuePart) else None,
+                connector_part=connector if isinstance(connector, ConnectorPart) else None,
+                has_connection_keyword=ctx.CONNECTION() is not None,
+            ),
+        )
+
+    def exitInterfaceEnd(self, ctx: SysMLv2Parser.InterfaceEndContext) -> None:
+        """Assemble interface endpoint reference and concrete modifiers."""
+        reference = self._child(ctx.ownedReferenceSubsetting())
+        if not self._is_reference(reference):
+            raise ValueError("interfaceEnd requires ownedReferenceSubsetting")
+        self._store(
+            ctx,
+            InterfaceEnd(
+                reference=reference,
+                cross_multiplicity=(
+                    self._text(ctx.ownedCrossMultiplicityMember()).strip()
+                    if ctx.ownedCrossMultiplicityMember()
+                    else None
+                ),
+                name=self._name_value(ctx.name()) if ctx.name() else None,
+                name_operator=(
+                    self._token_text(ctx.COLON_COLON_GT())
+                    if ctx.COLON_COLON_GT()
+                    else self._token_text(ctx.REFERENCES())
+                    if ctx.REFERENCES()
+                    else None
+                ),
+            ),
+        )
+
+    def exitInterfaceEndMember(self, ctx: SysMLv2Parser.InterfaceEndMemberContext) -> None:
+        """Pass an interface end through its one-child grammar wrapper."""
+        self._pass(ctx, ctx.interfaceEnd())
+
+    def exitInterfacePart(self, ctx: SysMLv2Parser.InterfacePartContext) -> None:
+        """Pass the selected binary or n-ary interface-part alternative."""
+        child = ctx.binaryInterfacePart() or ctx.naryInterfacePart()
+        if child is None:
+            raise ValueError("interfacePart has no alternative")
+        self._pass(ctx, child)
+
+    def exitBinaryInterfacePart(self, ctx: SysMLv2Parser.BinaryInterfacePartContext) -> None:
+        """Assemble two interface ends joined by ``to``."""
+        ends = [self._child(item) for item in ctx.interfaceEndMember()]
+        if len(ends) != 2 or not all(isinstance(item, InterfaceEnd) for item in ends):
+            raise ValueError("binaryInterfacePart requires two InterfaceEnd nodes")
+        self._store(ctx, BinaryInterfacePart(ends[0], ends[1]))
+
+    def exitNaryInterfacePart(self, ctx: SysMLv2Parser.NaryInterfacePartContext) -> None:
+        """Assemble the ordered interface ends in an n-ary part."""
+        ends = [self._child(item) for item in ctx.interfaceEndMember()]
+        if len(ends) < 2 or not all(isinstance(item, InterfaceEnd) for item in ends):
+            raise ValueError("naryInterfacePart requires at least two InterfaceEnd nodes")
+        self._store(
+            ctx,
+            NaryInterfacePart([item for item in ends if isinstance(item, InterfaceEnd)]),
+        )
+
+    def exitInterfaceBody(self, ctx: SysMLv2Parser.InterfaceBodyContext) -> None:
+        """Assemble a semicolon or ordered interface-body member list."""
+        if ctx.SEMI() is not None:
+            self._store(ctx, InterfaceBody(declaration_only=True))
+            return
+        items = [self._child(item) for item in ctx.interfaceBodyItem()]
+        if not all(isinstance(item, SourceElement) for item in items):
+            raise ValueError("interfaceBody contains an unassembled item")
+        self._store(
+            ctx,
+            InterfaceBody(items=[item for item in items if isinstance(item, SourceElement)]),
+        )
+
+    def exitInterfaceBodyItem(self, ctx: SysMLv2Parser.InterfaceBodyItemContext) -> None:
+        """Assemble interface-body alternatives and preserve source succession."""
+        if ctx.definitionMember() is not None:
+            self._pass(ctx, ctx.definitionMember())
+            return
+        if ctx.variantUsageMember() is not None:
+            self._pass(ctx, ctx.variantUsageMember())
+            return
+        if ctx.interfaceNonOccurrenceUsageMember() is not None:
+            self._pass(ctx, ctx.interfaceNonOccurrenceUsageMember())
+            return
+        if ctx.interfaceOccurrenceUsageMember() is not None:
+            occurrence = self._child(ctx.interfaceOccurrenceUsageMember())
+            if not isinstance(occurrence, InterfaceOccurrenceUsageMember):
+                raise ValueError("interfaceBodyItem requires occurrence member")
+            source = (
+                self._child(ctx.sourceSuccessionMember()) if ctx.sourceSuccessionMember() else None
+            )
+            if source is None:
+                self._pass(ctx, ctx.interfaceOccurrenceUsageMember())
+                return
+            if not isinstance(source, SourceSuccession):
+                raise ValueError("interfaceBodyItem source succession was not assembled")
+            self._store(
+                ctx,
+                InterfaceOccurrenceUsageMember(
+                    usage=occurrence.usage,
+                    member_prefix=occurrence.member_prefix,
+                    source_succession=source,
+                ),
+            )
+            return
+        if ctx.aliasMember() is not None:
+            self._pass(ctx, ctx.aliasMember())
+            return
+        if ctx.importRule() is not None:
+            self._pass(ctx, ctx.importRule())
+            return
+        raise ValueError("interfaceBodyItem has no alternative")
+
+    def exitInterfaceNonOccurrenceUsageMember(
+        self, ctx: SysMLv2Parser.InterfaceNonOccurrenceUsageMemberContext
+    ) -> None:
+        """Assemble an interface non-occurrence member and visibility."""
+        usage = self._child(ctx.interfaceNonOccurrenceUsageElement())
+        if not isinstance(usage, SourceElement):
+            raise ValueError("interfaceNonOccurrenceUsageMember requires typed usage")
+        self._store(
+            ctx,
+            InterfaceNonOccurrenceUsageMember(
+                usage=usage,
+                member_prefix=self._member_prefix(ctx.memberPrefix()),
+            ),
+        )
+
+    def exitInterfaceNonOccurrenceUsageElement(
+        self, ctx: SysMLv2Parser.InterfaceNonOccurrenceUsageElementContext
+    ) -> None:
+        """Pass typed interface non-occurrence alternatives or retain an unimplemented one."""
+        child = (
+            ctx.referenceUsage()
+            or ctx.attributeUsage()
+            or ctx.enumerationUsage()
+            or ctx.bindingConnectorAsUsage()
+            or ctx.successionAsUsage()
+        )
+        if child is not None and self._child(child) is not None:
+            self._pass(ctx, child)
+            return
+        self._raw_store(ctx)
+
+    def exitInterfaceOccurrenceUsageMember(
+        self, ctx: SysMLv2Parser.InterfaceOccurrenceUsageMemberContext
+    ) -> None:
+        """Assemble an interface occurrence member and visibility."""
+        usage = self._child(ctx.interfaceOccurrenceUsageElement())
+        if not isinstance(usage, SourceElement):
+            raise ValueError("interfaceOccurrenceUsageMember requires typed usage")
+        self._store(
+            ctx,
+            InterfaceOccurrenceUsageMember(
+                usage=usage,
+                member_prefix=self._member_prefix(ctx.memberPrefix()),
+            ),
+        )
+
+    def exitInterfaceOccurrenceUsageElement(
+        self, ctx: SysMLv2Parser.InterfaceOccurrenceUsageElementContext
+    ) -> None:
+        """Pass default end, end occurrence, structure, or behavior usage."""
+        child = (
+            ctx.defaultInterfaceEnd()
+            or ctx.endOccurrenceUsageElement()
+            or ctx.structureUsageElement()
+            or ctx.behaviorUsageElement()
+        )
+        if child is None:
+            raise ValueError("interfaceOccurrenceUsageElement has no alternative")
+        if self._child(child) is not None:
+            self._pass(ctx, child)
+            return
+        self._raw_store(ctx)
+
+    def exitDefaultInterfaceEnd(self, ctx: SysMLv2Parser.DefaultInterfaceEndContext) -> None:
+        """Assemble ``end`` with its structured interface-end usage."""
+        usage = self._child(ctx.usage())
+        if not isinstance(usage, Usage):
+            raise ValueError("defaultInterfaceEnd requires Usage")
+        self._store(ctx, DefaultInterfaceEnd(usage))
+
+    def exitInterfaceUsageDeclaration(
+        self, ctx: SysMLv2Parser.InterfaceUsageDeclarationContext
+    ) -> None:
+        """Assemble interface declaration/value and optional connection part."""
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        value = self._child(ctx.valuePart()) if ctx.valuePart() else None
+        part = self._child(ctx.interfacePart()) if ctx.interfacePart() else None
+        if declaration is not None and not isinstance(declaration, UsageDeclaration):
+            raise ValueError("interfaceUsageDeclaration declaration was not assembled")
+        if value is not None and not isinstance(value, ValuePart):
+            raise ValueError("interfaceUsageDeclaration value was not assembled")
+        if part is not None and not isinstance(part, InterfacePart):
+            raise ValueError("interfaceUsageDeclaration part was not assembled")
+        self._store(
+            ctx,
+            InterfaceUsageDeclaration(
+                usage_declaration=declaration
+                if isinstance(declaration, UsageDeclaration)
+                else None,
+                value_part=value if isinstance(value, ValuePart) else None,
+                interface_part=part if isinstance(part, InterfacePart) else None,
+                has_connect_keyword=ctx.CONNECT() is not None,
+            ),
+        )
+
+    def exitInterfaceDefinition(self, ctx: SysMLv2Parser.InterfaceDefinitionContext) -> None:
+        """Assemble ``interface def`` with its dedicated declaration/body nodes."""
+        prefix = self._child(ctx.occurrenceDefinitionPrefix())
+        declaration = self._child(ctx.definitionDeclaration())
+        body = self._child(ctx.interfaceBody())
+        if not isinstance(prefix, OccurrenceDefinitionPrefix):
+            raise ValueError("interfaceDefinition requires occurrence prefix")
+        if not isinstance(declaration, DefinitionDeclaration):
+            raise ValueError("interfaceDefinition requires definition declaration")
+        if not isinstance(body, InterfaceBody):
+            raise ValueError("interfaceDefinition requires interface body")
+        self._store(ctx, InterfaceDefinition(prefix, declaration, body))
+
+    def exitInterfaceUsage(self, ctx: SysMLv2Parser.InterfaceUsageContext) -> None:
+        """Assemble ``interface`` usage with declaration and body."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        declaration = self._child(ctx.interfaceUsageDeclaration())
+        body = self._child(ctx.interfaceBody())
+        if not isinstance(prefix, OccurrenceUsagePrefix):
+            raise ValueError("interfaceUsage requires occurrence prefix")
+        if not isinstance(declaration, InterfaceUsageDeclaration):
+            raise ValueError("interfaceUsage requires interface usage declaration")
+        if not isinstance(body, InterfaceBody):
+            raise ValueError("interfaceUsage requires interface body")
+        self._store(ctx, InterfaceUsage(prefix, declaration, body))
 
     def exitTransitionSuccessionMember(
         self, ctx: SysMLv2Parser.TransitionSuccessionMemberContext
@@ -2623,12 +3409,24 @@ class SysMLAstListener(SysMLv2ParserListener):
         )
 
     def exitBehaviorUsageElement(self, ctx: SysMLv2Parser.BehaviorUsageElementContext) -> None:
-        """Pass state/exhibit behavior alternatives or retain unrelated behavior syntax."""
+        """Pass every typed behavior-usage alternative."""
         child = (
             ctx.actionUsage()
+            or ctx.calculationUsage()
             or ctx.stateUsage()
+            or ctx.constraintUsage()
+            or ctx.requirementUsage()
+            or ctx.concernUsage()
+            or ctx.caseUsage()
+            or ctx.analysisCaseUsage()
+            or ctx.verificationCaseUsage()
+            or ctx.useCaseUsage()
+            or ctx.viewpointUsage()
             or ctx.performActionUsage()
             or ctx.exhibitStateUsage()
+            or ctx.includeUseCaseUsage()
+            or ctx.assertConstraintUsage()
+            or ctx.satisfyRequirementUsage()
         )
         if child is not None:
             self._pass(ctx, child)
@@ -2788,6 +3586,632 @@ class SysMLAstListener(SysMLv2ParserListener):
     # Generic definition/usage containment
     # ------------------------------------------------------------------
 
+    def exitDependency(self, ctx: SysMLv2Parser.DependencyContext) -> None:
+        """Assemble dependency endpoints as structured qualified references."""
+        names = [self._child(item) for item in ctx.qualifiedName()]
+        references = [item for item in names if isinstance(item, QualifiedReference)]
+        if ctx.dependencyDeclaration() is not None:
+            declaration = ctx.dependencyDeclaration()
+            names = [self._child(item) for item in declaration.qualifiedName()]
+            references = [item for item in names if isinstance(item, QualifiedReference)]
+            identification = None
+            if declaration.identification() is not None:
+                identification = self._child(declaration.identification())
+            source_count = len(references) // 2
+            source_references = references[:source_count]
+            target_references = references[source_count:]
+        else:
+            identification = self._child(ctx.identification()) if ctx.identification() else None
+            to_index = ctx.TO().symbol.tokenIndex if ctx.TO() is not None else -1
+            source_references = [
+                item for item in references if item.span is None or item.span.line >= 0
+            ]
+            # The grammar's endpoint names occur in source order.  The last
+            # ``to`` token is the only stable boundary needed here.
+            source_references = [
+                item for item in references if item.span is None or item.span.line >= 0
+            ]
+            if to_index >= 0:
+                qualified_contexts = ctx.qualifiedName()
+                split = next(
+                    (
+                        index
+                        for index, child in enumerate(qualified_contexts)
+                        if child.start.tokenIndex > to_index
+                    ),
+                    len(qualified_contexts),
+                )
+                source_references = [
+                    self._child(item)
+                    for item in qualified_contexts[:split]
+                    if isinstance(self._child(item), QualifiedReference)
+                ]
+                target_references = [
+                    self._child(item)
+                    for item in qualified_contexts[split:]
+                    if isinstance(self._child(item), QualifiedReference)
+                ]
+            else:
+                target_references = []
+        body = self._child(ctx.relationshipBody())
+        if not isinstance(body, RelationshipBody):
+            raise ValueError("dependency requires relationshipBody")
+        if not isinstance(identification, Identification):
+            identification = None
+        if not source_references or not target_references:
+            # Recovery and declaration shorthand still get a typed node.  The
+            # relationship body keeps the exact fragment until linking expands
+            # endpoint alternatives further.
+            source_references = source_references or references[:1]
+            target_references = target_references or references[1:]
+        self._store(
+            ctx,
+            Dependency(
+                source_references=source_references,
+                target_references=target_references,
+                relationship_body=body,
+                identification=identification,
+                prefix_metadata=[
+                    self._text(item).strip() for item in ctx.prefixMetadataAnnotation()
+                ],
+            ),
+        )
+
+    def exitEnumerationDefinition(self, ctx: SysMLv2Parser.EnumerationDefinitionContext) -> None:
+        """Assemble an ``enum def`` with explicit body members."""
+        declaration = self._child(ctx.definitionDeclaration())
+        body = self._child(ctx.enumerationBody())
+        if not isinstance(declaration, DefinitionDeclaration) or not isinstance(
+            body, EnumerationBody
+        ):
+            raise ValueError("enumerationDefinition has incomplete required fields")
+        self._store(
+            ctx,
+            EnumerationDefinition(
+                definition_declaration=declaration,
+                enumeration_body=body,
+                extension_keywords=[
+                    self._text(item).strip() for item in ctx.definitionExtensionKeyword()
+                ],
+            ),
+        )
+
+    def exitAllocationDefinition(self, ctx: SysMLv2Parser.AllocationDefinitionContext) -> None:
+        """Assemble an ``allocation def``."""
+        prefix = self._child(ctx.occurrenceDefinitionPrefix())
+        definition = self._child(ctx.definition())
+        if not isinstance(prefix, OccurrenceDefinitionPrefix) or not isinstance(
+            definition, Definition
+        ):
+            raise ValueError("allocationDefinition has incomplete required fields")
+        self._store(ctx, AllocationDefinition(prefix, definition))
+
+    def exitFlowDefinition(self, ctx: SysMLv2Parser.FlowDefinitionContext) -> None:
+        """Assemble a ``flow def``."""
+        prefix = self._child(ctx.occurrenceDefinitionPrefix())
+        definition = self._child(ctx.definition())
+        if not isinstance(prefix, OccurrenceDefinitionPrefix) or not isinstance(
+            definition, Definition
+        ):
+            raise ValueError("flowDefinition has incomplete required fields")
+        self._store(ctx, FlowDefinition(prefix, definition))
+
+    def exitRenderingDefinition(self, ctx: SysMLv2Parser.RenderingDefinitionContext) -> None:
+        """Assemble a ``rendering def``."""
+        prefix = self._child(ctx.occurrenceDefinitionPrefix())
+        definition = self._child(ctx.definition())
+        if not isinstance(prefix, OccurrenceDefinitionPrefix) or not isinstance(
+            definition, Definition
+        ):
+            raise ValueError("renderingDefinition has incomplete required fields")
+        self._store(ctx, RenderingDefinition(prefix, definition))
+
+    def exitMetadataDefinition(self, ctx: SysMLv2Parser.MetadataDefinitionContext) -> None:
+        """Assemble a ``metadata def``."""
+        definition = self._child(ctx.definition())
+        if not isinstance(definition, Definition):
+            raise ValueError("metadataDefinition has incomplete required fields")
+        self._store(
+            ctx,
+            MetadataDefinition(
+                definition=definition,
+                is_abstract=ctx.ABSTRACT() is not None,
+                extension_keywords=[
+                    self._text(item).strip() for item in ctx.definitionExtensionKeyword()
+                ],
+            ),
+        )
+
+    def exitExtendedDefinition(self, ctx: SysMLv2Parser.ExtendedDefinitionContext) -> None:
+        """Assemble an extension-keyword definition."""
+        definition = self._child(ctx.definition())
+        if not isinstance(definition, Definition):
+            raise ValueError("extendedDefinition has incomplete required fields")
+        basic = (
+            self._text(ctx.basicDefinitionPrefix()).strip() if ctx.basicDefinitionPrefix() else None
+        )
+        self._store(
+            ctx,
+            ExtendedDefinition(
+                definition_prefix=DefinitionPrefix(
+                    basic_definition_keyword=basic,
+                    extension_keywords=[
+                        self._text(item).strip() for item in ctx.definitionExtensionKeyword()
+                    ],
+                ),
+                definition=definition,
+            ),
+        )
+
+    def _definition_with_body(self, ctx: Any, body_rule: Any, node_type: Any) -> None:
+        """Build one occurrence definition with its explicit body node."""
+        prefix = self._child(ctx.occurrenceDefinitionPrefix())
+        declaration = self._child(ctx.definitionDeclaration())
+        body = self._child(body_rule)
+        if not isinstance(prefix, OccurrenceDefinitionPrefix):
+            raise ValueError("definition requires occurrenceDefinitionPrefix")
+        if not isinstance(declaration, DefinitionDeclaration) or not isinstance(
+            body, SourceElement
+        ):
+            raise ValueError("definition requires definitionDeclaration and body")
+        self._store(ctx, node_type(prefix, declaration, body))
+
+    def exitCalculationDefinition(self, ctx: SysMLv2Parser.CalculationDefinitionContext) -> None:
+        """Assemble a ``calc def``."""
+        self._definition_with_body(ctx, ctx.calculationBody(), CalculationDefinition)
+
+    def exitConstraintDefinition(self, ctx: SysMLv2Parser.ConstraintDefinitionContext) -> None:
+        """Assemble a ``constraint def``."""
+        self._definition_with_body(ctx, ctx.calculationBody(), ConstraintDefinition)
+
+    def exitRequirementDefinition(self, ctx: SysMLv2Parser.RequirementDefinitionContext) -> None:
+        """Assemble a ``requirement def``."""
+        self._definition_with_body(ctx, ctx.requirementBody(), RequirementDefinition)
+
+    def exitConcernDefinition(self, ctx: SysMLv2Parser.ConcernDefinitionContext) -> None:
+        """Assemble a ``concern def``."""
+        self._definition_with_body(ctx, ctx.requirementBody(), ConcernDefinition)
+
+    def exitCaseDefinition(self, ctx: SysMLv2Parser.CaseDefinitionContext) -> None:
+        """Assemble a ``case def``."""
+        self._definition_with_body(ctx, ctx.caseBody(), CaseDefinition)
+
+    def exitAnalysisCaseDefinition(self, ctx: SysMLv2Parser.AnalysisCaseDefinitionContext) -> None:
+        """Assemble an ``analysis def``."""
+        self._definition_with_body(ctx, ctx.caseBody(), AnalysisCaseDefinition)
+
+    def exitVerificationCaseDefinition(
+        self, ctx: SysMLv2Parser.VerificationCaseDefinitionContext
+    ) -> None:
+        """Assemble a ``verification def``."""
+        self._definition_with_body(ctx, ctx.caseBody(), VerificationCaseDefinition)
+
+    def exitUseCaseDefinition(self, ctx: SysMLv2Parser.UseCaseDefinitionContext) -> None:
+        """Assemble a ``use case def``."""
+        self._definition_with_body(ctx, ctx.caseBody(), UseCaseDefinition)
+
+    def exitViewDefinition(self, ctx: SysMLv2Parser.ViewDefinitionContext) -> None:
+        """Assemble a ``view def``."""
+        self._definition_with_body(ctx, ctx.viewDefinitionBody(), ViewDefinition)
+
+    def exitViewpointDefinition(self, ctx: SysMLv2Parser.ViewpointDefinitionContext) -> None:
+        """Assemble a ``viewpoint def``."""
+        self._definition_with_body(ctx, ctx.requirementBody(), ViewpointDefinition)
+
+    def exitFlowEnd(self, ctx: SysMLv2Parser.FlowEndContext) -> None:
+        """Assemble a flow endpoint as a qualified reference."""
+        names = [self._child(item) for item in ctx.qualifiedName()]
+        references = [item for item in names if isinstance(item, QualifiedReference)]
+        if not references:
+            raise ValueError("flowEnd requires qualifiedName")
+        self._pass(ctx, ctx.qualifiedName()[0]) if len(references) == 1 else self._store(
+            ctx, DottedQualifiedReference(references)
+        )
+
+    def exitFlowEndMember(self, ctx: SysMLv2Parser.FlowEndMemberContext) -> None:
+        """Pass the flow endpoint through its one-child wrapper."""
+        self._pass(ctx, ctx.flowEnd())
+
+    def exitFlowPayloadFeature(self, ctx: SysMLv2Parser.FlowPayloadFeatureContext) -> None:
+        """Pass the structured payload feature through its wrapper."""
+        self._pass(ctx, ctx.payloadFeature())
+
+    def exitFlowPayloadFeatureMember(
+        self, ctx: SysMLv2Parser.FlowPayloadFeatureMemberContext
+    ) -> None:
+        """Pass the payload feature member through its wrapper."""
+        self._pass(ctx, ctx.flowPayloadFeature())
+
+    def exitFlowDeclaration(self, ctx: SysMLv2Parser.FlowDeclarationContext) -> None:
+        """Assemble flow declaration fields without flattening endpoints."""
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        feature_declaration = (
+            self._child(ctx.featureDeclaration()) if ctx.featureDeclaration() else None
+        )
+        value = self._child(ctx.valuePart()) if ctx.valuePart() else None
+        payload = (
+            self._child(ctx.flowPayloadFeatureMember()) if ctx.flowPayloadFeatureMember() else None
+        )
+        ends = [self._child(item) for item in ctx.flowEndMember()]
+        references = [
+            item
+            for item in ends
+            if isinstance(item, (QualifiedReference, DottedQualifiedReference))
+        ]
+        self._store(
+            ctx,
+            FlowDeclaration(
+                usage_declaration=declaration
+                if isinstance(declaration, UsageDeclaration)
+                else None,
+                feature_declaration=(
+                    feature_declaration
+                    if isinstance(feature_declaration, FeatureDeclaration)
+                    else None
+                ),
+                value_part=value if isinstance(value, ValuePart) else None,
+                payload_feature=payload if isinstance(payload, SourceElement) else None,
+                source_end=references[0] if references else None,
+                target_end=references[1] if len(references) > 1 else None,
+                all_ends=ctx.ALL() is not None,
+            ),
+        )
+
+    def exitMessageEvent(self, ctx: SysMLv2Parser.MessageEventContext) -> None:
+        """Pass a message event's owned reference."""
+        self._pass(ctx, ctx.ownedReferenceSubsetting())
+
+    def exitMessageEventMember(self, ctx: SysMLv2Parser.MessageEventMemberContext) -> None:
+        """Pass a message event through its one-child wrapper."""
+        self._pass(ctx, ctx.messageEvent())
+
+    def exitMessageDeclaration(self, ctx: SysMLv2Parser.MessageDeclarationContext) -> None:
+        """Assemble message declaration and optional event endpoints."""
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        value = self._child(ctx.valuePart()) if ctx.valuePart() else None
+        payload = (
+            self._child(ctx.flowPayloadFeatureMember()) if ctx.flowPayloadFeatureMember() else None
+        )
+        events = [self._child(item) for item in ctx.messageEventMember()]
+        references = [
+            item
+            for item in events
+            if isinstance(item, (QualifiedReference, DottedQualifiedReference))
+        ]
+        self._store(
+            ctx,
+            MessageDeclaration(
+                usage_declaration=declaration
+                if isinstance(declaration, UsageDeclaration)
+                else None,
+                value_part=value if isinstance(value, ValuePart) else None,
+                payload_feature=payload if isinstance(payload, SourceElement) else None,
+                source_event=references[0] if references else None,
+                target_event=references[1] if len(references) > 1 else None,
+            ),
+        )
+
+    def exitAllocationUsageDeclaration(
+        self, ctx: SysMLv2Parser.AllocationUsageDeclarationContext
+    ) -> None:
+        """Assemble allocation/allocate declaration alternatives."""
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        connector = self._child(ctx.connectorPart()) if ctx.connectorPart() else None
+        self._store(
+            ctx,
+            AllocationUsageDeclaration(
+                usage_declaration=declaration
+                if isinstance(declaration, UsageDeclaration)
+                else None,
+                connector_part=connector if isinstance(connector, ConnectorPart) else None,
+                has_allocation_keyword=ctx.ALLOCATION() is not None,
+            ),
+        )
+
+    def exitConstraintUsageDeclaration(
+        self, ctx: SysMLv2Parser.ConstraintUsageDeclarationContext
+    ) -> None:
+        """Assemble constraint usage declaration and optional value."""
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        value = self._child(ctx.valuePart()) if ctx.valuePart() else None
+        self._store(
+            ctx,
+            ConstraintUsageDeclaration(
+                usage_declaration=declaration
+                if isinstance(declaration, UsageDeclaration)
+                else None,
+                value_part=value if isinstance(value, ValuePart) else None,
+            ),
+        )
+
+    def _usage_with_body(
+        self, ctx: Any, declaration_rule: Any, body_rule: Any, node_type: Any
+    ) -> None:
+        """Build one occurrence usage with an explicit declaration and body."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        declaration = self._child(declaration_rule) if declaration_rule is not None else None
+        body = self._child(body_rule)
+        if not isinstance(prefix, OccurrenceUsagePrefix) or not isinstance(body, SourceElement):
+            raise ValueError("usage requires occurrenceUsagePrefix and body")
+        if declaration is None:
+            raise ValueError("usage requires declaration")
+        self._store(ctx, node_type(prefix, declaration, body))
+
+    def exitCalculationUsage(self, ctx: SysMLv2Parser.CalculationUsageContext) -> None:
+        """Assemble a ``calc`` usage."""
+        declaration = self._child(ctx.actionUsageDeclaration())
+        body = self._child(ctx.calculationBody())
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        if (
+            not isinstance(prefix, OccurrenceUsagePrefix)
+            or not isinstance(declaration, ActionUsageDeclaration)
+            or not isinstance(body, CalculationBody)
+        ):
+            raise ValueError("calculationUsage has incomplete required fields")
+        self._store(ctx, CalculationUsage(prefix, declaration, body))
+
+    def exitConstraintUsage(self, ctx: SysMLv2Parser.ConstraintUsageContext) -> None:
+        """Assemble a ``constraint`` usage."""
+        declaration = self._child(ctx.constraintUsageDeclaration())
+        body = self._child(ctx.calculationBody())
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        if (
+            not isinstance(prefix, OccurrenceUsagePrefix)
+            or not isinstance(declaration, ConstraintUsageDeclaration)
+            or not isinstance(body, CalculationBody)
+        ):
+            raise ValueError("constraintUsage has incomplete required fields")
+        self._store(ctx, ConstraintUsage(prefix, declaration, body))
+
+    def exitRequirementUsage(self, ctx: SysMLv2Parser.RequirementUsageContext) -> None:
+        """Assemble a ``requirement`` usage."""
+        self._usage_with_body(
+            ctx, ctx.constraintUsageDeclaration(), ctx.requirementBody(), RequirementUsage
+        )
+
+    def exitConcernUsage(self, ctx: SysMLv2Parser.ConcernUsageContext) -> None:
+        """Assemble a ``concern`` usage."""
+        self._usage_with_body(
+            ctx, ctx.constraintUsageDeclaration(), ctx.requirementBody(), ConcernUsage
+        )
+
+    def exitCaseUsage(self, ctx: SysMLv2Parser.CaseUsageContext) -> None:
+        """Assemble a ``case`` usage."""
+        self._usage_with_body(ctx, ctx.constraintUsageDeclaration(), ctx.caseBody(), CaseUsage)
+
+    def exitAnalysisCaseUsage(self, ctx: SysMLv2Parser.AnalysisCaseUsageContext) -> None:
+        """Assemble an ``analysis`` usage."""
+        self._usage_with_body(
+            ctx, ctx.constraintUsageDeclaration(), ctx.caseBody(), AnalysisCaseUsage
+        )
+
+    def exitVerificationCaseUsage(self, ctx: SysMLv2Parser.VerificationCaseUsageContext) -> None:
+        """Assemble a ``verification`` usage."""
+        self._usage_with_body(
+            ctx, ctx.constraintUsageDeclaration(), ctx.caseBody(), VerificationCaseUsage
+        )
+
+    def exitUseCaseUsage(self, ctx: SysMLv2Parser.UseCaseUsageContext) -> None:
+        """Assemble a ``use case`` usage."""
+        self._usage_with_body(ctx, ctx.constraintUsageDeclaration(), ctx.caseBody(), UseCaseUsage)
+
+    def exitViewpointUsage(self, ctx: SysMLv2Parser.ViewpointUsageContext) -> None:
+        """Assemble a ``viewpoint`` usage."""
+        self._usage_with_body(
+            ctx, ctx.constraintUsageDeclaration(), ctx.requirementBody(), ViewpointUsage
+        )
+
+    def exitViewUsage(self, ctx: SysMLv2Parser.ViewUsageContext) -> None:
+        """Assemble a ``view`` usage and its dedicated view body."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        body = self._child(ctx.viewBody())
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        value = self._child(ctx.valuePart()) if ctx.valuePart() else None
+        if not isinstance(prefix, OccurrenceUsagePrefix) or not isinstance(body, ViewBody):
+            raise ValueError("viewUsage has incomplete required fields")
+        self._store(
+            ctx,
+            ViewUsage(
+                occurrence_usage_prefix=prefix,
+                view_body=body,
+                usage_declaration=declaration
+                if isinstance(declaration, UsageDeclaration)
+                else None,
+                value_part=value if isinstance(value, ValuePart) else None,
+            ),
+        )
+
+    def exitViewRenderingUsage(self, ctx: SysMLv2Parser.ViewRenderingUsageContext) -> None:
+        """Assemble a view rendering target and its usage body."""
+        reference = (
+            self._child(ctx.ownedReferenceSubsetting()) if ctx.ownedReferenceSubsetting() else None
+        )
+        usage = self._child(ctx.usage()) if ctx.usage() else None
+        body = self._child(ctx.usageBody()) if ctx.usageBody() else None
+        if body is None and isinstance(usage, Usage):
+            body = usage.body
+        if not isinstance(body, DefinitionBody):
+            raise ValueError("viewRenderingUsage requires usage body")
+        self._store(
+            ctx,
+            ViewRenderingUsage(
+                body=body,
+                reference=reference
+                if isinstance(reference, (QualifiedReference, DottedQualifiedReference))
+                else None,
+                usage=usage if isinstance(usage, Usage) else None,
+            ),
+        )
+
+    def exitRenderingUsage(self, ctx: SysMLv2Parser.RenderingUsageContext) -> None:
+        """Assemble a ``rendering`` usage."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        usage = self._child(ctx.usage())
+        if not isinstance(prefix, OccurrenceUsagePrefix) or not isinstance(usage, Usage):
+            raise ValueError("renderingUsage has incomplete required fields")
+        self._store(ctx, RenderingUsage(prefix, usage))
+
+    def exitAllocationUsage(self, ctx: SysMLv2Parser.AllocationUsageContext) -> None:
+        """Assemble an ``allocation`` usage."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        declaration = self._child(ctx.allocationUsageDeclaration())
+        body = self._child(ctx.usageBody())
+        if (
+            not isinstance(prefix, OccurrenceUsagePrefix)
+            or not isinstance(declaration, AllocationUsageDeclaration)
+            or not isinstance(body, DefinitionBody)
+        ):
+            raise ValueError("allocationUsage has incomplete required fields")
+        self._store(ctx, AllocationUsage(prefix, declaration, body))
+
+    def exitMessage(self, ctx: SysMLv2Parser.MessageContext) -> None:
+        """Assemble a ``message`` usage."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        declaration = self._child(ctx.messageDeclaration())
+        body = self._child(ctx.definitionBody())
+        if (
+            not isinstance(prefix, OccurrenceUsagePrefix)
+            or not isinstance(declaration, MessageDeclaration)
+            or not isinstance(body, DefinitionBody)
+        ):
+            raise ValueError("message has incomplete required fields")
+        self._store(ctx, Message(prefix, declaration, body))
+
+    def exitFlowUsage(self, ctx: SysMLv2Parser.FlowUsageContext) -> None:
+        """Assemble a ``flow`` usage."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        declaration = self._child(ctx.flowDeclaration())
+        body = self._child(ctx.definitionBody())
+        if (
+            not isinstance(prefix, OccurrenceUsagePrefix)
+            or not isinstance(declaration, FlowDeclaration)
+            or not isinstance(body, DefinitionBody)
+        ):
+            raise ValueError("flowUsage has incomplete required fields")
+        self._store(ctx, FlowUsage(prefix, declaration, body))
+
+    def exitSuccessionFlowUsage(self, ctx: SysMLv2Parser.SuccessionFlowUsageContext) -> None:
+        """Assemble a ``succession flow`` usage."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        declaration = self._child(ctx.flowDeclaration())
+        body = self._child(ctx.definitionBody())
+        if (
+            not isinstance(prefix, OccurrenceUsagePrefix)
+            or not isinstance(declaration, FlowDeclaration)
+            or not isinstance(body, DefinitionBody)
+        ):
+            raise ValueError("successionFlowUsage has incomplete required fields")
+        self._store(ctx, SuccessionFlowUsage(prefix, declaration, body))
+
+    def exitIncludeUseCaseUsage(self, ctx: SysMLv2Parser.IncludeUseCaseUsageContext) -> None:
+        """Assemble an ``include use case`` usage."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        body = self._child(ctx.caseBody())
+        reference = (
+            self._child(ctx.ownedReferenceSubsetting()) if ctx.ownedReferenceSubsetting() else None
+        )
+        specialization = (
+            self._child(ctx.featureSpecializationPart())
+            if ctx.featureSpecializationPart()
+            else None
+        )
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        value = self._child(ctx.valuePart()) if ctx.valuePart() else None
+        if not isinstance(prefix, OccurrenceUsagePrefix) or not isinstance(body, CaseBody):
+            raise ValueError("includeUseCaseUsage has incomplete required fields")
+        self._store(
+            ctx,
+            IncludeUseCaseUsage(
+                occurrence_usage_prefix=prefix,
+                case_body=body,
+                usage_declaration=declaration
+                if isinstance(declaration, UsageDeclaration)
+                else None,
+                value_part=value if isinstance(value, ValuePart) else None,
+                owned_reference_subsetting=reference
+                if isinstance(reference, (QualifiedReference, DottedQualifiedReference))
+                else None,
+                feature_specialization_part=specialization
+                if isinstance(specialization, FeatureSpecializationPart)
+                else None,
+            ),
+        )
+
+    def exitAssertConstraintUsage(self, ctx: SysMLv2Parser.AssertConstraintUsageContext) -> None:
+        """Assemble an ``assert constraint`` usage."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        body = self._child(ctx.calculationBody())
+        reference = (
+            self._child(ctx.ownedReferenceSubsetting()) if ctx.ownedReferenceSubsetting() else None
+        )
+        specialization = (
+            self._child(ctx.featureSpecializationPart())
+            if ctx.featureSpecializationPart()
+            else None
+        )
+        declaration = (
+            self._child(ctx.constraintUsageDeclaration())
+            if ctx.constraintUsageDeclaration()
+            else None
+        )
+        if not isinstance(prefix, OccurrenceUsagePrefix) or not isinstance(body, CalculationBody):
+            raise ValueError("assertConstraintUsage has incomplete required fields")
+        self._store(
+            ctx,
+            AssertConstraintUsage(
+                occurrence_usage_prefix=prefix,
+                calculation_body=body,
+                constraint_usage_declaration=declaration
+                if isinstance(declaration, ConstraintUsageDeclaration)
+                else None,
+                owned_reference_subsetting=reference
+                if isinstance(reference, (QualifiedReference, DottedQualifiedReference))
+                else None,
+                feature_specialization_part=specialization
+                if isinstance(specialization, FeatureSpecializationPart)
+                else None,
+                is_not=ctx.NOT() is not None,
+            ),
+        )
+
+    def exitSatisfyRequirementUsage(
+        self, ctx: SysMLv2Parser.SatisfyRequirementUsageContext
+    ) -> None:
+        """Assemble a ``satisfy requirement`` usage."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        body = self._child(ctx.requirementBody())
+        reference = (
+            self._child(ctx.ownedReferenceSubsetting()) if ctx.ownedReferenceSubsetting() else None
+        )
+        specialization = (
+            self._child(ctx.featureSpecializationPart())
+            if ctx.featureSpecializationPart()
+            else None
+        )
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        value = self._child(ctx.valuePart()) if ctx.valuePart() else None
+        if not isinstance(prefix, OccurrenceUsagePrefix) or not isinstance(body, RequirementBody):
+            raise ValueError("satisfyRequirementUsage has incomplete required fields")
+        self._store(
+            ctx,
+            SatisfyRequirementUsage(
+                occurrence_usage_prefix=prefix,
+                requirement_body=body,
+                usage_declaration=declaration
+                if isinstance(declaration, UsageDeclaration)
+                else None,
+                value_part=value if isinstance(value, ValuePart) else None,
+                owned_reference_subsetting=reference
+                if isinstance(reference, (QualifiedReference, DottedQualifiedReference))
+                else None,
+                feature_specialization_part=specialization
+                if isinstance(specialization, FeatureSpecializationPart)
+                else None,
+                is_assert=ctx.ASSERT() is not None,
+                is_not=ctx.NOT() is not None,
+            ),
+        )
+
     def exitUsageBody(self, ctx: SysMLv2Parser.UsageBodyContext) -> None:
         """Pass a generic usage body through to its definition body."""
         self._pass(ctx, ctx.definitionBody())
@@ -2818,6 +4242,18 @@ class SysMLAstListener(SysMLv2ParserListener):
             ctx.itemUsage(),
             ctx.partUsage(),
             ctx.portUsage(),
+            ctx.viewUsage(),
+            ctx.renderingUsage(),
+            ctx.allocationUsage(),
+            ctx.message(),
+            ctx.flowUsage(),
+            ctx.successionFlowUsage(),
+            ctx.occurrenceUsage(),
+            ctx.individualUsage(),
+            ctx.portionUsage(),
+            ctx.eventOccurrenceUsage(),
+            ctx.connectionUsage(),
+            ctx.interfaceUsage(),
             ctx.behaviorUsageElement(),
         )
         for child in children:
@@ -2963,6 +4399,14 @@ class SysMLAstListener(SysMLv2ParserListener):
         if not isinstance(prefix, UsagePrefix) or not isinstance(usage, Usage):
             raise ValueError("attributeUsage has incomplete required fields")
         self._store(ctx, AttributeUsage(prefix, usage))
+
+    def exitEnumerationUsage(self, ctx: SysMLv2Parser.EnumerationUsageContext) -> None:
+        """Assemble an ``enum`` usage from prefix and generic completion."""
+        prefix = self._child(ctx.usagePrefix())
+        usage = self._child(ctx.usage())
+        if not isinstance(prefix, UsagePrefix) or not isinstance(usage, Usage):
+            raise ValueError("enumerationUsage has incomplete required fields")
+        self._store(ctx, EnumerationUsage(prefix, usage))
 
     def _usage_prefix_from_ref_prefix(self, ctx: Any) -> UsagePrefix:
         """Convert a ``refPrefix`` context into the shared typed prefix node."""
@@ -3207,7 +4651,7 @@ class SysMLAstListener(SysMLv2ParserListener):
         )
 
     def exitStructureUsageElement(self, ctx: SysMLv2Parser.StructureUsageElementContext) -> None:
-        """Pass typed structure usages or retain unrelated structure syntax."""
+        """Pass every typed structure-usage alternative."""
         child = (
             ctx.occurrenceUsage()
             or ctx.individualUsage()
@@ -3215,7 +4659,15 @@ class SysMLAstListener(SysMLv2ParserListener):
             or ctx.eventOccurrenceUsage()
             or ctx.itemUsage()
             or ctx.partUsage()
+            or ctx.viewUsage()
+            or ctx.renderingUsage()
             or ctx.portUsage()
+            or ctx.connectionUsage()
+            or ctx.interfaceUsage()
+            or ctx.allocationUsage()
+            or ctx.message()
+            or ctx.flowUsage()
+            or ctx.successionFlowUsage()
         )
         if child is not None:
             self._pass(ctx, child)
@@ -3461,7 +4913,7 @@ class SysMLAstListener(SysMLv2ParserListener):
             self._raw_store(ctx)
 
     def exitDefinitionElement(self, ctx: SysMLv2Parser.DefinitionElementContext) -> None:
-        """Pass state/package definitions and preserve unrelated definitions."""
+        """Pass every concrete SysML definition alternative."""
         child = (
             ctx.stateDefinition()
             or ctx.partDefinition()
@@ -3469,8 +4921,27 @@ class SysMLAstListener(SysMLv2ParserListener):
             or ctx.occurrenceDefinition()
             or ctx.individualDefinition()
             or ctx.attributeDefinition()
+            or ctx.dependency()
+            or ctx.enumerationDefinition()
             or ctx.portDefinition()
+            or ctx.connectionDefinition()
+            or ctx.flowDefinition()
+            or ctx.interfaceDefinition()
             or ctx.actionDefinition()
+            or ctx.calculationDefinition()
+            or ctx.constraintDefinition()
+            or ctx.requirementDefinition()
+            or ctx.concernDefinition()
+            or ctx.caseDefinition()
+            or ctx.analysisCaseDefinition()
+            or ctx.verificationCaseDefinition()
+            or ctx.useCaseDefinition()
+            or ctx.viewDefinition()
+            or ctx.viewpointDefinition()
+            or ctx.renderingDefinition()
+            or ctx.metadataDefinition()
+            or ctx.allocationDefinition()
+            or ctx.extendedDefinition()
             or ctx.package()
             or ctx.libraryPackage()
             or ctx.annotatingElement()
@@ -3484,7 +4955,13 @@ class SysMLAstListener(SysMLv2ParserListener):
         self, ctx: SysMLv2Parser.NonOccurrenceUsageElementContext
     ) -> None:
         """Preserve non-occurrence usage syntax at the compatibility boundary."""
-        child = ctx.referenceUsage() or ctx.defaultReferenceUsage() or ctx.attributeUsage()
+        child = (
+            ctx.referenceUsage()
+            or ctx.endFeatureUsage()
+            or ctx.defaultReferenceUsage()
+            or ctx.attributeUsage()
+            or ctx.enumerationUsage()
+        )
         if child is not None:
             if self._child(child) is not None:
                 self._pass(ctx, child)

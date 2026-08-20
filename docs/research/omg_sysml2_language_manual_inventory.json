@@ -5292,6 +5292,32 @@
       "review_ledger": "docs/research/manual_pdf_review/section_8_4_3_8_4_6.json",
       "source_code": "item def I specializes Items::Item {\n    ref item a subsets Items::items;\n    item b subsets Items::Item::subitems;\n}",
       "source_kind": "prose_code_block"
+    },
+    {
+      "clause": "A.3",
+      "completeness": "complete",
+      "dependencies": [
+        "ISQ::mass",
+        "ISQ::length",
+        "ISQ::speed",
+        "ISQ::acceleration",
+        "ISQ::power",
+        "ISQ::temperature",
+        "Time::DateTime",
+        "IgnitionCmdPort",
+        "PwrCmdPort",
+        "VehicleToRoadPort"
+      ],
+      "fixture_eligible": true,
+      "fixture_name": "annex_a/a3_vehicle_definition.sysml",
+      "id": "A3-P637-E01",
+      "notes": "Complete Vehicle part-definition source panel from Annex A.3; attributes, ports, performed actions, and exhibited state are all included.",
+      "parseability": "independently_parseable",
+      "physical_pages": [669],
+      "printed_pages": [637],
+      "review_ledger": "docs/research/manual_pdf_review/annex_a_3_vehicle_definition.json",
+      "source_code": "part def Vehicle {\n    attribute mass :> ISQ::mass;\n    attribute dryMass :> ISQ::mass;\n    attribute cargoMass :> ISQ::mass;\n    attribute position :> ISQ::length;\n    attribute velocity :> ISQ::speed;\n    attribute acceleration :> ISQ::acceleration;\n    attribute electricalPower :> ISQ::power;\n    attribute Tmax :> ISQ::temperature;\n    attribute maintenanceTime : Time::DateTime;\n    attribute brakePedalDepressed : Boolean;\n    port ignitionCmdPort : IgnitionCmdPort;\n    port pwrCmdPort : PwrCmdPort;\n    port vehicleToRoadPort : VehicleToRoadPort;\n    perform action providePower;\n    perform action provideBraking;\n    perform action controlDirection;\n    perform action performSelfTest;\n    perform action applyParkingBrake;\n    perform action senseTemperature;\n    exhibit state vehicleStates;\n}",
+      "source_kind": "prose_code_block"
     }
   ],
   "excluded_entries": [
@@ -8165,7 +8191,7 @@
   ],
   "fixture_policy": "Only complete textual SysML examples and complete representative templates become fixtures; excluded source records remain in excluded_entries with their verbatim text and reason.",
   "review_policy": "Entries are transcribed and visually checked by a human reviewer. This manifest does not infer examples from PDF text extraction.",
-  "reviewed_entry_count": 421,
+  "reviewed_entry_count": 422,
   "schema_version": 2,
   "source": "Human-reviewed OMG SysML 2.0 Language PDF examples",
   "source_document": "formal/2026-03-02",

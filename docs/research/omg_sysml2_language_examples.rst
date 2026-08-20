@@ -82,9 +82,11 @@ the ``TargetTransitionUsage`` shorthand with the trigger before its guard;
 that target form is accepted by the pinned upstream grammar and is not a
 local grammar extension. OnOff5's closed transition effects are the separate
 legacy semicolon compatibility case. OnOff6 exercises the corresponding
-terminate action shorthand. All three examples now parse successfully, and
-their exact AST goldens are compared field-for-field by the official corpus
-tests. No target guard-first alternative is accepted by this project.
+terminate action shorthand. OnOff4, OnOff5, and OnOff6 all parse successfully. Their
+parser-derived snapshots are compared field-for-field by the official corpus
+tests, while the handwritten state-oracle suite independently checks the
+concrete fields for OnOff1--OnOff6. No target guard-first alternative is
+accepted by this project.
 
 Clauses 7.1--7.5: early language foundations
 ---------------------------------------------
@@ -106,9 +108,9 @@ The merge manifest keeps two disjoint sets:
   and an explicit reason whenever a block is lexical/contextual, incomplete,
   visibly mistyped, or incompatible with the current normative grammar.
 
-The early ledger has 46 reviewed textual records: 35 executable fixtures and
-11 retained exclusions.  In particular, the formal PDF's legacy
-``action def setX(c : C, newX : Real)`` form is preserved as an
+The merged manual ledger currently has 422 reviewed textual records: 275
+executable fixtures and 147 retained exclusions.  In particular, the formal
+PDF's legacy ``action def setX(c : C, newX : Real)`` form is preserved as an
 ``official_compatibility_difference``.  The current official BNF, pilot
 implementation, Spec42, sysmlpy, and copied release examples use body ``in``
 parameter members, so the old form is not silently accepted by a grammar
@@ -135,6 +137,13 @@ for every one of the 747 blocks.  It is an evidence ledger, not a fixture
 directory: unreviewed OCR/layout fragments are intentionally not fed to the
 parser as tests.  The smaller ``omg_sysml2_language_examples.json`` file is
 the durable, reviewed summary and contains manually cleaned state examples.
+
+Annex A currently has one additional visually reviewed closed source panel:
+the complete ``part def Vehicle`` block from printed page 637 (physical page
+669), recorded in ``manual_pdf_review/annex_a_3_vehicle_definition.json`` and
+checked by an independent field-level oracle.  The remaining Annex A panels
+and later semantic examples are tracked as open coverage work rather than
+being represented by parser-derived claims.
 
 Status vocabulary
 -----------------

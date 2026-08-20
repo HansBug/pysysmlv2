@@ -139,7 +139,8 @@ def test_manual_inventory_fixture_directory_is_complete_and_nonduplicated():
     """Require a checked-in fixture for every reviewed manual source panel."""
     expected = {entry["fixture_name"] for entry in ENTRIES}
     assert len(expected) == len(ENTRIES)
-    assert {path.name for path in FIXTURE_ROOT.glob("*.sysml")} == expected
+    actual = {path.relative_to(FIXTURE_ROOT).as_posix() for path in FIXTURE_ROOT.rglob("*.sysml")}
+    assert actual == expected
 
 
 def test_manual_inventory_preserves_every_reviewed_early_pdf_source_record():

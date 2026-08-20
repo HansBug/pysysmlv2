@@ -8,7 +8,7 @@
 
 # 当前基线
 
-截至 2026-08-20，初始化工作位于 `codex/foundation-ast-parser` 分支，HEAD 为 `378f641594852dbabc2b699abd295d91deaa7e83`，PR 为 [#2](https://github.com/HansBug/pysysmlv2/pull/2)，主规划 issue 为 [#1](https://github.com/HansBug/pysysmlv2/issues/1)，grammar overlay 调查和更正记录在 [#3](https://github.com/HansBug/pysysmlv2/issues/3)。PR #2 当前为 OPEN、非 draft、GitHub merge state 为 `clean`，但尚无 GitHub review decision；最新 PR workflow [32293371601](https://github.com/HansBug/pysysmlv2/actions/runs/32293371601) 的 26 个 job 全部成功，同一提交的 push workflow [32293367680](https://github.com/HansBug/pysysmlv2/actions/runs/32293367680) 也全部成功。
+截至 2026-08-21，初始化工作位于 `codex/foundation-ast-parser` 分支，当前提交以 PR #2 的最新 head 为准，PR 为 [#2](https://github.com/HansBug/pysysmlv2/pull/2)，主规划 issue 为 [#1](https://github.com/HansBug/pysysmlv2/issues/1)，grammar overlay 调查和更正记录在 [#3](https://github.com/HansBug/pysysmlv2/issues/3)。PR #2 当前为 OPEN、非 draft；旧提交的 workflow 结果不能代替当前提交的 CI 证据。
 
 当前 pinned grammar submodule 是 `daltskin/sysml-v2-grammar` 的 `v2026.05.0`，commit 为 `7292dc39983a6d263d14f8f6689de0f3b35db5eb`；本项目使用 ANTLR 4.13.2 生成 Python lexer/parser，并把生成代码随 wheel 发布，因此安装运行时不需要 Java。`pysysmlv2/syntax/generated/` 是 generated-only 目录，grammar 只能通过 submodule、外层 overlay 和 `make antlr_update`/`make antlr_build` 变更。
 
@@ -30,8 +30,9 @@ target transition 的规范结论已经收紧并固定：`TargetTransitionUsage`
 - 提供结构化 lexer/parser diagnostics、`parse()`、`parse_as_ast_node()`、可指定 grammar entry 的局部解析、source-aware `SourceSpan`、手写 `SysMLAstListener`、显式 source AST 和 canonical `str(node)` round-trip。
 - 提供 package、documentation、comment、state、state subaction、transition、expression、statement、action/control 节点的当前 AST slice，以及 workspace、semantic、formatter、query 和 Click CLI 的边界 placeholder。
 - 建立严格源码镜像测试目录、英文 reStructuredText docstring、详细 module/init roadmap、双语 Sphinx、`rst_auto`、Makefile help、ANTLR/build/package smoke 和 `AGENTS.md -> CLAUDE.md` 真实 symlink。
-- 本地保留 2026-03-02 人工复核的 OMG SysML 2.0 Language PDF inventory，共 274 个可执行 source entries 和 147 个明确排除记录；保留 Intro textual notation PDF 的 167 个 slide 资产及页面解说注释；复制 OMG 2026-05 Release 中 251 个 `.sysml` 官方模型到 `test/testfile`，测试不直接读取 upstream。
-- Section 7.18 当前有 22 个完整字段 AST golden，Section 8.4 及其他人工 ledger fixture 具备字段级 AST/round-trip 回归；AST 和 listener 的专门 branch coverage 门禁要求 100%。这些数字代表当前已固化的本地资产，不代表完整 SysML 语义模型已经完成。
+- 本地保留 2026-03-02 人工复核的 OMG SysML 2.0 Language PDF inventory，共 275 个可执行 source entries 和 147 个明确排除记录；保留 Intro textual notation PDF 的 167 个 slide 资产及页面解说注释；复制 OMG 2026-05 Release 中 251 个 `.sysml` 官方模型到 `test/testfile`，测试不直接读取 upstream。
+- Section 7.18 当前有 22 个提交的 parser-derived AST snapshot，其中 11 个状态/动作样例另有独立手写字段级 oracle；Section 8.4 的 8 个纳入样例具备独立字段级 AST/round-trip 回归，其他人工 ledger fixture 目前主要提供 source-preservation 与 fixed-point 回归。AST 和 listener 的专门 branch coverage 门禁要求 100%。这些数字代表当前已固化的本地资产，不代表完整 SysML 语义模型已经完成。
+- `RawElement` 的现有兼容分支已登记在 `docs/research/raw_element_compatibility_ledger.json`，每条记录包含 production、listener callback、保留理由、回归测试和后续 typed-node 任务；核心 state/action/transition/expression/import/alias/filter/connection/interface 路径有专门回归，不能把该私有桥接当成语义模型。
 
 # 目标架构
 
@@ -79,9 +80,9 @@ target transition 的规范结论已经收紧并固定：`TargetTransitionUsage`
 
 # 当前已知限制与风险
 
-当前 `pysysmlv2/syntax/listener.py` 仍有面向未完成 production 的 `_raw_store`/`RawElement` 兼容路径，CLAUDE 中的“最终不得依赖 opaque fallback”是目标纪律，不应被当前 fixed-point round-trip 误解为已完成的全量 typed AST。当前官方 251 文件测试证明的是本地复制资产可被 parser 接受并达到 AST round-trip fixed point，不等价于每个文件都有独立的语义正确性 oracle；当前 274/147 manual inventory 也区分了可执行完整例子和上下文/图形/历史记录，不能把排除记录宣称为 parser 已支持。
+当前 `pysysmlv2/syntax/listener.py` 仍有面向未完成 production 的 `_raw_store`/`RawElement` 兼容路径，CLAUDE 中的“最终不得依赖 opaque fallback”是目标纪律，不应被当前 fixed-point round-trip 误解为已完成的全量 typed AST。当前官方 251 文件测试证明的是本地复制资产可被 parser 接受并达到 AST round-trip fixed point，不等价于每个文件都有独立的语义正确性 oracle；当前 275/147 manual inventory 也区分了可执行完整例子和上下文/图形/历史记录，不能把排除记录宣称为 parser 已支持。
 
-当前 GitHub Actions 的 runtime/test matrix 是 3 个 host 乘 8 个 Python line，共 24 个跨平台 test job；quality/generated、docs、package smoke 和 Codecov upload 只在 Ubuntu 22.04/Python 3.12 执行，且 Codecov action 配置为 `fail_ci_if_error: false`。这证明现有 CI 已覆盖运行时兼容性和主流程，但尚不足以证明三个平台都能 build/install wheel、运行 docs 或重生成 ANTLR；后续验收必须保留这一事实边界。
+当前 GitHub Actions 的 runtime/test matrix 是 3 个 host 乘 8 个 Python line，共 24 个跨平台 test job；quality/generated、docs、package smoke 和 Codecov upload 只在 Ubuntu 22.04/Python 3.12 执行，且 Codecov action 配置为 `fail_ci_if_error: true`。这证明现有 CI 已覆盖运行时兼容性和主流程，但尚不足以证明三个平台都能 build/install wheel、运行 docs 或重生成 ANTLR；后续验收必须保留这一事实边界。
 
 SysML 2.0 PDF、2026-05 Beta 1 release、KEBNF、Pilot 和 daltskin grammar 可能存在版本差异或历史示例/grammar 矛盾；每次采用 overlay 都必须给出固定 commit、条款/行号、输入探针、规则差异、AST 影响和测试证据。不得把 informative KEBNF、历史 issue 或第三方实现单独升级为当前 normative standard；不得向 OMG 或 daltskin 重复提交已被核实为本地错误分类的 target guard-first 问题。
 

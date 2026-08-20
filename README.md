@@ -8,15 +8,15 @@ The project deliberately separates syntax AST responsibilities from workspace an
 
 ## Status
 
-This is the initial `0.1.0` foundation release. The ANTLR parser, diagnostics, handwritten source AST, canonical AST export, Click CLI, generated API documentation, and cross-platform test/build scaffolding are in place. The current handwritten AST slice models SysML packages, documentation, states, state subactions, and transitions; full SysML semantic linking and symbol resolution remain staged work and are tracked in the project issue plan.
+This repository is the initial `0.1.0` foundation under active development; it is not yet a PyPI release. The ANTLR parser, diagnostics, handwritten source AST, canonical AST export, Click CLI, generated API documentation, and cross-platform test/build scaffolding are in place. The current handwritten AST slice models SysML packages, documentation, states, state subactions, and transitions; full SysML semantic linking and symbol resolution remain staged work and are tracked in the project issue plan.
 
 ## Install
 
 ```bash
-python -m pip install pysysmlv2
+python -m pip install .
 ```
 
-The published wheel contains generated Python parser code and does not require Java. Java and the pinned ANTLR tool are needed only when maintainers regenerate parser artifacts from `upstream/sysml-v2-grammar`.
+Built wheels contain generated Python parser code and do not require Java at runtime. Java and the pinned ANTLR tool are needed only when maintainers regenerate parser artifacts from `upstream/sysml-v2-grammar`.
 
 ## Quick start
 
@@ -57,6 +57,8 @@ make package_check
 ```
 
 Only `pysysmlv2/syntax/generated/` is generated and must never be edited by hand. Change the pinned grammar submodule and rerun `make antlr_update`; the generated parser artifacts are Ruff-formatted, while the handwritten AST and listener remain ordinary linted and covered source. Public AST nodes have explicit snake_case fields and node-owned round-trip renderers. `make unittest RANGE_DIR=syntax` runs the syntax test subtree and emits `coverage.xml` plus terminal `term-missing` coverage by default; `make unittest RANGE_DIR=workspace` runs the corresponding source subtree.
+
+The private lossless `RawElement` bridge is limited to deferred non-core grammar productions and parser-recovery fragments. Its production-by-production audit, regression tests, and typed-node follow-ups live in `docs/research/raw_element_compatibility_ledger.json`; valid state-machine and other core paths are required to produce typed AST nodes.
 
 ## Documentation
 

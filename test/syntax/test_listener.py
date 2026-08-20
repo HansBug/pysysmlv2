@@ -1906,3 +1906,914 @@ def test_listener_namespace_import_and_definition_dispatch_guards():
         ),
         (import_context, ast.RawElement("import A::*;")),
     )
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "package P { connection def C; }",
+        "package P { connection c connect a to b; }",
+        "package P { connection c connect (a, b, c); }",
+        "package P { interface def I; }",
+        "package P { interface i connect a to b; }",
+        "package P { interface (a, b); }",
+        "package P { interface def I { end p : P; } }",
+        "package P { interface def I { alias A for B; import X::*; } }",
+    ],
+)
+def test_connection_and_interface_productions_are_typed_and_nested(source):
+    """Exercise connection/interface listeners through real grammar dispatch."""
+    result = parse(source)
+    assert result.ok, result.diagnostics
+    package = result.ast.members[0].element
+    element = package.members[0].element
+    assert not isinstance(element, ast.RawElement)
+    assert isinstance(
+        element,
+        (
+            ast.ConnectionDefinition,
+            ast.ConnectionUsage,
+            ast.InterfaceDefinition,
+            ast.InterfaceUsage,
+        ),
+    )
+    rendered = str(result.ast)
+    reparsed = parse(rendered)
+    assert reparsed.ok, reparsed.diagnostics
+    assert reparsed.ast == result.ast
+
+    if isinstance(element, ast.ConnectionDefinition):
+        assert isinstance(element.definition, ast.Definition)
+    if isinstance(element, ast.ConnectionUsage):
+        assert isinstance(element.connector_part, ast.ConnectorPart)
+    if isinstance(element, ast.InterfaceDefinition):
+        assert isinstance(element.interface_body, ast.InterfaceBody)
+        if element.interface_body.items:
+            assert all(isinstance(item, ast.SourceElement) for item in element.interface_body.items)
+    if isinstance(element, ast.InterfaceUsage):
+        assert isinstance(element.interface_usage_declaration, ast.InterfaceUsageDeclaration)
+
+
+def test_connection_and_interface_definitions_preserve_nested_states():
+    """States nested in connection/interface definitions remain discoverable."""
+    for source in (
+        "package P { connection def C { state def S; } }",
+        "package P { interface def I { state def S; } }",
+    ):
+        result = parse(source)
+        assert result.ok, result.diagnostics
+        outer = result.ast.members[0].element.members[0].element
+        body = (
+            outer.definition.body
+            if isinstance(outer, ast.ConnectionDefinition)
+            else outer.interface_body
+        )
+        nested = body.items[0]
+        assert isinstance(nested, ast.DefinitionBodyItem)
+        assert isinstance(nested.element, ast.StateDefinition)
+
+
+def test_listener_connection_interface_and_feature_defensive_paths():
+    """Cover every explicit validation branch for connection/interface nodes."""
+    listener = _fake_listener()
+    reference = ast.QualifiedReference(["A"])
+    connector_end = ast.ConnectorEnd(reference)
+    interface_end = ast.InterfaceEnd(reference)
+
+    # Connector-part dispatch and assembly.
+    binary_ctx = _FakeContext()
+    nary_ctx = _FakeContext()
+    listener.nodes[binary_ctx] = ast.BinaryConnectorPart(connector_end, connector_end)
+    listener.nodes[nary_ctx] = ast.NaryConnectorPart([connector_end, connector_end])
+    listener.exitConnectorPart(_FakeContext(binaryConnectorPart=binary_ctx, naryConnectorPart=None))
+    listener.exitConnectorPart(_FakeContext(binaryConnectorPart=None, naryConnectorPart=nary_ctx))
+    _error("exitConnectorPart", _FakeContext(binaryConnectorPart=None, naryConnectorPart=None))
+    _error("exitBinaryConnectorPart", _FakeContext(connectorEndMember=[]))
+    _error("exitNaryConnectorPart", _FakeContext(connectorEndMember=[]))
+
+    # Required and optional connection fields reject the wrong typed child.
+    prefix_ctx = _FakeContext()
+    definition_ctx = _FakeContext()
+    body_ctx = _FakeContext()
+    listener.nodes[prefix_ctx] = ast.OccurrenceDefinitionPrefix()
+    listener.nodes[definition_ctx] = ast.Definition(
+        ast.DefinitionDeclaration(), ast.DefinitionBody(declaration_only=True)
+    )
+    listener.nodes[body_ctx] = ast.DefinitionBody(declaration_only=True)
+    listener.exitConnectionDefinition(
+        _FakeContext(occurrenceDefinitionPrefix=prefix_ctx, definition=definition_ctx)
+    )
+    connection_context = _FakeContext(
+        occurrenceUsagePrefix=prefix_ctx,
+        usageBody=body_ctx,
+        usageDeclaration=None,
+        valuePart=None,
+        connectorPart=None,
+        CONNECTION=_FakeToken("connection"),
+    )
+    listener.nodes[prefix_ctx] = ast.OccurrenceUsagePrefix()
+    listener.exitConnectionUsage(connection_context)
+    for key, value in (
+        ("occurrenceUsagePrefix", ast.RawElement("bad")),
+        ("usageBody", ast.RawElement("bad")),
+        ("usageDeclaration", ast.RawElement("bad")),
+        ("valuePart", ast.RawElement("bad")),
+        ("connectorPart", ast.RawElement("bad")),
+    ):
+        values = {
+            "occurrenceUsagePrefix": prefix_ctx,
+            "usageBody": body_ctx,
+            "usageDeclaration": None,
+            "valuePart": None,
+            "connectorPart": None,
+            "CONNECTION": None,
+        }
+        child = _FakeContext()
+        listener.nodes[child] = value
+        values[key] = child
+        _error(
+            "exitConnectionUsage",
+            _FakeContext(**values),
+            (prefix_ctx, ast.OccurrenceUsagePrefix()),
+            (body_ctx, ast.DefinitionBody(declaration_only=True)),
+            (child, value),
+        )
+
+    _error(
+        "exitConnectionDefinition",
+        _FakeContext(occurrenceDefinitionPrefix=prefix_ctx, definition=definition_ctx),
+        (prefix_ctx, ast.OccurrenceDefinitionPrefix()),
+        (definition_ctx, ast.RawElement("bad")),
+    )
+
+    # Interface endpoint/part validation and assembly.
+    interface_binary_ctx = _FakeContext()
+    interface_nary_ctx = _FakeContext()
+    listener.nodes[interface_binary_ctx] = ast.BinaryInterfacePart(interface_end, interface_end)
+    listener.nodes[interface_nary_ctx] = ast.NaryInterfacePart([interface_end, interface_end])
+    listener.exitInterfacePart(
+        _FakeContext(binaryInterfacePart=interface_binary_ctx, naryInterfacePart=None)
+    )
+    listener.exitInterfacePart(
+        _FakeContext(binaryInterfacePart=None, naryInterfacePart=interface_nary_ctx)
+    )
+    _error("exitInterfacePart", _FakeContext(binaryInterfacePart=None, naryInterfacePart=None))
+    _error("exitBinaryInterfacePart", _FakeContext(interfaceEndMember=[]))
+    _error("exitNaryInterfacePart", _FakeContext(interfaceEndMember=[]))
+    _error("exitInterfaceEnd", _FakeContext(ownedReferenceSubsetting=None))
+
+    interface_prefix_ctx = _FakeContext()
+    interface_declaration_ctx = _FakeContext()
+    interface_body_ctx = _FakeContext()
+    listener.nodes[interface_prefix_ctx] = ast.OccurrenceDefinitionPrefix()
+    listener.nodes[interface_declaration_ctx] = ast.DefinitionDeclaration()
+    listener.nodes[interface_body_ctx] = ast.InterfaceBody(declaration_only=True)
+    listener.exitInterfaceDefinition(
+        _FakeContext(
+            occurrenceDefinitionPrefix=interface_prefix_ctx,
+            definitionDeclaration=interface_declaration_ctx,
+            interfaceBody=interface_body_ctx,
+        )
+    )
+    listener.nodes[interface_prefix_ctx] = ast.OccurrenceUsagePrefix()
+    usage_declaration_ctx = _FakeContext()
+    listener.nodes[usage_declaration_ctx] = ast.InterfaceUsageDeclaration()
+    listener.exitInterfaceUsage(
+        _FakeContext(
+            occurrenceUsagePrefix=interface_prefix_ctx,
+            interfaceUsageDeclaration=usage_declaration_ctx,
+            interfaceBody=interface_body_ctx,
+        )
+    )
+    for callback, context in (
+        (
+            "exitInterfaceDefinition",
+            _FakeContext(
+                occurrenceDefinitionPrefix=None,
+                definitionDeclaration=interface_declaration_ctx,
+                interfaceBody=interface_body_ctx,
+            ),
+        ),
+        (
+            "exitInterfaceDefinition",
+            _FakeContext(
+                occurrenceDefinitionPrefix=interface_prefix_ctx,
+                definitionDeclaration=None,
+                interfaceBody=interface_body_ctx,
+            ),
+        ),
+        (
+            "exitInterfaceDefinition",
+            _FakeContext(
+                occurrenceDefinitionPrefix=interface_prefix_ctx,
+                definitionDeclaration=interface_declaration_ctx,
+                interfaceBody=None,
+            ),
+        ),
+        (
+            "exitInterfaceUsage",
+            _FakeContext(
+                occurrenceUsagePrefix=None,
+                interfaceUsageDeclaration=usage_declaration_ctx,
+                interfaceBody=interface_body_ctx,
+            ),
+        ),
+        (
+            "exitInterfaceUsage",
+            _FakeContext(
+                occurrenceUsagePrefix=interface_prefix_ctx,
+                interfaceUsageDeclaration=None,
+                interfaceBody=interface_body_ctx,
+            ),
+        ),
+        (
+            "exitInterfaceUsage",
+            _FakeContext(
+                occurrenceUsagePrefix=interface_prefix_ctx,
+                interfaceUsageDeclaration=usage_declaration_ctx,
+                interfaceBody=None,
+            ),
+        ),
+    ):
+        _error(callback, context)
+
+    _error(
+        "exitInterfaceDefinition",
+        _FakeContext(
+            occurrenceDefinitionPrefix=interface_prefix_ctx,
+            definitionDeclaration=None,
+            interfaceBody=interface_body_ctx,
+        ),
+        (interface_prefix_ctx, ast.OccurrenceDefinitionPrefix()),
+        (interface_body_ctx, ast.InterfaceBody(declaration_only=True)),
+    )
+    _error(
+        "exitInterfaceDefinition",
+        _FakeContext(
+            occurrenceDefinitionPrefix=interface_prefix_ctx,
+            definitionDeclaration=interface_declaration_ctx,
+            interfaceBody=None,
+        ),
+        (interface_prefix_ctx, ast.OccurrenceDefinitionPrefix()),
+        (interface_declaration_ctx, ast.DefinitionDeclaration()),
+    )
+    _error(
+        "exitInterfaceUsage",
+        _FakeContext(
+            occurrenceUsagePrefix=interface_prefix_ctx,
+            interfaceUsageDeclaration=None,
+            interfaceBody=interface_body_ctx,
+        ),
+        (interface_prefix_ctx, ast.OccurrenceUsagePrefix()),
+        (interface_body_ctx, ast.InterfaceBody(declaration_only=True)),
+    )
+    _error(
+        "exitInterfaceUsage",
+        _FakeContext(
+            occurrenceUsagePrefix=interface_prefix_ctx,
+            interfaceUsageDeclaration=usage_declaration_ctx,
+            interfaceBody=None,
+        ),
+        (interface_prefix_ctx, ast.OccurrenceUsagePrefix()),
+        (usage_declaration_ctx, ast.InterfaceUsageDeclaration()),
+    )
+
+    # Interface body dispatch preserves each grammar alternative and source
+    # succession, while malformed children fail explicitly.
+    body_child = _FakeContext()
+    listener.nodes[body_child] = ast.DefinitionBodyItem(element=ast.RawElement("part p;"))
+    listener.exitInterfaceBodyItem(
+        _FakeContext(
+            definitionMember=body_child,
+            variantUsageMember=None,
+            interfaceNonOccurrenceUsageMember=None,
+            interfaceOccurrenceUsageMember=None,
+            sourceSuccessionMember=None,
+            aliasMember=None,
+            importRule=None,
+        )
+    )
+    variant_child = _FakeContext()
+    listener.nodes[variant_child] = ast.VariantUsageMember(ast.RawElement("part p;"))
+    listener.exitInterfaceBodyItem(
+        _FakeContext(
+            definitionMember=None,
+            variantUsageMember=variant_child,
+            interfaceNonOccurrenceUsageMember=None,
+            interfaceOccurrenceUsageMember=None,
+            sourceSuccessionMember=None,
+            aliasMember=None,
+            importRule=None,
+        )
+    )
+    non_occurrence_child = _FakeContext()
+    listener.nodes[non_occurrence_child] = ast.InterfaceNonOccurrenceUsageMember(
+        ast.RawElement("attribute a;")
+    )
+    listener.exitInterfaceBodyItem(
+        _FakeContext(
+            definitionMember=None,
+            variantUsageMember=None,
+            interfaceNonOccurrenceUsageMember=non_occurrence_child,
+            interfaceOccurrenceUsageMember=None,
+            sourceSuccessionMember=None,
+            aliasMember=None,
+            importRule=None,
+        )
+    )
+    occurrence_child = _FakeContext()
+    listener.nodes[occurrence_child] = ast.InterfaceOccurrenceUsageMember(ast.RawElement("part p;"))
+    listener.exitInterfaceBodyItem(
+        _FakeContext(
+            definitionMember=None,
+            variantUsageMember=None,
+            interfaceNonOccurrenceUsageMember=None,
+            interfaceOccurrenceUsageMember=occurrence_child,
+            sourceSuccessionMember=None,
+            aliasMember=None,
+            importRule=None,
+        )
+    )
+    source_child = _FakeContext()
+    listener.nodes[source_child] = ast.SourceSuccession()
+    listener.exitInterfaceBodyItem(
+        _FakeContext(
+            definitionMember=None,
+            variantUsageMember=None,
+            interfaceNonOccurrenceUsageMember=None,
+            interfaceOccurrenceUsageMember=occurrence_child,
+            sourceSuccessionMember=source_child,
+            aliasMember=None,
+            importRule=None,
+        )
+    )
+    alias_child = _FakeContext()
+    listener.nodes[alias_child] = ast.AliasMember(
+        target=reference, relationship_body=ast.RelationshipBody(";")
+    )
+    import_child = _FakeContext()
+    listener.nodes[import_child] = ast.ImportRule(
+        import_declaration=ast.NamespaceImport(reference),
+        relationship_body=ast.RelationshipBody(";"),
+    )
+    for key, child in (("aliasMember", alias_child), ("importRule", import_child)):
+        listener.exitInterfaceBodyItem(
+            _FakeContext(
+                definitionMember=None,
+                variantUsageMember=None,
+                interfaceNonOccurrenceUsageMember=None,
+                interfaceOccurrenceUsageMember=None,
+                sourceSuccessionMember=None,
+                aliasMember=child if key == "aliasMember" else None,
+                importRule=child if key == "importRule" else None,
+            )
+        )
+    _error(
+        "exitInterfaceBodyItem",
+        _FakeContext(
+            definitionMember=None,
+            variantUsageMember=None,
+            interfaceNonOccurrenceUsageMember=None,
+            interfaceOccurrenceUsageMember=None,
+            sourceSuccessionMember=None,
+            aliasMember=None,
+            importRule=None,
+        ),
+    )
+    _error(
+        "exitInterfaceBodyItem",
+        _FakeContext(
+            definitionMember=None,
+            variantUsageMember=None,
+            interfaceNonOccurrenceUsageMember=None,
+            interfaceOccurrenceUsageMember=occurrence_child,
+            sourceSuccessionMember=source_child,
+            aliasMember=None,
+            importRule=None,
+        ),
+        (occurrence_child, ast.RawElement("bad")),
+    )
+    _error(
+        "exitInterfaceBodyItem",
+        _FakeContext(
+            definitionMember=None,
+            variantUsageMember=None,
+            interfaceNonOccurrenceUsageMember=None,
+            interfaceOccurrenceUsageMember=occurrence_child,
+            sourceSuccessionMember=source_child,
+            aliasMember=None,
+            importRule=None,
+        ),
+        (source_child, ast.RawElement("bad")),
+        (occurrence_child, ast.InterfaceOccurrenceUsageMember(ast.RawElement("part p;"))),
+    )
+
+    member_usage_child = _FakeContext()
+    listener.nodes[member_usage_child] = ast.RawElement("attribute a;")
+    listener.exitInterfaceNonOccurrenceUsageMember(
+        _FakeContext(
+            interfaceNonOccurrenceUsageElement=member_usage_child,
+            memberPrefix=_FakeContext(),
+        )
+    )
+    _error(
+        "exitInterfaceNonOccurrenceUsageMember",
+        _FakeContext(interfaceNonOccurrenceUsageElement=None, memberPrefix=_FakeContext()),
+    )
+    interface_non_occurrence_child = _FakeContext()
+    listener.nodes[interface_non_occurrence_child] = ast.RawElement("attribute a;")
+    listener.exitInterfaceNonOccurrenceUsageElement(
+        _FakeContext(
+            referenceUsage=interface_non_occurrence_child,
+            attributeUsage=None,
+            enumerationUsage=None,
+            bindingConnectorAsUsage=None,
+            successionAsUsage=None,
+        )
+    )
+    listener.exitInterfaceNonOccurrenceUsageElement(
+        _FakeContext(
+            referenceUsage=interface_non_occurrence_child,
+            attributeUsage=None,
+            enumerationUsage=None,
+            bindingConnectorAsUsage=None,
+            successionAsUsage=None,
+        )
+    )
+    raw_non_occurrence_context = _FakeContext(
+        referenceUsage=None,
+        attributeUsage=None,
+        enumerationUsage=None,
+        bindingConnectorAsUsage=None,
+        successionAsUsage=None,
+    )
+    listener.exitInterfaceNonOccurrenceUsageElement(raw_non_occurrence_context)
+    assert isinstance(listener.node_for(raw_non_occurrence_context), ast.RawElement)
+    listener.exitInterfaceOccurrenceUsageMember(
+        _FakeContext(
+            interfaceOccurrenceUsageElement=member_usage_child,
+            memberPrefix=_FakeContext(),
+        )
+    )
+    _error(
+        "exitInterfaceOccurrenceUsageMember",
+        _FakeContext(interfaceOccurrenceUsageElement=None, memberPrefix=_FakeContext()),
+    )
+    occurrence_element_child = _FakeContext()
+    listener.nodes[occurrence_element_child] = ast.RawElement("part p;")
+    listener.exitInterfaceOccurrenceUsageElement(
+        _FakeContext(
+            defaultInterfaceEnd=occurrence_element_child,
+            endOccurrenceUsageElement=None,
+            structureUsageElement=None,
+            behaviorUsageElement=None,
+        )
+    )
+    listener.exitInterfaceOccurrenceUsageElement(
+        _FakeContext(
+            defaultInterfaceEnd=occurrence_element_child,
+            endOccurrenceUsageElement=None,
+            structureUsageElement=None,
+            behaviorUsageElement=None,
+        )
+    )
+    _error(
+        "exitInterfaceOccurrenceUsageElement",
+        _FakeContext(
+            defaultInterfaceEnd=None,
+            endOccurrenceUsageElement=None,
+            structureUsageElement=None,
+            behaviorUsageElement=None,
+        ),
+    )
+    raw_occurrence_context = _FakeContext(
+        defaultInterfaceEnd=occurrence_element_child,
+        endOccurrenceUsageElement=None,
+        structureUsageElement=None,
+        behaviorUsageElement=None,
+    )
+    listener.nodes[occurrence_element_child] = ast.RawElement("bad")
+    listener.exitInterfaceOccurrenceUsageElement(raw_occurrence_context)
+    assert isinstance(listener.node_for(raw_occurrence_context), ast.RawElement)
+    unassembled_occurrence_context = _FakeContext(
+        defaultInterfaceEnd=occurrence_element_child,
+        endOccurrenceUsageElement=None,
+        structureUsageElement=None,
+        behaviorUsageElement=None,
+    )
+    listener.nodes.pop(occurrence_element_child)
+    listener.exitInterfaceOccurrenceUsageElement(unassembled_occurrence_context)
+    assert isinstance(listener.node_for(unassembled_occurrence_context), ast.RawElement)
+    listener.nodes[occurrence_element_child] = ast.RawElement("bad")
+    usage_child = _FakeContext()
+    listener.nodes[usage_child] = ast.Usage(ast.DefinitionBody(declaration_only=True))
+    listener.exitDefaultInterfaceEnd(_FakeContext(usage=usage_child))
+    _error("exitDefaultInterfaceEnd", _FakeContext(usage=None))
+    listener.exitInterfaceUsageDeclaration(
+        _FakeContext(usageDeclaration=None, valuePart=None, interfacePart=None, CONNECT=None)
+    )
+    _error(
+        "exitInterfaceUsageDeclaration",
+        _FakeContext(
+            usageDeclaration=usage_child,
+            valuePart=None,
+            interfacePart=None,
+            CONNECT=None,
+        ),
+        (usage_child, ast.RawElement("bad")),
+    )
+
+    unassembled_interface_body_item = _FakeContext()
+    _error(
+        "exitInterfaceBody",
+        _FakeContext(SEMI=None, interfaceBodyItem=[unassembled_interface_body_item]),
+    )
+    _error(
+        "exitInterfaceUsageDeclaration",
+        _FakeContext(
+            usageDeclaration=None,
+            valuePart=usage_child,
+            interfacePart=None,
+            CONNECT=None,
+        ),
+        (usage_child, ast.RawElement("bad")),
+    )
+    _error(
+        "exitInterfaceUsageDeclaration",
+        _FakeContext(
+            usageDeclaration=None,
+            valuePart=None,
+            interfacePart=usage_child,
+            CONNECT=None,
+        ),
+        (usage_child, ast.RawElement("bad")),
+    )
+
+    # Feature/end wrappers: cover both alternatives and their required-child guards.
+    name_context = _FakeContext()
+    listener.values[name_context] = "feature"
+    listener.exitFeatureIdentification(_FakeContext(name=[name_context], LT=None))
+    listener.exitFeatureIdentification(
+        _FakeContext(name=[name_context, name_context], LT=_FakeToken("<"))
+    )
+    _error("exitFeatureIdentification", _FakeContext(name=[]))
+
+    feature_identification_context = _FakeContext()
+    specialization_context = _FakeContext()
+    listener.nodes[feature_identification_context] = ast.FeatureIdentification(declared_name="f")
+    listener.nodes[specialization_context] = ast.FeatureSpecializationPart()
+    listener.exitFeatureDeclaration(
+        _FakeContext(
+            featureIdentification=feature_identification_context,
+            featureSpecializationPart=specialization_context,
+            ALL=_FakeToken("all"),
+            conjugationPart=None,
+            featureRelationshipPart=[],
+        )
+    )
+    _error(
+        "exitFeatureDeclaration",
+        _FakeContext(
+            featureIdentification=feature_identification_context,
+            featureSpecializationPart=specialization_context,
+            ALL=None,
+            conjugationPart=None,
+            featureRelationshipPart=[],
+        ),
+        (feature_identification_context, ast.RawElement("bad")),
+    )
+    _error(
+        "exitFeatureDeclaration",
+        _FakeContext(
+            featureIdentification=feature_identification_context,
+            featureSpecializationPart=specialization_context,
+            ALL=None,
+            conjugationPart=None,
+            featureRelationshipPart=[],
+        ),
+        (specialization_context, ast.RawElement("bad")),
+        (feature_identification_context, ast.FeatureIdentification(declared_name="f")),
+    )
+
+    basic_feature_context = _FakeContext()
+    feature_declaration_context = _FakeContext()
+    listener.values[basic_feature_context] = "end"
+    listener.nodes[feature_declaration_context] = ast.FeatureDeclaration()
+    listener.exitOwnedCrossFeature(
+        _FakeContext(
+            basicFeaturePrefix=basic_feature_context, featureDeclaration=feature_declaration_context
+        )
+    )
+    _error(
+        "exitOwnedCrossFeature",
+        _FakeContext(basicFeaturePrefix=basic_feature_context, featureDeclaration=None),
+    )
+    basic_usage_context = _FakeContext(
+        featureDirection=None,
+        DERIVED=None,
+        ABSTRACT=None,
+        VARIATION=None,
+        CONSTANT=None,
+    )
+    listener.exitOwnedCrossFeature(
+        _FakeContext(
+            basicFeaturePrefix=None, basicUsagePrefix=basic_usage_context, usageDeclaration=None
+        )
+    )
+    _error("exitOwnedCrossFeature", _FakeContext(basicFeaturePrefix=None, basicUsagePrefix=None))
+
+    cross_context = _FakeContext()
+    listener.nodes[cross_context] = ast.OwnedCrossFeature()
+    listener.exitOwnedCrossFeatureMember(_FakeContext(ownedCrossFeature=cross_context))
+    end_prefix_context = _FakeContext()
+    listener.nodes[end_prefix_context] = ast.EndUsagePrefix(ast.OwnedCrossFeature())
+    completion_context = _FakeContext()
+    listener.nodes[completion_context] = ast.Usage(ast.DefinitionBody(declaration_only=True))
+    listener.exitEndUsagePrefix(_FakeContext(ownedCrossFeatureMember=cross_context))
+    listener.exitEndFeatureUsage(
+        _FakeContext(
+            endUsagePrefix=end_prefix_context,
+            featureDeclaration=feature_declaration_context,
+            usageCompletion=completion_context,
+        ),
+    )
+    _error("exitEndUsagePrefix", _FakeContext(ownedCrossFeatureMember=None))
+    _error(
+        "exitEndFeatureUsage",
+        _FakeContext(
+            endUsagePrefix=None,
+            featureDeclaration=feature_declaration_context,
+            usageCompletion=completion_context,
+        ),
+    )
+    _error(
+        "exitEndFeatureUsage",
+        _FakeContext(
+            endUsagePrefix=end_prefix_context,
+            featureDeclaration=None,
+            usageCompletion=completion_context,
+        ),
+        (end_prefix_context, ast.EndUsagePrefix(ast.OwnedCrossFeature())),
+    )
+    _error(
+        "exitEndFeatureUsage",
+        _FakeContext(
+            endUsagePrefix=end_prefix_context,
+            featureDeclaration=feature_declaration_context,
+            usageCompletion=None,
+        ),
+        (end_prefix_context, ast.EndUsagePrefix(ast.OwnedCrossFeature())),
+        (feature_declaration_context, ast.FeatureDeclaration()),
+    )
+
+
+def test_listener_relation_and_body_error_paths_are_explicitly_covered():
+    """Exercise defensive branches for relationship and body dispatch rules."""
+
+    def mapped(listener, node):
+        context = _FakeContext()
+        listener.nodes[context] = node
+        return context
+
+    listener = _fake_listener()
+    bad = mapped(listener, ast.RawElement("bad"))
+    _error(
+        "exitConjugationPart",
+        _FakeContext(ownedConjugation=bad),
+        (bad, ast.RawElement("bad")),
+    )
+    _error(
+        "exitInvertingPart",
+        _FakeContext(ownedFeatureInverting=bad),
+        (bad, ast.RawElement("bad")),
+    )
+
+    for callback, child_name in (
+        ("exitTypeFeaturingPart", "ownedTypeFeaturing"),
+        ("exitDisjoiningPart", "ownedDisjoining"),
+        ("exitUnioningPart", "unioning"),
+        ("exitIntersectingPart", "intersecting"),
+        ("exitDifferencingPart", "differencing"),
+    ):
+        child = _FakeContext()
+        _error(
+            callback,
+            _FakeContext(**{child_name: [child]}),
+            (child, ast.RawElement("bad")),
+        )
+
+    _error("exitTypeRelationshipPart", _FakeContext())
+    _error("exitFeatureRelationshipPart", _FakeContext())
+
+    bad_conjugation = mapped(listener, ast.RawElement("bad conjugation"))
+    _error(
+        "exitFeatureDeclaration",
+        _FakeContext(
+            featureIdentification=None,
+            featureSpecializationPart=None,
+            conjugationPart=bad_conjugation,
+            featureRelationshipPart=[],
+        ),
+        (bad_conjugation, ast.RawElement("bad conjugation")),
+    )
+    bad_relationship = mapped(listener, ast.RawElement("bad relationship"))
+    _error(
+        "exitFeatureDeclaration",
+        _FakeContext(
+            featureIdentification=None,
+            featureSpecializationPart=None,
+            conjugationPart=None,
+            featureRelationshipPart=[bad_relationship],
+        ),
+        (bad_relationship, ast.RawElement("bad relationship")),
+    )
+
+    bad_usage = mapped(listener, ast.RawElement("bad usage"))
+    _error(
+        "exitReturnParameterMember",
+        _FakeContext(usageElement=bad_usage),
+        (bad_usage, ast.RawElement("bad usage")),
+    )
+    invalid_usage = mapped(listener, object())
+    _error(
+        "exitReturnParameterMember",
+        _FakeContext(usageElement=invalid_usage),
+        (invalid_usage, object()),
+    )
+    _error("exitCalculationBodyItem", _FakeContext())
+    raw_calculation_item = _FakeContext(actionBodyItem=_FakeContext())
+    listener.exitCalculationBodyItem(raw_calculation_item)
+    assert isinstance(listener.node_for(raw_calculation_item), ast.RawElement)
+
+    _error("exitCaseBodyItem", _FakeContext())
+    _error("exitRequirementBodyItem", _FakeContext())
+    _error("exitViewDefinitionBodyItem", _FakeContext())
+    _error("exitViewBodyItem", _FakeContext())
+
+    view_body = _FakeContext(SEMI=_FakeToken(), viewBodyItem=[])
+    listener.exitViewBody(view_body)
+    assert listener.node_for(view_body) == ast.ViewBody(declaration_only=True)
+
+    _error(
+        "exitEnumerationUsageMember",
+        _FakeContext(enumeratedValue=bad_usage),
+        (bad_usage, ast.RawElement("bad usage")),
+    )
+    _error(
+        "exitEnumeratedValue",
+        _FakeContext(usage=bad_usage),
+        (bad_usage, ast.RawElement("bad usage")),
+    )
+
+
+def test_listener_dependency_and_definition_validation_paths():
+    """Cover dependency endpoint splitting and typed definition guards."""
+
+    def mapped(listener, node):
+        context = _FakeContext()
+        listener.nodes[context] = node
+        return context
+
+    listener = _fake_listener()
+    first = mapped(listener, QualifiedReference(["A"]))
+    second = mapped(listener, QualifiedReference(["B"]))
+    identification = mapped(listener, ast.Identification(declared_name="D"))
+    declaration = _FakeContext(
+        qualifiedName=[first, second],
+        identification=identification,
+    )
+    body = mapped(listener, ast.RelationshipBody("connect A to B"))
+    dependency = _FakeContext(
+        qualifiedName=[],
+        dependencyDeclaration=declaration,
+        relationshipBody=body,
+        prefixMetadataAnnotation=[],
+    )
+    listener.exitDependency(dependency)
+    result = listener.node_for(dependency)
+    assert isinstance(result, ast.Dependency)
+    assert result.source_references == [ast.QualifiedReference(["A"])]
+    assert result.target_references == [ast.QualifiedReference(["B"])]
+
+    declaration_without_identification = _FakeContext(
+        qualifiedName=[first, second],
+        identification=None,
+    )
+    dependency_without_identification = _FakeContext(
+        qualifiedName=[],
+        dependencyDeclaration=declaration_without_identification,
+        relationshipBody=body,
+        prefixMetadataAnnotation=[],
+    )
+    listener.exitDependency(dependency_without_identification)
+    assert isinstance(listener.node_for(dependency_without_identification), ast.Dependency)
+
+    no_target_body = mapped(listener, ast.RelationshipBody("A to B"))
+    no_target_dependency = _FakeContext(
+        qualifiedName=[],
+        dependencyDeclaration=None,
+        identification=None,
+        TO=None,
+        relationshipBody=no_target_body,
+        prefixMetadataAnnotation=[],
+    )
+    listener.exitDependency(no_target_dependency)
+    assert isinstance(listener.node_for(no_target_dependency), ast.Dependency)
+    invalid_dependency_body = _FakeContext()
+    _error(
+        "exitDependency",
+        _FakeContext(
+            qualifiedName=[],
+            dependencyDeclaration=None,
+            identification=None,
+            TO=None,
+            relationshipBody=invalid_dependency_body,
+            prefixMetadataAnnotation=[],
+        ),
+        (invalid_dependency_body, object()),
+    )
+
+    for callback in (
+        "exitEnumerationDefinition",
+        "exitAllocationDefinition",
+        "exitFlowDefinition",
+        "exitRenderingDefinition",
+        "exitMetadataDefinition",
+        "exitExtendedDefinition",
+    ):
+        _error(callback, _FakeContext())
+
+    _error("exitCalculationDefinition", _FakeContext())
+    prefix = mapped(listener, ast.OccurrenceDefinitionPrefix())
+    bad_declaration = mapped(listener, ast.RawElement("bad declaration"))
+    bad_body = mapped(listener, ast.RawElement("bad body"))
+    _error(
+        "exitCalculationDefinition",
+        _FakeContext(
+            occurrenceDefinitionPrefix=prefix,
+            definitionDeclaration=bad_declaration,
+            calculationBody=bad_body,
+        ),
+        (prefix, ast.OccurrenceDefinitionPrefix()),
+        (bad_declaration, ast.RawElement("bad declaration")),
+        (bad_body, ast.RawElement("bad body")),
+    )
+    declaration = mapped(listener, ast.DefinitionDeclaration())
+    invalid_body = mapped(listener, object())
+    _error(
+        "exitCalculationDefinition",
+        _FakeContext(
+            occurrenceDefinitionPrefix=prefix,
+            definitionDeclaration=declaration,
+            calculationBody=invalid_body,
+        ),
+        (prefix, ast.OccurrenceDefinitionPrefix()),
+        (declaration, ast.DefinitionDeclaration()),
+        (invalid_body, object()),
+    )
+    _error("exitFlowEnd", _FakeContext(qualifiedName=[]))
+
+
+def test_listener_usage_validation_and_raw_fallback_paths():
+    """Cover typed usage guards and the two intentional raw compatibility exits."""
+
+    _error("exitRequirementUsage", _FakeContext())
+    listener = _fake_listener()
+    prefix_context = _FakeContext()
+    body_context = _FakeContext()
+    listener.nodes[prefix_context] = ast.OccurrenceUsagePrefix()
+    listener.nodes[body_context] = ast.RequirementBody()
+    with pytest.raises(ValueError):
+        listener.exitRequirementUsage(
+            _FakeContext(
+                occurrenceUsagePrefix=prefix_context,
+                constraintUsageDeclaration=None,
+                requirementBody=body_context,
+            )
+        )
+
+    for callback in (
+        "exitCalculationUsage",
+        "exitConstraintUsage",
+        "exitCaseUsage",
+        "exitViewUsage",
+        "exitViewRenderingUsage",
+        "exitRenderingUsage",
+        "exitAllocationUsage",
+        "exitMessage",
+        "exitFlowUsage",
+        "exitSuccessionFlowUsage",
+        "exitIncludeUseCaseUsage",
+        "exitAssertConstraintUsage",
+        "exitSatisfyRequirementUsage",
+        "exitEnumerationUsage",
+    ):
+        _error(callback, _FakeContext())
+
+    listener = _fake_listener()
+    structure_context = _FakeContext()
+    listener.exitStructureUsageElement(structure_context)
+    assert isinstance(listener.node_for(structure_context), ast.RawElement)
+    definition_context = _FakeContext()
+    listener.exitDefinitionElement(definition_context)
+    assert isinstance(listener.node_for(definition_context), ast.RawElement)

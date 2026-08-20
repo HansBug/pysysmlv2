@@ -13,7 +13,7 @@ ANTLR_JAR := $(ANTLR_DIR)/antlr-$(ANTLR_VERSION)-complete.jar
 ANTLR_TEMP := $(ANTLR_DIR)/generated
 
 RANGE_TEST_DIR := $(TEST_DIR)/$(RANGE_DIR)
-RANGE_SRC_DIR := $(SRC_DIR)/$(RANGE_DIR)
+RANGE_SRC_DIR := $(if $(filter .,$(RANGE_DIR)),$(SRC_DIR),$(SRC_DIR)/$(RANGE_DIR))
 COV_TYPES ?= xml term-missing
 MIN_COVERAGE ?=
 WORKERS ?=
@@ -71,24 +71,10 @@ install-dev:
 	$(PYTHON) -m pip install -e .[dev,test,docs,tooling]
 
 antlr_update:
-	mkdir -p "$(GENERATED_DIR)"
-	cp "$(UPSTREAM_GRAMMAR_DIR)/SysMLv2Lexer.g4" "$(GENERATED_DIR)/SysMLv2Lexer.g4"
-	cp "$(UPSTREAM_GRAMMAR_DIR)/SysMLv2Parser.g4" "$(GENERATED_DIR)/SysMLv2Parser.g4"
-	cp "$(UPSTREAM_GRAMMAR_ROOT)/LICENSE" "$(GENERATED_DIR)/UPSTREAM_LICENSE.txt"
-	$(PYTHON) -m tools.grammar_overlay "$(GENERATED_DIR)/SysMLv2Parser.g4" "$(UPSTREAM_GRAMMAR_DIR)" "$(GRAMMAR_PROVENANCE)"
-	$(MAKE) antlr_build
+	$(PYTHON) -m tools.antlr_pipeline update
 
 antlr_build:
-	mkdir -p "$(ANTLR_DIR)" "$(GENERATED_DIR)"
-	if [ ! -f "$(ANTLR_JAR)" ]; then curl -fL --retry 3 --output "$(ANTLR_JAR)" "https://www.antlr.org/download/antlr-$(ANTLR_VERSION)-complete.jar"; fi
-	rm -rf "$(ANTLR_TEMP)"
-	mkdir -p "$(ANTLR_TEMP)"
-	java -jar "$(ANTLR_JAR)" -Dlanguage=Python3 -Xexact-output-dir -o "$(ANTLR_TEMP)" \
-		"$(GENERATED_DIR)/SysMLv2Lexer.g4" "$(GENERATED_DIR)/SysMLv2Parser.g4"
-	rm -f "$(GENERATED_DIR)"/*.py "$(GENERATED_DIR)"/*.tokens "$(GENERATED_DIR)"/*.interp "$(GENERATED_DIR)/manifest.json"
-	cp "$(ANTLR_TEMP)"/*.py "$(ANTLR_TEMP)"/*.tokens "$(ANTLR_TEMP)"/*.interp "$(GENERATED_DIR)"
-	printf '%s\n' '"""Generated ANTLR4 Python modules; regenerate with ``make antlr_build``."""' > "$(GENERATED_DIR)/__init__.py"
-	$(PYTHON) -m ruff format --no-force-exclude "$(GENERATED_DIR)"/*.py
+	$(PYTHON) -m tools.antlr_pipeline build
 
 antlr_check:
 	$(PYTHON) -m tools.check_generated
