@@ -83,3 +83,16 @@ def test_upstream_license_copy_must_match_submodule(tmp_path, monkeypatch):
 
     with pytest.raises(SystemExit, match="stale"):
         check_generated._check_upstream_license()
+
+
+def test_upstream_license_line_endings_are_platform_neutral(tmp_path, monkeypatch):
+    upstream = tmp_path / "upstream" / "sysml-v2-grammar"
+    generated = tmp_path / "generated"
+    upstream.mkdir(parents=True)
+    generated.mkdir()
+    (upstream / "LICENSE").write_bytes(b"license line one\r\nlicense line two\r\n")
+    (generated / "UPSTREAM_LICENSE.txt").write_bytes(b"license line one\nlicense line two\n")
+    monkeypatch.setattr(check_generated, "UPSTREAM_LICENSE", upstream / "LICENSE")
+    monkeypatch.setattr(check_generated, "GENERATED", generated)
+
+    check_generated._check_upstream_license()

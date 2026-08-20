@@ -111,7 +111,8 @@ def _check_grammar_provenance() -> None:
 def _check_upstream_license() -> None:
     """Require the packaged grammar license to match the pinned submodule.
 
-    :return: ``None`` when the generated license copy is byte-for-byte current.
+    :return: ``None`` when the generated license copy is current after line
+        ending normalization.
     :rtype: None
     :raises SystemExit: If the upstream license or generated copy is missing or
         differs.
@@ -121,7 +122,9 @@ def _check_upstream_license() -> None:
         raise SystemExit("upstream grammar license is missing")
     if not packaged.is_file():
         raise SystemExit("generated upstream grammar license is missing")
-    if packaged.read_bytes() != UPSTREAM_LICENSE.read_bytes():
+    packaged_bytes = packaged.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    upstream_bytes = UPSTREAM_LICENSE.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    if packaged_bytes != upstream_bytes:
         raise SystemExit("generated upstream grammar license is stale")
 
 
