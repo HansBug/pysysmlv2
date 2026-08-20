@@ -1,0 +1,228 @@
+{
+  "schema_version": 1,
+  "source": {
+    "title": "OMG Systems Modeling Language (SysML) Version 2.0, Part 1: Language Specification",
+    "document_number": "formal/2026-03-02",
+    "url": "https://www.omg.org/spec/SysML/2.0/Language/PDF",
+    "local_pdf": "/tmp/SysML-2.0-Language.pdf",
+    "sha256_local_pdf": "46e6c0476a6f1f34f367d57e039d56659bff75e41d2e4b3d37ca4cadea84a83a"
+  },
+  "scope": {
+    "clauses": ["8.4.2.3", "8.4.3", "8.4.5", "8.4.6"],
+    "printed_pages": [403, 408],
+    "physical_pages": [435, 440],
+    "page_mapping": "physical page = printed page + 32",
+    "notes": "Eight complete SysML source blocks are retained as fixtures. KerML-only blocks and blocks containing literal omission markers are retained only as exclusions."
+  },
+  "review_method": "Rendered physical pages 435-440 were visually inspected by a human. PDF text extraction was used only for navigation and token cross-checking; rendered layout determined source-block boundaries and the D2/d block is retained as one source panel.",
+  "status_vocabulary": {
+    "complete": "A closed SysML source block suitable for a repository-owned parser fixture.",
+    "incomplete_placeholder": "A source block contains a literal omission marker such as `...`; omitted content is not invented.",
+    "kerml_only": "The source block is explicitly introduced as KerML and is outside the SysML fixture scope."
+  },
+  "entries": [
+    {
+      "id": "S843-P404-E01",
+      "clause": "8.4.3.1",
+      "printed_pages": [404],
+      "physical_pages": [436],
+      "source_kind": "prose_code_block",
+      "source_code": "attribute def D1 specializes Base::DataValue {\n    ref a subsets Base::things;\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "fixture_name": "s843_p404_e01_d1.sysml",
+      "dependencies": ["Base::DataValue", "Base::things"],
+      "notes": "Attribute definition semantic example."
+    },
+    {
+      "id": "S843-P404-E02",
+      "clause": "8.4.3.2",
+      "printed_pages": [404],
+      "physical_pages": [436],
+      "source_kind": "prose_code_block",
+      "source_code": "attribute def D2 specializes Base::DataValue {\n    ref attribute a : ScalarValue::String subsets Base::dataValues;\n}\nref attribute d : D2 subsets Base::dataValues {\n    ref attribute b subsets a;\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "fixture_name": "s843_p404_e02_d2_and_d.sysml",
+      "dependencies": ["Base::DataValue", "ScalarValue::String", "Base::dataValues"],
+      "notes": "The PDF presents the D2 definition and d usage as one contiguous source panel; both declarations are retained in one fixture."
+    },
+    {
+      "id": "S845-P405-E01",
+      "clause": "8.4.5.1",
+      "printed_pages": [405],
+      "physical_pages": [437],
+      "source_kind": "prose_code_block",
+      "source_code": "individual occurrence def Ind;",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "fixture_name": "s845_p405_e01_ind.sysml",
+      "dependencies": ["Occurrences::Life", "Base::zeroOrOne (implied semantic specialization)"],
+      "notes": "Individual occurrence-definition declaration."
+    },
+    {
+      "id": "S845-P406-E02",
+      "clause": "8.4.5.2",
+      "printed_pages": [406],
+      "physical_pages": [438],
+      "source_kind": "prose_code_block",
+      "source_code": "occurrence def Occ specializes Occurrences::Occurrence {\n    ref occurrence a subsets Occurrences::occurrences;\n    occurrence b subsets Occurrences::Occurrence::suboccurrences;\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "fixture_name": "s845_p406_e02_occurrence_members.sysml",
+      "dependencies": ["Occurrences::Occurrence", "Occurrences::occurrences", "Occurrences::Occurrence::suboccurrences"],
+      "notes": "Occurrence definition with referential and composite suboccurrence usages."
+    },
+    {
+      "id": "S845-P406-P407-E03",
+      "clause": "8.4.5.2",
+      "printed_pages": [406, 407],
+      "physical_pages": [438, 439],
+      "source_kind": "prose_code_block",
+      "source_code": "occurrence def Occ {\n    timeslice occurrence t;\n    snapshot occurrence s;\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "fixture_name": "s845_p406_p407_e03_occurrence_portions.sysml",
+      "dependencies": ["Occurrences::Occurrence::timeslices", "Occurrences::Occurrence::snapshots (implied semantic specialization)"],
+      "notes": "The source block starts at the bottom of physical page 438 and closes at the top of physical page 439."
+    },
+    {
+      "id": "S845-P407-E04",
+      "clause": "8.4.5.3",
+      "printed_pages": [407],
+      "physical_pages": [439],
+      "source_kind": "prose_code_block",
+      "source_code": "occurrence occ1;\noccurrence occ2 {\n    event occurrence evt references occ1;\n    // Other than having a name, the above is equivalent to\n    // event occ1;\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "fixture_name": "s845_p407_e04_event_occurrences.sysml",
+      "dependencies": ["occ1", "Occurrences::Occurrence::timeEnclosedOccurrences (implied semantic specialization)"],
+      "notes": "Event occurrence usage example. The explanatory line comments are part of the source panel and are retained verbatim."
+    },
+    {
+      "id": "S845-P407-E05",
+      "clause": "8.4.5.3",
+      "printed_pages": [407],
+      "physical_pages": [439],
+      "source_kind": "prose_code_block",
+      "source_code": "occurrence occ1 subsets Occurrences::occurrences;\noccurrence occ2 subsets Occurrences::occurrences {\n    ref occurrence evt references occ1\n        subsets Occurrences::Occurrence::timeEnclosedOccurrences;\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "fixture_name": "s845_p407_e05_event_occurrences_equivalent.sysml",
+      "dependencies": ["Occurrences::occurrences", "Occurrences::Occurrence::timeEnclosedOccurrences"],
+      "notes": "Complete SysML semantic-equivalent model printed immediately after the event usage example."
+    },
+    {
+      "id": "S846-P408-E01",
+      "clause": "8.4.6.2",
+      "printed_pages": [408],
+      "physical_pages": [440],
+      "source_kind": "prose_code_block",
+      "source_code": "item def I specializes Items::Item {\n    ref item a subsets Items::items;\n    item b subsets Items::Item::subitems;\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "fixture_name": "s846_p408_e01_item_i.sysml",
+      "dependencies": ["Items::Item", "Items::items", "Items::Item::subitems"],
+      "notes": "Item definition with referential and composite subitem usages."
+    }
+  ],
+  "excluded_fragments": [
+    {
+      "id": "X842-P403-E01",
+      "clause": "8.4.2.3",
+      "printed_pages": [403],
+      "physical_pages": [435],
+      "source_kind": "prose_code_block",
+      "source_code": "variation part def P {\n    variant part p1;\n    variant part p2;\n    ...\n}",
+      "completeness": "incomplete_placeholder",
+      "fixture_eligible": false,
+      "exclusion_reason": "The official block contains the literal omission marker `...`; omitted variant members are not invented.",
+      "notes": "SysML variation definition retained as provenance only."
+    },
+    {
+      "id": "X842-P403-E02",
+      "clause": "8.4.2.3",
+      "printed_pages": [403],
+      "physical_pages": [435],
+      "source_kind": "kerml_equivalent_code_block",
+      "source_code": "// KerML\nclass P specializes Parts::Part {\n    member feature p1 : P subsets Parts::parts;\n    member feature p2 : P subsets Parts::parts;\n    ...\n}",
+      "completeness": "incomplete_placeholder",
+      "fixture_eligible": false,
+      "exclusion_reason": "The block is explicitly introduced as KerML and also contains the literal omission marker `...`; it is outside the SysML fixture scope.",
+      "notes": "Kernel-equivalent variation semantics."
+    },
+    {
+      "id": "X842-P403-E03",
+      "clause": "8.4.2.3",
+      "printed_pages": [403],
+      "physical_pages": [435],
+      "source_kind": "prose_code_block",
+      "source_code": "variation part p {\n    variant part p1;\n    variant part p2;\n    ...\n}",
+      "completeness": "incomplete_placeholder",
+      "fixture_eligible": false,
+      "exclusion_reason": "The official block contains the literal omission marker `...`; omitted variant members are not invented.",
+      "notes": "SysML variation usage retained as provenance only."
+    },
+    {
+      "id": "X842-P403-E04",
+      "clause": "8.4.2.3",
+      "printed_pages": [403],
+      "physical_pages": [435],
+      "source_kind": "kerml_equivalent_code_block",
+      "source_code": "// KerML\nfeature p subsets Parts::parts {\n    member feature p1 subsets p;\n    member feature p2 subsets p;\n    ...\n}",
+      "completeness": "incomplete_placeholder",
+      "fixture_eligible": false,
+      "exclusion_reason": "The block is explicitly introduced as KerML and also contains the literal omission marker `...`; it is outside the SysML fixture scope.",
+      "notes": "Kernel-equivalent variation usage semantics."
+    },
+    {
+      "id": "X844-P404-E01",
+      "clause": "8.4.4",
+      "printed_pages": [404, 405],
+      "physical_pages": [436, 437],
+      "source_kind": "prose_code_block",
+      "source_code": "enum def E {\n    enum e1;\n    enum e2;\n    ...\n}",
+      "completeness": "incomplete_placeholder",
+      "fixture_eligible": false,
+      "exclusion_reason": "The example is split across pages and contains the literal omission marker `...`; omitted enumeration members are not invented.",
+      "notes": "Enumeration definition source block."
+    },
+    {
+      "id": "X844-P405-E02",
+      "clause": "8.4.4",
+      "printed_pages": [405],
+      "physical_pages": [437],
+      "source_kind": "prose_code_block",
+      "source_code": "variation attribute def E specializes Base::DataValue {\n    variant attribute e1 : E subsets Base::dataValues;\n    variant attribute e2 : E subsets Base::dataValues;\n    ...\n}",
+      "completeness": "incomplete_placeholder",
+      "fixture_eligible": false,
+      "exclusion_reason": "The official semantic-equivalent example contains the literal omission marker `...`; omitted variant members are not invented.",
+      "notes": "SysML variation equivalent of the enumeration definition."
+    },
+    {
+      "id": "X845-P405-E03",
+      "clause": "8.4.5.1",
+      "printed_pages": [405],
+      "physical_pages": [437],
+      "source_kind": "kerml_equivalent_code_block",
+      "source_code": "// KerML\nclass Ind specializes Occurrences::Life {\n    multiplicity subsets Base::zeroOrOne;\n}",
+      "completeness": "complete",
+      "fixture_eligible": false,
+      "exclusion_reason": "The block is explicitly introduced as KerML and is outside the SysML fixture scope.",
+      "notes": "Kernel-equivalent semantics of the individual occurrence definition."
+    },
+    {
+      "id": "X845-P407-E04",
+      "clause": "8.4.5.2",
+      "printed_pages": [407],
+      "physical_pages": [439],
+      "source_kind": "kerml_equivalent_code_block",
+      "source_code": "//KerML\nclass Occ specializes Occurrences::Occurrence {\n    portion feature t subsets Occurrences::Occurrence::timeslices;\n    portion feature s subsets Occurrences::Occurrence::snapshots;\n}",
+      "completeness": "complete",
+      "fixture_eligible": false,
+      "exclusion_reason": "The block is explicitly introduced as KerML and is outside the SysML fixture scope.",
+      "notes": "Kernel-equivalent semantics of the timeslice and snapshot declaration."
+    }
+  ],
+  "reviewed_entry_count": 16
+}

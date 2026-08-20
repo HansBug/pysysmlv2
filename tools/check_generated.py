@@ -26,6 +26,7 @@ from tools.grammar_overlay import OVERLAY_IDENTIFIER
 
 ROOT = Path(__file__).resolve().parents[1]
 GENERATED = ROOT / "pysysmlv2" / "syntax" / "generated"
+UPSTREAM_LICENSE = ROOT / "upstream" / "sysml-v2-grammar" / "LICENSE"
 
 GENERATED_FILES = frozenset(
     {
@@ -38,6 +39,7 @@ GENERATED_FILES = frozenset(
         "SysMLv2Parser.py",
         "SysMLv2Parser.tokens",
         "SysMLv2ParserListener.py",
+        "UPSTREAM_LICENSE.txt",
         "__init__.py",
         "grammar-provenance.json",
     }
@@ -104,6 +106,23 @@ def _check_grammar_provenance() -> None:
         raise SystemExit("generated grammar provenance lacks upstream revision data")
     if manifest.get("effective_parser_sha256") != expected_hash:
         raise SystemExit("generated grammar provenance hash does not match parser grammar")
+
+
+def _check_upstream_license() -> None:
+    """Require the packaged grammar license to match the pinned submodule.
+
+    :return: ``None`` when the generated license copy is byte-for-byte current.
+    :rtype: None
+    :raises SystemExit: If the upstream license or generated copy is missing or
+        differs.
+    """
+    packaged = GENERATED / "UPSTREAM_LICENSE.txt"
+    if not UPSTREAM_LICENSE.is_file():
+        raise SystemExit("upstream grammar license is missing")
+    if not packaged.is_file():
+        raise SystemExit("generated upstream grammar license is missing")
+    if packaged.read_bytes() != UPSTREAM_LICENSE.read_bytes():
+        raise SystemExit("generated upstream grammar license is stale")
 
 
 def _snapshot() -> dict:
@@ -174,6 +193,7 @@ def check() -> None:
     subprocess.check_call([os.environ.get("MAKE", "make"), "antlr_update"], cwd=str(ROOT))
     _check_generated_files()
     _check_grammar_provenance()
+    _check_upstream_license()
     after = _snapshot()
     if before != after:
         raise SystemExit("generated ANTLR artifacts are not reproducible")

@@ -15,7 +15,7 @@ standard library package ModelingMetadata {
         attribute status : StatusKind;
         attribute risk : Risk [0..1];
     }
-    // To be used to give rationale for a model element.
+    // To be used to give a rationale for a model element.
     metadata def Rationale {
         attribute text : String;
         // This is an optional reference to a feature that further explains this rationale (e.g., a trade study analysis).

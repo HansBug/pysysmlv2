@@ -1,5 +1,5 @@
 ...
-// ContinuousStateSpaceDynamics represents continuous behavior. The derivative needs to return the derivative of stateSpace, i.e. dx/dt.
+// ContinuousStateSpaceDynamics represents continuous behavior. The derivative needs to return a time derivative of stateSpace, i.e. dx/dt.
 abstract action def ContinuousStateSpaceDynamics :> StateSpaceDynamics {
     abstract calc getDerivative: GetDerivative;
     calc :>> getNextState: GetNextState {

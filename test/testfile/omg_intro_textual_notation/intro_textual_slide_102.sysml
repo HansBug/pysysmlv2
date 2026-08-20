@@ -18,6 +18,8 @@ variation attribute def DiameterChoices :> Diameter {
     variant attribute diameterSmall = 70[mm];
     variant attribute diameterLarge = 100[mm];
 }
+// A variation definition will typically specialize a definition from a design model, representing the type of thing being varied. The variants must then be valid usages of this type.
+// Variants can also be declared by reference to usages defined elsewhere.
 variation part def EngineChoices :> Engine {
     variant '4cylEngine';
     variant '6cylEngine';

@@ -11,10 +11,13 @@ standard library package AnalysisTooling {
 }
 action computeDynamics {
     private import AnalysisTooling::*;
+    // A metadata annotation contained in the body of a namespace (package, definition or usage) is, by default, about that namespace.
+    // If the metadata definition has nested features, these must be bound to values in the metadata annotation.
     metadata ToolExecution {
         toolName = "ModelCenter";
         uri = "aserv://localhost/Vehicle/Equation1";
     }
+    // The @ symbol is equivalent to the metadata keyword.
     in dt : ISQ::TimeValue  {@ToolVariable {name = "deltaT";}}
     in a : ISQ:: AccelerationValue  {@ToolVariable {name = "mass";}}
     in v_in : ISQ:: VelocityValue   {@ToolVariable {name = "v0";}}

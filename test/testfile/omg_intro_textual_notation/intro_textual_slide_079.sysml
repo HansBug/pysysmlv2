@@ -8,6 +8,7 @@ constraint def MassConstraint {
     in partMasses : MassValue[0..*];
     in massLimit : MassValue;
     // The constraint expression can be any Boolean expression using the constraint parameters.
+    // There is no semicolon at the end of a constraint expression.
     sum(partMasses) <= massLimit
 }
 part def Vehicle {

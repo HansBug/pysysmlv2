@@ -359,3 +359,54 @@ def test_ast_exporters_cover_remaining_optional_rendering_branches():
     )
     assert str(a.PerformActionUsageDeclaration(referenced_feature=ref("Effect"))) == "Effect"
     assert str(a.TransitionPerformActionUsage(a.PerformActionUsageDeclaration())) == ""
+
+
+def test_expression_precedence_handles_conditional_and_coalesce_nodes():
+    """Cover precedence lookup for the two non-binary expression subclasses."""
+    a = ast_module
+    reference = a.FeatureReferenceExpression(a.QualifiedReference(["value"]))
+    assert a._expression_precedence(a.CoalesceExpression(reference, reference)) == 2
+    assert a._expression_precedence(a.ConditionalExpression(reference, reference, reference)) == 1
+
+
+def test_new_usage_nodes_cover_optional_prefix_and_completion_rendering():
+    """Exercise optional typed-node exporter alternatives explicitly."""
+    a = ast_module
+    assert (
+        str(
+            a.UsagePrefix(
+                is_abstract=True,
+                is_variation=True,
+                is_constant=True,
+            )
+        )
+        == "abstract variation constant"
+    )
+
+    prefix = a.OccurrenceUsagePrefix()
+    declaration = a.Definition(
+        a.DefinitionDeclaration(),
+        a.DefinitionBody(declaration_only=True),
+    )
+    usage = a.Usage(a.DefinitionBody(declaration_only=True))
+    assert str(a.PartDefinition(prefix, declaration)) == "part def;"
+    assert str(a.OccurrenceDefinition(prefix, declaration)) == "occurrence def;"
+    assert str(a.IndividualDefinition(None, [], declaration)) == "individual def;"
+    assert str(a.AttributeDefinition(a.DefinitionPrefix(), declaration)) == "attribute def;"
+    assert str(a.AttributeUsage(a.UsagePrefix(), usage)) == "attribute;"
+    assert str(a.PortUsage(prefix, usage)) == "port;"
+    assert (
+        str(
+            a.PortDefinition(
+                a.DefinitionPrefix(),
+                declaration,
+                a.ConjugatedPortTyping(a.QualifiedReference(["P"])),
+            )
+        )
+        == "port def; ~P"
+    )
+
+    block_usage = a.Usage(a.DefinitionBody())
+    assert str(a.EventOccurrenceUsage(prefix, block_usage)) == "event { }"
+    payload_usage = a.Usage(a.RawElement("value"))
+    assert str(a.EventOccurrenceUsage(prefix, payload_usage)) == "event value"

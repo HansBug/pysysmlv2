@@ -120,11 +120,13 @@ Evidence boundary
 -----------------
 
 The JSON record includes exact cleaned source for the state examples and the
-source page/section.  The checked-in Section 7 goldens are span-free snapshots
-of every AST dataclass field and are compared field-for-field; a second parse
-of ``str(first.ast)`` additionally checks the round-trip fixed point.  The
-goldens are independent test data, not snapshots generated during the test
-run.
+source page/section.  The checked-in Section 7 goldens are span-free,
+parser-derived snapshots of every AST dataclass field and are compared
+field-for-field; a second parse of ``str(first.ast)`` additionally checks the
+round-trip fixed point.  They are committed regression snapshots, not
+independent semantic oracles.  Independent hand-authored AST oracles for the
+state-machine examples live in ``test_official_ast_oracles.py`` and the
+Section 8.4 semantic fixtures have their own field-level oracles.
 
 The raw extraction used for the whole section is retained in
 ``omg_sysml2_language_section7_blocks.json``.  It contains the physical page,

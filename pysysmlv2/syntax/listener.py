@@ -23,6 +23,9 @@ omitted by callers constructing a node directly.
      - Nodes assembled
    * - Names/declarations
      - Identification, qualified references, declarations, specializations.
+   * - Namespace membership
+     - Alias members, membership/namespace imports, filtered imports, and
+       package filter expressions.
    * - Expressions
      - Literals, recursive operators, calls, indexing, access, constructors,
        metadata forms, and argument lists.
@@ -60,11 +63,14 @@ from .ast import (
     ActionUsage,
     ActionUsageDeclaration,
     ActionUsageNode,
+    AliasMember,
     AllExpression,
     ArgumentList,
     AssignmentActionUsage,
     AssignmentNode,
     AssignmentNodeDeclaration,
+    AttributeDefinition,
+    AttributeUsage,
     BehaviorUsageMember,
     BehaviorUsageStateMember,
     BinaryExpression,
@@ -86,14 +92,17 @@ from .ast import (
     DefinitionBody,
     DefinitionBodyItem,
     DefinitionDeclaration,
+    DefinitionPrefix,
     DoActionMember,
     Documentation,
     DottedQualifiedReference,
     EffectBehaviorMember,
+    ElementFilterMember,
     EmptyActionUsage,
     EndOccurrenceUsageElement,
     EntryActionMember,
     EntryTransitionMember,
+    EventOccurrenceUsage,
     ExhibitStateUsage,
     ExitActionMember,
     Expression,
@@ -102,6 +111,7 @@ from .ast import (
     FeatureReferenceExpression,
     FeatureSpecialization,
     FeatureSpecializationPart,
+    FilterPackage,
     ForkNode,
     ForLoopNode,
     FunctionBodyItem,
@@ -112,22 +122,37 @@ from .ast import (
     GuardExpressionMember,
     Identification,
     IfNode,
+    ImportDeclaration,
+    ImportRule,
     IndexExpression,
+    IndividualDefinition,
+    IndividualUsage,
     InfinityLiteral,
     InitialNodeMember,
     IntegerLiteral,
     InvocationExpression,
+    ItemDefinition,
     ItemUsage,
     JoinNode,
+    MembershipImport,
     MergeNode,
     MetadataAccessExpression,
+    MetadataBody,
+    MetadataBodyFeature,
+    MetadataBodyUsage,
     MetadataCastExpression,
+    MetadataFeature,
+    MetadataFeatureDeclaration,
     Model,
     NamedArgument,
+    NamespaceImport,
     NodeParameter,
     NonFeatureMember,
+    NonOccurrenceUsageMember,
     NullExpression,
+    OccurrenceDefinition,
     OccurrenceDefinitionPrefix,
+    OccurrenceUsage,
     OccurrenceUsagePrefix,
     OwnedFeatureTyping,
     Package,
@@ -139,10 +164,14 @@ from .ast import (
     PayloadParameter,
     PerformActionUsage,
     PerformActionUsageDeclaration,
+    PortDefinition,
+    PortionUsage,
+    PortUsage,
     QualifiedReference,
     RawElement,
     RealLiteral,
     Reference,
+    ReferenceUsage,
     RelationshipBody,
     ResultExpressionMember,
     ReturnFeatureMember,
@@ -179,6 +208,7 @@ from .ast import (
     UnaryExpression,
     Usage,
     UsageDeclaration,
+    UsagePrefix,
     ValuePart,
     VariantUsage,
     WhileLoopNode,
@@ -298,6 +328,33 @@ class SysMLAstListener(SysMLv2ParserListener):
         text = self._text(ctx).strip()
         return text or None
 
+    def _alias_node(self, ctx: Any, member_prefix: Optional[str] = None) -> AliasMember:
+        """Build an alias node from either alias grammar production.
+
+        ``aliasMember`` owns ``memberPrefix`` while the factored alias
+        alternative in ``definitionBodyItemContent`` receives that prefix
+        from its enclosing ``definitionBodyItem``.  Both productions share
+        the remaining named fields, so this helper keeps their assembly
+        identical without introducing a text-based fallback.
+        """
+        names = [self._name_value(item) for item in ctx.name()]
+        identification = None
+        if names:
+            identification = Identification(
+                short_name=names[0] if ctx.LT() is not None else None,
+                declared_name=(names[1] if ctx.LT() is not None else names[0]),
+            )
+        target = self._child(ctx.qualifiedName())
+        body = self._child(ctx.relationshipBody())
+        if not isinstance(target, QualifiedReference) or not isinstance(body, RelationshipBody):
+            raise ValueError("alias requires qualifiedName and relationshipBody")
+        return AliasMember(
+            target=target,
+            relationship_body=body,
+            identification=identification,
+            member_prefix=member_prefix,
+        )
+
     def _dotted_reference(self, ctx: Any) -> Reference:
         """Assemble a reference without flattening namespace separators."""
         names = [self._child(item) for item in ctx.qualifiedName()]
@@ -333,6 +390,21 @@ class SysMLAstListener(SysMLv2ParserListener):
             items.append(item)
         return items
 
+    def _direct_source_items(self, ctx: Any) -> List[SourceElement]:
+        """Return typed direct children in grammar source order.
+
+        ``metadataBody`` has two brace alternatives with different child
+        production names.  Inspecting its direct parse-tree children keeps
+        their source order without flattening nested metadata bodies or
+        introducing a grammar-specific text scanner.
+        """
+        items: List[SourceElement] = []
+        for child in ctx.children or []:
+            item = self._child(child)
+            if isinstance(item, SourceElement):
+                items.append(item)
+        return items
+
     def node_for(self, tree: Any) -> SourceElement:
         """Return the AST node assembled for a walked parser context.
 
@@ -362,6 +434,21 @@ class SysMLAstListener(SysMLv2ParserListener):
     # Names, references, and declarations
     # ------------------------------------------------------------------
 
+    def exitPrefixMetadataFeature(self, ctx: SysMLv2Parser.PrefixMetadataFeatureContext) -> None:
+        """Pass a ``#`` metadata feature prefix through its wrapper."""
+        self._pass(ctx, ctx.ownedFeatureTyping())
+
+    def exitPrefixMetadataUsage(self, ctx: SysMLv2Parser.PrefixMetadataUsageContext) -> None:
+        """Pass a ``#`` metadata usage prefix through its wrapper."""
+        self._pass(ctx, ctx.ownedFeatureTyping())
+
+    def exitPrefixMetadataMember(self, ctx: SysMLv2Parser.PrefixMetadataMemberContext) -> None:
+        """Pass the selected ``#`` metadata prefix alternative."""
+        child = ctx.prefixMetadataFeature() or ctx.prefixMetadataUsage()
+        if child is None:
+            raise ValueError("prefixMetadataMember has no alternative")
+        self._pass(ctx, child)
+
     def exitName(self, ctx: SysMLv2Parser.NameContext) -> None:
         """Record the source spelling of one grammar ``name``."""
         self.values[ctx] = self._text(ctx).strip()
@@ -384,6 +471,106 @@ class SysMLAstListener(SysMLv2ParserListener):
             QualifiedReference(
                 segments=[self._name_value(item) for item in ctx.name()],
                 is_absolute=ctx.DOLLAR() is not None,
+            ),
+        )
+
+    def exitAliasMember(self, ctx: SysMLv2Parser.AliasMemberContext) -> None:
+        """Assemble an alias member with its explicit names and target."""
+        self._store(ctx, self._alias_node(ctx, self._member_prefix(ctx.memberPrefix())))
+
+    def exitMembershipImport(self, ctx: SysMLv2Parser.MembershipImportContext) -> None:
+        """Assemble a membership import and its optional ``::*`` suffix."""
+        target = self._child(ctx.qualifiedName())
+        if not isinstance(target, QualifiedReference):
+            raise ValueError("membershipImport requires qualifiedName")
+        self._store(ctx, MembershipImport(target, is_all_members=ctx.STAR_STAR() is not None))
+
+    def exitNamespaceImportDirect(self, ctx: SysMLv2Parser.NamespaceImportDirectContext) -> None:
+        """Assemble the direct namespace wildcard used by filtered imports."""
+        target = self._child(ctx.qualifiedName())
+        if not isinstance(target, QualifiedReference):
+            raise ValueError("namespaceImportDirect requires qualifiedName")
+        self._store(ctx, NamespaceImport(target, is_recursive=ctx.STAR_STAR() is not None))
+
+    def exitNamespaceImport(self, ctx: SysMLv2Parser.NamespaceImportContext) -> None:
+        """Assemble a namespace wildcard or pass a filtered import package."""
+        if ctx.filterPackage() is not None:
+            self._pass(ctx, ctx.filterPackage())
+            return
+        target = self._child(ctx.qualifiedName())
+        if not isinstance(target, QualifiedReference):
+            raise ValueError("namespaceImport requires qualifiedName")
+        self._store(ctx, NamespaceImport(target, is_recursive=ctx.STAR_STAR() is not None))
+
+    def exitFilterPackageImportDeclaration(
+        self, ctx: SysMLv2Parser.FilterPackageImportDeclarationContext
+    ) -> None:
+        """Pass the direct import alternative inside a filtered package."""
+        child = ctx.membershipImport() or ctx.namespaceImportDirect()
+        if child is None:
+            raise ValueError("filterPackageImportDeclaration has no alternative")
+        self._pass(ctx, child)
+
+    def exitFilterPackageMember(self, ctx: SysMLv2Parser.FilterPackageMemberContext) -> None:
+        """Pass the typed expression enclosed by one filter bracket pair."""
+        expression = self._child(ctx.ownedExpression())
+        if not isinstance(expression, Expression):
+            raise ValueError("filterPackageMember requires ownedExpression")
+        self._pass(ctx, ctx.ownedExpression())
+
+    def exitFilterPackage(self, ctx: SysMLv2Parser.FilterPackageContext) -> None:
+        """Assemble a filtered import with ordered predicate expressions."""
+        declaration = self._child(ctx.filterPackageImportDeclaration())
+        filters = [self._child(item) for item in ctx.filterPackageMember()]
+        if not isinstance(declaration, ImportDeclaration) or not all(
+            isinstance(item, Expression) for item in filters
+        ):
+            raise ValueError("filterPackage has incomplete import or filter fields")
+        self._store(
+            ctx,
+            FilterPackage(
+                import_declaration=declaration,
+                filters=[item for item in filters if isinstance(item, Expression)],
+            ),
+        )
+
+    def exitImportDeclaration(self, ctx: SysMLv2Parser.ImportDeclarationContext) -> None:
+        """Pass the selected membership or namespace import alternative."""
+        child = ctx.membershipImport() or ctx.namespaceImport()
+        if child is None:
+            raise ValueError("importDeclaration has no alternative")
+        self._pass(ctx, child)
+
+    def exitImportRule(self, ctx: SysMLv2Parser.ImportRuleContext) -> None:
+        """Assemble visibility, ``all``, declaration, and relationship body."""
+        declaration = self._child(ctx.importDeclaration())
+        body = self._child(ctx.relationshipBody())
+        if not isinstance(declaration, ImportDeclaration) or not isinstance(body, RelationshipBody):
+            raise ValueError("importRule has incomplete required fields")
+        self._store(
+            ctx,
+            ImportRule(
+                import_declaration=declaration,
+                relationship_body=body,
+                visibility=(
+                    self._text(ctx.visibilityIndicator()).strip()
+                    if ctx.visibilityIndicator() is not None
+                    else None
+                ),
+                is_all=ctx.ALL() is not None,
+            ),
+        )
+
+    def exitElementFilterMember(self, ctx: SysMLv2Parser.ElementFilterMemberContext) -> None:
+        """Assemble a package filter member from its typed expression."""
+        expression = self._child(ctx.ownedExpression())
+        if not isinstance(expression, Expression):
+            raise ValueError("elementFilterMember requires ownedExpression")
+        self._store(
+            ctx,
+            ElementFilterMember(
+                expression=expression,
+                member_prefix=self._member_prefix(ctx.memberPrefix()),
             ),
         )
 
@@ -781,6 +968,70 @@ class SysMLAstListener(SysMLv2ParserListener):
                 is_reference=bool(ref and ref.REF()),
                 is_individual=ctx.INDIVIDUAL() is not None,
                 portion_kind=self._text(ctx.portionKind()).strip() if ctx.portionKind() else None,
+                extension_keywords=[
+                    self._text(item).strip() for item in ctx.usageExtensionKeyword()
+                ],
+            ),
+        )
+
+    def exitBasicDefinitionPrefix(self, ctx: SysMLv2Parser.BasicDefinitionPrefixContext) -> None:
+        """Record the selected ``abstract`` or ``variation`` definition prefix."""
+        self.values[ctx] = self._text(ctx).strip()
+
+    def exitDefinitionExtensionKeyword(
+        self, ctx: SysMLv2Parser.DefinitionExtensionKeywordContext
+    ) -> None:
+        """Record one definition extension keyword without flattening its owner."""
+        self.values[ctx] = self._text(ctx).strip()
+
+    def exitDefinitionPrefix(self, ctx: SysMLv2Parser.DefinitionPrefixContext) -> None:
+        """Assemble the shared non-occurrence definition prefix."""
+        basic = (
+            self._text(ctx.basicDefinitionPrefix()).strip() if ctx.basicDefinitionPrefix() else None
+        )
+        self._store(
+            ctx,
+            DefinitionPrefix(
+                basic_definition_keyword=basic,
+                extension_keywords=[
+                    self._text(item).strip() for item in ctx.definitionExtensionKeyword()
+                ],
+            ),
+        )
+
+    def exitRefPrefix(self, ctx: SysMLv2Parser.RefPrefixContext) -> None:
+        """Record the token spelling of the generic reference prefix."""
+        self.values[ctx] = self._text(ctx).strip()
+
+    def exitBasicUsagePrefix(self, ctx: SysMLv2Parser.BasicUsagePrefixContext) -> None:
+        """Record the generic usage prefix before its optional ``ref`` token."""
+        self.values[ctx] = self._text(ctx).strip()
+
+    def exitUnextendedUsagePrefix(self, ctx: SysMLv2Parser.UnextendedUsagePrefixContext) -> None:
+        """Record the unextended usage prefix alternative."""
+        self.values[ctx] = self._text(ctx).strip()
+
+    def exitUsageExtensionKeyword(self, ctx: SysMLv2Parser.UsageExtensionKeywordContext) -> None:
+        """Record one usage extension keyword in source order."""
+        self.values[ctx] = self._text(ctx).strip()
+
+    def exitUsagePrefix(self, ctx: SysMLv2Parser.UsagePrefixContext) -> None:
+        """Assemble the generic prefix used by attributes and references."""
+        unextended = ctx.unextendedUsagePrefix()
+        basic = unextended.basicUsagePrefix() if unextended else None
+        ref = basic.refPrefix() if basic and basic.refPrefix() else None
+        direction = (
+            self._text(ref.featureDirection()).strip() if ref and ref.featureDirection() else None
+        )
+        self._store(
+            ctx,
+            UsagePrefix(
+                feature_direction=direction,
+                is_derived=bool(ref and ref.DERIVED()),
+                is_abstract=bool(ref and ref.ABSTRACT()),
+                is_variation=bool(ref and ref.VARIATION()),
+                is_constant=bool(ref and ref.CONSTANT()),
+                is_reference=bool(basic and basic.REF()),
                 extension_keywords=[
                     self._text(item).strip() for item in ctx.usageExtensionKeyword()
                 ],
@@ -1621,7 +1872,11 @@ class SysMLAstListener(SysMLv2ParserListener):
 
     def exitRelationshipBody(self, ctx: SysMLv2Parser.RelationshipBodyContext) -> None:
         """Preserve relationship-body syntax as an explicit non-state node."""
-        self._store(ctx, RelationshipBody(self._text(ctx).strip()))
+        # The enclosing AST node owns indentation when it renders a nested
+        # body.  Retaining absolute source indentation here would make a
+        # second parse of canonical output change this field and break AST
+        # equality for otherwise identical models.
+        self._store(ctx, RelationshipBody(_relative_source(self._text(ctx))))
 
     def exitInitialNodeMember(self, ctx: SysMLv2Parser.InitialNodeMemberContext) -> None:
         """Assemble an action body's initial ``first`` node member."""
@@ -2541,6 +2796,9 @@ class SysMLAstListener(SysMLv2ParserListener):
         self, ctx: SysMLv2Parser.DefinitionBodyItemContentContext
     ) -> None:
         """Pass the selected generic definition-body content alternative."""
+        if ctx.ALIAS() is not None:
+            self._store(ctx, self._alias_node(ctx))
+            return
         if ctx.VARIANT() is not None:
             element = self._child(ctx.variantUsageElement())
             if not isinstance(element, SourceElement):
@@ -2556,8 +2814,10 @@ class SysMLAstListener(SysMLv2ParserListener):
     def exitVariantUsageElement(self, ctx: SysMLv2Parser.VariantUsageElementContext) -> None:
         """Pass a typed variant usage or retain an unimplemented non-state choice."""
         children = (
+            ctx.attributeUsage(),
             ctx.itemUsage(),
             ctx.partUsage(),
+            ctx.portUsage(),
             ctx.behaviorUsageElement(),
         )
         for child in children:
@@ -2566,14 +2826,31 @@ class SysMLAstListener(SysMLv2ParserListener):
                 return
         self._raw_store(ctx)
 
+    def exitNonOccurrenceUsageMember(
+        self, ctx: SysMLv2Parser.NonOccurrenceUsageMemberContext
+    ) -> None:
+        """Assemble a non-occurrence usage member and retain visibility."""
+        usage = self._child(ctx.nonOccurrenceUsageElement())
+        if not isinstance(usage, SourceElement):
+            raise ValueError("nonOccurrenceUsageMember requires a typed usage")
+        self._store(
+            ctx,
+            NonOccurrenceUsageMember(
+                usage=usage,
+                member_prefix=self._member_prefix(ctx.memberPrefix()),
+            ),
+        )
+
     def exitDefinitionBodyItem(self, ctx: SysMLv2Parser.DefinitionBodyItemContext) -> None:
         """Assemble a generic body item with its owned source/visibility fields."""
         if ctx.importRule():
-            self._raw_store(ctx.importRule())
+            import_rule = self._child(ctx.importRule())
+            if not isinstance(import_rule, ImportRule):
+                raise ValueError("definitionBodyItem import requires ImportRule")
             self._store(
                 ctx,
                 DefinitionBodyItem(
-                    element=self._child(ctx.importRule()),
+                    element=import_rule,
                     member_prefix=None,
                     source_succession=None,
                 ),
@@ -2631,6 +2908,133 @@ class SysMLAstListener(SysMLv2ParserListener):
             raise ValueError("partDefinition has incomplete required fields")
         self._store(ctx, PartDefinition(prefix, definition))
 
+    def exitOccurrenceDefinition(self, ctx: SysMLv2Parser.OccurrenceDefinitionContext) -> None:
+        """Assemble the generic ``occurrence def`` production."""
+        prefix = self._child(ctx.occurrenceDefinitionPrefix())
+        definition = self._child(ctx.definition())
+        if not isinstance(prefix, OccurrenceDefinitionPrefix) or not isinstance(
+            definition, Definition
+        ):
+            raise ValueError("occurrenceDefinition has incomplete required fields")
+        self._store(ctx, OccurrenceDefinition(prefix, definition))
+
+    def exitIndividualDefinition(self, ctx: SysMLv2Parser.IndividualDefinitionContext) -> None:
+        """Assemble the distinct ``individual ... def`` alternative."""
+        definition = self._child(ctx.definition())
+        if not isinstance(definition, Definition):
+            raise ValueError("individualDefinition has incomplete required fields")
+        self._store(
+            ctx,
+            IndividualDefinition(
+                basic_definition_keyword=(
+                    self._text(ctx.basicDefinitionPrefix()).strip()
+                    if ctx.basicDefinitionPrefix()
+                    else None
+                ),
+                extension_keywords=[
+                    self._text(item).strip() for item in ctx.definitionExtensionKeyword()
+                ],
+                definition=definition,
+            ),
+        )
+
+    def exitItemDefinition(self, ctx: SysMLv2Parser.ItemDefinitionContext) -> None:
+        """Assemble an ``item def`` from its explicit grammar children."""
+        prefix = self._child(ctx.occurrenceDefinitionPrefix())
+        definition = self._child(ctx.definition())
+        if not isinstance(prefix, OccurrenceDefinitionPrefix) or not isinstance(
+            definition, Definition
+        ):
+            raise ValueError("itemDefinition has incomplete required fields")
+        self._store(ctx, ItemDefinition(prefix, definition))
+
+    def exitAttributeDefinition(self, ctx: SysMLv2Parser.AttributeDefinitionContext) -> None:
+        """Assemble an ``attribute def`` with its non-occurrence prefix."""
+        prefix = self._child(ctx.definitionPrefix())
+        definition = self._child(ctx.definition())
+        if not isinstance(prefix, DefinitionPrefix) or not isinstance(definition, Definition):
+            raise ValueError("attributeDefinition has incomplete required fields")
+        self._store(ctx, AttributeDefinition(prefix, definition))
+
+    def exitAttributeUsage(self, ctx: SysMLv2Parser.AttributeUsageContext) -> None:
+        """Assemble an ``attribute`` usage from prefix and generic completion."""
+        prefix = self._child(ctx.usagePrefix())
+        usage = self._child(ctx.usage())
+        if not isinstance(prefix, UsagePrefix) or not isinstance(usage, Usage):
+            raise ValueError("attributeUsage has incomplete required fields")
+        self._store(ctx, AttributeUsage(prefix, usage))
+
+    def _usage_prefix_from_ref_prefix(self, ctx: Any) -> UsagePrefix:
+        """Convert a ``refPrefix`` context into the shared typed prefix node."""
+        ref = ctx.refPrefix() if ctx is not None and hasattr(ctx, "refPrefix") else ctx
+        if not hasattr(ref, "featureDirection"):
+            return UsagePrefix(extension_keywords=[self._text(ctx).strip()])
+        return UsagePrefix(
+            feature_direction=(
+                self._text(ref.featureDirection()).strip()
+                if ref is not None and ref.featureDirection()
+                else None
+            ),
+            is_derived=bool(ref is not None and ref.DERIVED()),
+            is_abstract=bool(ref is not None and ref.ABSTRACT()),
+            is_variation=bool(ref is not None and ref.VARIATION()),
+            is_constant=bool(ref is not None and ref.CONSTANT()),
+        )
+
+    def exitReferenceUsage(self, ctx: SysMLv2Parser.ReferenceUsageContext) -> None:
+        """Assemble an explicit ``ref`` usage instead of a raw fragment."""
+        usage = self._child(ctx.usage())
+        prefix_context = ctx.refPrefix() or ctx.endUsagePrefix()
+        if not isinstance(usage, Usage) or prefix_context is None:
+            raise ValueError("referenceUsage has incomplete required fields")
+        self._store(ctx, ReferenceUsage(self._usage_prefix_from_ref_prefix(prefix_context), usage))
+
+    def exitDefaultReferenceUsage(self, ctx: SysMLv2Parser.DefaultReferenceUsageContext) -> None:
+        """Assemble a default reference usage without a second ``ref`` token."""
+        usage = self._child(ctx.usage())
+        prefix = ctx.refPrefix()
+        if not isinstance(usage, Usage) or prefix is None:
+            raise ValueError("defaultReferenceUsage has incomplete required fields")
+        self._store(
+            ctx,
+            ReferenceUsage(self._usage_prefix_from_ref_prefix(prefix), usage, False),
+        )
+
+    def exitConjugatedPortDefinitionMember(
+        self, ctx: SysMLv2Parser.ConjugatedPortDefinitionMemberContext
+    ) -> None:
+        """Pass the optional conjugated-port definition suffix."""
+        if (
+            ctx.conjugatedPortDefinition() is not None
+            and self._child(ctx.conjugatedPortDefinition()) is not None
+        ):
+            self._pass(ctx, ctx.conjugatedPortDefinition())
+
+    def exitConjugatedPortDefinition(
+        self, ctx: SysMLv2Parser.ConjugatedPortDefinitionContext
+    ) -> None:
+        """Pass the concrete conjugated-port definition marker."""
+        if ctx.portConjugation() is not None and self._child(ctx.portConjugation()) is not None:
+            self._pass(ctx, ctx.portConjugation())
+
+    def exitPortDefinition(self, ctx: SysMLv2Parser.PortDefinitionContext) -> None:
+        """Assemble a ``port def`` and preserve its conjugation suffix."""
+        prefix = self._child(ctx.definitionPrefix())
+        definition = self._child(ctx.definition())
+        conjugation = self._child(ctx.conjugatedPortDefinitionMember())
+        if not isinstance(prefix, DefinitionPrefix) or not isinstance(definition, Definition):
+            raise ValueError("portDefinition has incomplete required fields")
+        self._store(
+            ctx,
+            PortDefinition(
+                definition_prefix=prefix,
+                definition=definition,
+                conjugated_port_definition=conjugation
+                if isinstance(conjugation, ConjugatedPortTyping)
+                else None,
+            ),
+        )
+
     def exitUsage(self, ctx: SysMLv2Parser.UsageContext) -> None:
         """Assemble a generic usage declaration and completion body."""
         declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
@@ -2670,6 +3074,109 @@ class SysMLAstListener(SysMLv2ParserListener):
             raise ValueError("partUsage has incomplete required fields")
         self._store(ctx, PartUsage(prefix, usage))
 
+    def exitOccurrenceUsage(self, ctx: SysMLv2Parser.OccurrenceUsageContext) -> None:
+        """Assemble the generic ``occurrence`` usage alternative."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        usage = self._child(ctx.usage())
+        if not isinstance(prefix, OccurrenceUsagePrefix) or not isinstance(usage, Usage):
+            raise ValueError("occurrenceUsage has incomplete required fields")
+        self._store(ctx, OccurrenceUsage(prefix, usage))
+
+    def exitIndividualUsage(self, ctx: SysMLv2Parser.IndividualUsageContext) -> None:
+        """Assemble the distinct ``individual`` usage alternative."""
+        usage = self._child(ctx.usage())
+        if not isinstance(usage, Usage):
+            raise ValueError("individualUsage has incomplete required fields")
+        basic = ctx.basicUsagePrefix()
+        ref = basic.refPrefix() if basic and basic.refPrefix() else None
+        prefix = UsagePrefix(
+            feature_direction=(
+                self._text(ref.featureDirection()).strip()
+                if ref and ref.featureDirection()
+                else None
+            ),
+            is_derived=bool(ref and ref.DERIVED()),
+            is_abstract=bool(ref and ref.ABSTRACT()),
+            is_variation=bool(ref and ref.VARIATION()),
+            is_constant=bool(ref and ref.CONSTANT()),
+            is_reference=bool(basic and basic.REF()),
+        )
+        self._store(
+            ctx,
+            IndividualUsage(
+                basic_usage_prefix=prefix,
+                extension_keywords=[
+                    self._text(item).strip() for item in ctx.usageExtensionKeyword()
+                ],
+                usage=usage,
+            ),
+        )
+
+    def exitPortionUsage(self, ctx: SysMLv2Parser.PortionUsageContext) -> None:
+        """Assemble a ``snapshot`` or ``timeslice`` occurrence usage."""
+        usage = self._child(ctx.usage())
+        if not isinstance(usage, Usage):
+            raise ValueError("portionUsage has incomplete required fields")
+        basic = ctx.basicUsagePrefix()
+        ref = basic.refPrefix() if basic and basic.refPrefix() else None
+        prefix = OccurrenceUsagePrefix(
+            feature_direction=(
+                self._text(ref.featureDirection()).strip()
+                if ref and ref.featureDirection()
+                else None
+            ),
+            is_derived=bool(ref and ref.DERIVED()),
+            is_abstract=bool(ref and ref.ABSTRACT()),
+            is_variation=bool(ref and ref.VARIATION()),
+            is_constant=bool(ref and ref.CONSTANT()),
+            is_reference=bool(basic and basic.REF()),
+            is_individual=ctx.INDIVIDUAL() is not None,
+            portion_kind=self._text(ctx.portionKind()).strip(),
+            extension_keywords=[self._text(item).strip() for item in ctx.usageExtensionKeyword()],
+        )
+        self._store(ctx, PortionUsage(prefix, usage))
+
+    def exitEventOccurrenceUsage(self, ctx: SysMLv2Parser.EventOccurrenceUsageContext) -> None:
+        """Assemble the named and shorthand ``event`` occurrence forms."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        completion = self._child(ctx.usageCompletion())
+        reference = (
+            self._child(ctx.ownedReferenceSubsetting()) if ctx.ownedReferenceSubsetting() else None
+        )
+        specialization = (
+            self._child(ctx.featureSpecializationPart())
+            if ctx.featureSpecializationPart()
+            else None
+        )
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        if not isinstance(prefix, OccurrenceUsagePrefix) or not isinstance(completion, Usage):
+            raise ValueError("eventOccurrenceUsage has incomplete required fields")
+        self._store(
+            ctx,
+            EventOccurrenceUsage(
+                occurrence_usage_prefix=prefix,
+                usage=completion,
+                owned_reference_subsetting=reference if self._is_reference(reference) else None,
+                feature_specialization_part=(
+                    specialization
+                    if isinstance(specialization, FeatureSpecializationPart)
+                    else None
+                ),
+                occurrence=ctx.OCCURRENCE() is not None,
+                usage_declaration=declaration
+                if isinstance(declaration, UsageDeclaration)
+                else None,
+            ),
+        )
+
+    def exitPortUsage(self, ctx: SysMLv2Parser.PortUsageContext) -> None:
+        """Assemble a structured ``port`` usage."""
+        prefix = self._child(ctx.occurrenceUsagePrefix())
+        usage = self._child(ctx.usage())
+        if not isinstance(prefix, OccurrenceUsagePrefix) or not isinstance(usage, Usage):
+            raise ValueError("portUsage has incomplete required fields")
+        self._store(ctx, PortUsage(prefix, usage))
+
     def exitItemUsage(self, ctx: SysMLv2Parser.ItemUsageContext) -> None:
         """Assemble a structured ``item`` usage."""
         prefix = self._child(ctx.occurrenceUsagePrefix())
@@ -2701,7 +3208,15 @@ class SysMLAstListener(SysMLv2ParserListener):
 
     def exitStructureUsageElement(self, ctx: SysMLv2Parser.StructureUsageElementContext) -> None:
         """Pass typed structure usages or retain unrelated structure syntax."""
-        child = ctx.partUsage() or ctx.itemUsage()
+        child = (
+            ctx.occurrenceUsage()
+            or ctx.individualUsage()
+            or ctx.portionUsage()
+            or ctx.eventOccurrenceUsage()
+            or ctx.itemUsage()
+            or ctx.partUsage()
+            or ctx.portUsage()
+        )
         if child is not None:
             self._pass(ctx, child)
             return
@@ -2723,6 +3238,177 @@ class SysMLAstListener(SysMLv2ParserListener):
     # ------------------------------------------------------------------
     # Package/document containment
     # ------------------------------------------------------------------
+
+    def exitMetadataFeatureDeclaration(
+        self, ctx: SysMLv2Parser.MetadataFeatureDeclarationContext
+    ) -> None:
+        """Assemble metadata identification, typing operator, and type."""
+        identification = self._child(ctx.identification()) if ctx.identification() else None
+        owned_feature_typing = self._child(ctx.ownedFeatureTyping())
+        if not isinstance(owned_feature_typing, OwnedFeatureTyping):
+            raise ValueError("metadataFeatureDeclaration requires ownedFeatureTyping")
+        operator = None
+        if ctx.COLON() is not None:
+            operator = ":"
+        elif ctx.TYPED() is not None:
+            operator = "typed by"
+        if identification is not None and not isinstance(identification, Identification):
+            raise ValueError("metadataFeatureDeclaration identification was not assembled")
+        self._store(
+            ctx,
+            MetadataFeatureDeclaration(
+                owned_feature_typing=owned_feature_typing,
+                identification=identification
+                if isinstance(identification, Identification)
+                else None,
+                operator=operator,
+            ),
+        )
+
+    def exitMetadataBody(self, ctx: SysMLv2Parser.MetadataBodyContext) -> None:
+        """Assemble a metadata semicolon or ordered brace body."""
+        if ctx.SEMI() is not None:
+            self._store(ctx, MetadataBody(declaration_only=True))
+            return
+        expected_count = sum(
+            len(contexts)
+            for contexts in (
+                ctx.metadataBodyElement(),
+                ctx.definitionMember(),
+                ctx.metadataBodyUsageMember(),
+                ctx.aliasMember(),
+                ctx.importRule(),
+            )
+        )
+        items = self._direct_source_items(ctx)
+        if len(items) != expected_count:
+            raise ValueError("metadataBody contains an unassembled member")
+        self._store(ctx, MetadataBody(items=items))
+
+    def exitMetadataBodyElement(self, ctx: SysMLv2Parser.MetadataBodyElementContext) -> None:
+        """Pass one metadata body element alternative."""
+        child = (
+            ctx.nonFeatureMember()
+            or ctx.metadataBodyFeatureMember()
+            or ctx.aliasMember()
+            or ctx.importRule()
+        )
+        if child is None:
+            raise ValueError("metadataBodyElement has no alternative")
+        self._pass(ctx, child)
+
+    def exitMetadataBodyFeatureMember(
+        self, ctx: SysMLv2Parser.MetadataBodyFeatureMemberContext
+    ) -> None:
+        """Pass the concrete metadata body feature through its wrapper."""
+        self._pass(ctx, ctx.metadataBodyFeature())
+
+    def exitMetadataBodyFeature(self, ctx: SysMLv2Parser.MetadataBodyFeatureContext) -> None:
+        """Assemble a metadata feature with typed specialization and value fields."""
+        owned_redefinition = self._child(ctx.ownedRedefinition())
+        body = self._child(ctx.metadataBody())
+        specialization = (
+            self._child(ctx.featureSpecializationPart())
+            if ctx.featureSpecializationPart()
+            else None
+        )
+        value = self._child(ctx.valuePart()) if ctx.valuePart() else None
+        if not self._is_reference(owned_redefinition) or not isinstance(body, MetadataBody):
+            raise ValueError("metadataBodyFeature has incomplete required fields")
+        if specialization is not None and not isinstance(specialization, FeatureSpecializationPart):
+            raise ValueError("metadataBodyFeature specialization was not assembled")
+        if value is not None and not isinstance(value, ValuePart):
+            raise ValueError("metadataBodyFeature value was not assembled")
+        self._store(
+            ctx,
+            MetadataBodyFeature(
+                owned_redefinition=owned_redefinition,
+                body=body,
+                is_feature=ctx.FEATURE() is not None,
+                redefinition_operator=(
+                    ":>>"
+                    if ctx.COLON_GT_GT() is not None
+                    else "redefines"
+                    if ctx.REDEFINES() is not None
+                    else None
+                ),
+                feature_specialization_part=(
+                    specialization
+                    if isinstance(specialization, FeatureSpecializationPart)
+                    else None
+                ),
+                value_part=value if isinstance(value, ValuePart) else None,
+            ),
+        )
+
+    def exitMetadataBodyUsageMember(
+        self, ctx: SysMLv2Parser.MetadataBodyUsageMemberContext
+    ) -> None:
+        """Pass the concrete metadata body usage through its wrapper."""
+        self._pass(ctx, ctx.metadataBodyUsage())
+
+    def exitMetadataBodyUsage(self, ctx: SysMLv2Parser.MetadataBodyUsageContext) -> None:
+        """Assemble a metadata usage with typed specialization and value fields."""
+        owned_redefinition = self._child(ctx.ownedRedefinition())
+        body = self._child(ctx.metadataBody())
+        specialization = (
+            self._child(ctx.featureSpecializationPart())
+            if ctx.featureSpecializationPart()
+            else None
+        )
+        value = self._child(ctx.valuePart()) if ctx.valuePart() else None
+        if not self._is_reference(owned_redefinition) or not isinstance(body, MetadataBody):
+            raise ValueError("metadataBodyUsage has incomplete required fields")
+        if specialization is not None and not isinstance(specialization, FeatureSpecializationPart):
+            raise ValueError("metadataBodyUsage specialization was not assembled")
+        if value is not None and not isinstance(value, ValuePart):
+            raise ValueError("metadataBodyUsage value was not assembled")
+        self._store(
+            ctx,
+            MetadataBodyUsage(
+                owned_redefinition=owned_redefinition,
+                body=body,
+                is_ref=ctx.REF() is not None,
+                redefinition_operator=(
+                    ":>>"
+                    if ctx.COLON_GT_GT() is not None
+                    else "redefines"
+                    if ctx.REDEFINES() is not None
+                    else None
+                ),
+                feature_specialization_part=(
+                    specialization
+                    if isinstance(specialization, FeatureSpecializationPart)
+                    else None
+                ),
+                value_part=value if isinstance(value, ValuePart) else None,
+            ),
+        )
+
+    def exitMetadataFeature(self, ctx: SysMLv2Parser.MetadataFeatureContext) -> None:
+        """Assemble a model-owned metadata annotation from explicit children."""
+        declaration = self._child(ctx.metadataFeatureDeclaration())
+        body = self._child(ctx.metadataBody())
+        prefixes = [self._child(item) for item in ctx.prefixMetadataMember()]
+        about = [self._child(item) for item in ctx.annotation()]
+        if not isinstance(declaration, MetadataFeatureDeclaration) or not isinstance(
+            body, MetadataBody
+        ):
+            raise ValueError("metadataFeature has incomplete required fields")
+        if not all(isinstance(item, OwnedFeatureTyping) for item in prefixes):
+            raise ValueError("metadataFeature prefix metadata was not assembled")
+        if not all(isinstance(item, QualifiedReference) for item in about):
+            raise ValueError("metadataFeature about annotation was not assembled")
+        self._store(
+            ctx,
+            MetadataFeature(
+                declaration=declaration,
+                body=body,
+                keyword="@" if ctx.AT_SIGN() is not None else "metadata",
+                about=[item for item in about if isinstance(item, QualifiedReference)],
+                prefix_metadata=[item for item in prefixes if isinstance(item, OwnedFeatureTyping)],
+            ),
+        )
 
     def exitPackageDeclaration(self, ctx: SysMLv2Parser.PackageDeclarationContext) -> None:
         """Pass package identification through the keyword wrapper."""
@@ -2768,7 +3454,7 @@ class SysMLAstListener(SysMLv2ParserListener):
 
     def exitAnnotatingElement(self, ctx: SysMLv2Parser.AnnotatingElementContext) -> None:
         """Pass comment/documentation annotations or retain unrelated metadata."""
-        child = ctx.comment() or ctx.documentation()
+        child = ctx.comment() or ctx.documentation() or ctx.metadataFeature()
         if child is not None:
             self._pass(ctx, child)
         else:
@@ -2779,6 +3465,11 @@ class SysMLAstListener(SysMLv2ParserListener):
         child = (
             ctx.stateDefinition()
             or ctx.partDefinition()
+            or ctx.itemDefinition()
+            or ctx.occurrenceDefinition()
+            or ctx.individualDefinition()
+            or ctx.attributeDefinition()
+            or ctx.portDefinition()
             or ctx.actionDefinition()
             or ctx.package()
             or ctx.libraryPackage()
@@ -2793,6 +3484,13 @@ class SysMLAstListener(SysMLv2ParserListener):
         self, ctx: SysMLv2Parser.NonOccurrenceUsageElementContext
     ) -> None:
         """Preserve non-occurrence usage syntax at the compatibility boundary."""
+        child = ctx.referenceUsage() or ctx.defaultReferenceUsage() or ctx.attributeUsage()
+        if child is not None:
+            if self._child(child) is not None:
+                self._pass(ctx, child)
+            else:
+                self._raw_store(ctx)
+            return
         self._raw_store(ctx)
 
     def exitUsageElement(self, ctx: SysMLv2Parser.UsageElementContext) -> None:
@@ -2825,10 +3523,16 @@ class SysMLAstListener(SysMLv2ParserListener):
 
     def exitNonBehaviorBodyItem(self, ctx: SysMLv2Parser.NonBehaviorBodyItemContext) -> None:
         """Pass nested definitions or preserve non-state body syntax."""
-        if ctx.definitionMember():
+        if ctx.importRule():
+            self._pass(ctx, ctx.importRule())
+        elif ctx.aliasMember():
+            self._pass(ctx, ctx.aliasMember())
+        elif ctx.definitionMember():
             self._pass(ctx, ctx.definitionMember())
         elif ctx.structureUsageMember():
             self._pass(ctx, ctx.structureUsageMember())
+        elif ctx.nonOccurrenceUsageMember():
+            self._pass(ctx, ctx.nonOccurrenceUsageMember())
         else:
             self._raw_store(ctx)
 
@@ -2853,9 +3557,12 @@ class SysMLAstListener(SysMLv2ParserListener):
         )
         if child is None:
             raise ValueError("packageBodyElement has no alternative")
-        if ctx.packageMember():
+        if self._child(child) is not None:
             self._pass(ctx, child)
         else:
+            # Parser recovery can expose an incomplete dispatcher context;
+            # retain that malformed fragment without affecting valid typed
+            # package members.
             self._raw_store(ctx)
 
     def exitPackageBody(self, ctx: SysMLv2Parser.PackageBodyContext) -> None:

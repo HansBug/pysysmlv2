@@ -652,18 +652,18 @@
                     {
                       "__class__": "EntryTransitionMember",
                       "guard": {
-                        "__class__": "FeatureChainExpression",
-                        "member": {
-                          "__class__": "QualifiedReference",
-                          "is_absolute": false,
-                          "segments": [
-                            "isStarting"
-                          ],
-                          "separator": "::"
-                        },
-                        "target": {
-                          "__class__": "UnaryExpression",
-                          "operand": {
+                        "__class__": "UnaryExpression",
+                        "operand": {
+                          "__class__": "FeatureChainExpression",
+                          "member": {
+                            "__class__": "QualifiedReference",
+                            "is_absolute": false,
+                            "segments": [
+                              "isStarting"
+                            ],
+                            "separator": "::"
+                          },
+                          "target": {
                             "__class__": "FeatureReferenceExpression",
                             "reference": {
                               "__class__": "QualifiedReference",
@@ -673,9 +673,9 @@
                               ],
                               "separator": "::"
                             }
-                          },
-                          "operator": "not "
-                        }
+                          }
+                        },
+                        "operator": "not "
                       },
                       "member_prefix": null,
                       "target": {
@@ -736,9 +736,66 @@
                       "declaration_only": false,
                       "items": [
                         {
-                          "__class__": "RawElement",
-                          "member_prefix": "",
-                          "source_text": "out attribute isStarting : Boolean;"
+                          "__class__": "NonOccurrenceUsageMember",
+                          "member_prefix": null,
+                          "usage": {
+                            "__class__": "AttributeUsage",
+                            "usage": {
+                              "__class__": "Usage",
+                              "body": {
+                                "__class__": "DefinitionBody",
+                                "declaration_only": true,
+                                "items": []
+                              },
+                              "declaration": {
+                                "__class__": "UsageDeclaration",
+                                "identification": {
+                                  "__class__": "Identification",
+                                  "declared_name": "isStarting",
+                                  "short_name": null
+                                },
+                                "specialization": {
+                                  "__class__": "FeatureSpecializationPart",
+                                  "multiplicity_text": null,
+                                  "specializations": [
+                                    {
+                                      "__class__": "FeatureSpecialization",
+                                      "operator": ":",
+                                      "references": [
+                                        {
+                                          "__class__": "OwnedFeatureTyping",
+                                          "reference": {
+                                            "__class__": "DottedQualifiedReference",
+                                            "qualified_names": [
+                                              {
+                                                "__class__": "QualifiedReference",
+                                                "is_absolute": false,
+                                                "segments": [
+                                                  "Boolean"
+                                                ],
+                                                "separator": "::"
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              },
+                              "value_part": null
+                            },
+                            "usage_prefix": {
+                              "__class__": "UsagePrefix",
+                              "extension_keywords": [],
+                              "feature_direction": "out",
+                              "is_abstract": false,
+                              "is_constant": false,
+                              "is_derived": false,
+                              "is_reference": false,
+                              "is_variation": false
+                            }
+                          }
                         }
                       ]
                     },
@@ -1376,9 +1433,30 @@
         {
           "__class__": "PackageMember",
           "element": {
-            "__class__": "RawElement",
-            "member_prefix": "",
-            "source_text": "item def TurnOn;"
+            "__class__": "ItemDefinition",
+            "definition": {
+              "__class__": "Definition",
+              "body": {
+                "__class__": "DefinitionBody",
+                "declaration_only": true,
+                "items": []
+              },
+              "declaration": {
+                "__class__": "DefinitionDeclaration",
+                "identification": {
+                  "__class__": "Identification",
+                  "declared_name": "TurnOn",
+                  "short_name": null
+                },
+                "subclassification": null
+              }
+            },
+            "occurrence_definition_prefix": {
+              "__class__": "OccurrenceDefinitionPrefix",
+              "basic_definition_keyword": null,
+              "extension_keywords": [],
+              "is_individual": false
+            }
           },
           "member_prefix": null
         },
@@ -1410,9 +1488,37 @@
                   "__class__": "StructureUsageMember",
                   "member_prefix": null,
                   "structure_usage": {
-                    "__class__": "RawElement",
-                    "member_prefix": "",
-                    "source_text": "port commPort;"
+                    "__class__": "PortUsage",
+                    "occurrence_usage_prefix": {
+                      "__class__": "OccurrenceUsagePrefix",
+                      "extension_keywords": [],
+                      "feature_direction": null,
+                      "is_abstract": false,
+                      "is_constant": false,
+                      "is_derived": false,
+                      "is_individual": false,
+                      "is_reference": false,
+                      "is_variation": false,
+                      "portion_kind": null
+                    },
+                    "usage": {
+                      "__class__": "Usage",
+                      "body": {
+                        "__class__": "DefinitionBody",
+                        "declaration_only": true,
+                        "items": []
+                      },
+                      "declaration": {
+                        "__class__": "UsageDeclaration",
+                        "identification": {
+                          "__class__": "Identification",
+                          "declared_name": "commPort",
+                          "short_name": null
+                        },
+                        "specialization": null
+                      },
+                      "value_part": null
+                    }
                   }
                 },
                 {
@@ -1751,22 +1857,164 @@
               "is_parallel": false,
               "state_body_members": [
                 {
-                  "__class__": "RawElement",
-                  "member_prefix": "",
-                  "source_text": "in attribute isInitOff : Boolean;"
+                  "__class__": "NonOccurrenceUsageMember",
+                  "member_prefix": null,
+                  "usage": {
+                    "__class__": "AttributeUsage",
+                    "usage": {
+                      "__class__": "Usage",
+                      "body": {
+                        "__class__": "DefinitionBody",
+                        "declaration_only": true,
+                        "items": []
+                      },
+                      "declaration": {
+                        "__class__": "UsageDeclaration",
+                        "identification": {
+                          "__class__": "Identification",
+                          "declared_name": "isInitOff",
+                          "short_name": null
+                        },
+                        "specialization": {
+                          "__class__": "FeatureSpecializationPart",
+                          "multiplicity_text": null,
+                          "specializations": [
+                            {
+                              "__class__": "FeatureSpecialization",
+                              "operator": ":",
+                              "references": [
+                                {
+                                  "__class__": "OwnedFeatureTyping",
+                                  "reference": {
+                                    "__class__": "DottedQualifiedReference",
+                                    "qualified_names": [
+                                      {
+                                        "__class__": "QualifiedReference",
+                                        "is_absolute": false,
+                                        "segments": [
+                                          "Boolean"
+                                        ],
+                                        "separator": "::"
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "value_part": null
+                    },
+                    "usage_prefix": {
+                      "__class__": "UsagePrefix",
+                      "extension_keywords": [],
+                      "feature_direction": "in",
+                      "is_abstract": false,
+                      "is_constant": false,
+                      "is_derived": false,
+                      "is_reference": false,
+                      "is_variation": false
+                    }
+                  }
                 },
                 {
-                  "__class__": "RawElement",
-                  "member_prefix": "",
-                  "source_text": "in attribute isEnabled : Boolean;"
+                  "__class__": "NonOccurrenceUsageMember",
+                  "member_prefix": null,
+                  "usage": {
+                    "__class__": "AttributeUsage",
+                    "usage": {
+                      "__class__": "Usage",
+                      "body": {
+                        "__class__": "DefinitionBody",
+                        "declaration_only": true,
+                        "items": []
+                      },
+                      "declaration": {
+                        "__class__": "UsageDeclaration",
+                        "identification": {
+                          "__class__": "Identification",
+                          "declared_name": "isEnabled",
+                          "short_name": null
+                        },
+                        "specialization": {
+                          "__class__": "FeatureSpecializationPart",
+                          "multiplicity_text": null,
+                          "specializations": [
+                            {
+                              "__class__": "FeatureSpecialization",
+                              "operator": ":",
+                              "references": [
+                                {
+                                  "__class__": "OwnedFeatureTyping",
+                                  "reference": {
+                                    "__class__": "DottedQualifiedReference",
+                                    "qualified_names": [
+                                      {
+                                        "__class__": "QualifiedReference",
+                                        "is_absolute": false,
+                                        "segments": [
+                                          "Boolean"
+                                        ],
+                                        "separator": "::"
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "value_part": null
+                    },
+                    "usage_prefix": {
+                      "__class__": "UsagePrefix",
+                      "extension_keywords": [],
+                      "feature_direction": "in",
+                      "is_abstract": false,
+                      "is_constant": false,
+                      "is_derived": false,
+                      "is_reference": false,
+                      "is_variation": false
+                    }
+                  }
                 },
                 {
                   "__class__": "StructureUsageMember",
                   "member_prefix": null,
                   "structure_usage": {
-                    "__class__": "RawElement",
-                    "member_prefix": "",
-                    "source_text": "port commPort;"
+                    "__class__": "PortUsage",
+                    "occurrence_usage_prefix": {
+                      "__class__": "OccurrenceUsagePrefix",
+                      "extension_keywords": [],
+                      "feature_direction": null,
+                      "is_abstract": false,
+                      "is_constant": false,
+                      "is_derived": false,
+                      "is_individual": false,
+                      "is_reference": false,
+                      "is_variation": false,
+                      "portion_kind": null
+                    },
+                    "usage": {
+                      "__class__": "Usage",
+                      "body": {
+                        "__class__": "DefinitionBody",
+                        "declaration_only": true,
+                        "items": []
+                      },
+                      "declaration": {
+                        "__class__": "UsageDeclaration",
+                        "identification": {
+                          "__class__": "Identification",
+                          "declared_name": "commPort",
+                          "short_name": null
+                        },
+                        "specialization": null
+                      },
+                      "value_part": null
+                    }
                   }
                 },
                 {
@@ -2256,9 +2504,30 @@
         {
           "__class__": "PackageMember",
           "element": {
-            "__class__": "RawElement",
-            "member_prefix": "",
-            "source_text": "item def TimeoutSignal;"
+            "__class__": "ItemDefinition",
+            "definition": {
+              "__class__": "Definition",
+              "body": {
+                "__class__": "DefinitionBody",
+                "declaration_only": true,
+                "items": []
+              },
+              "declaration": {
+                "__class__": "DefinitionDeclaration",
+                "identification": {
+                  "__class__": "Identification",
+                  "declared_name": "TimeoutSignal",
+                  "short_name": null
+                },
+                "subclassification": null
+              }
+            },
+            "occurrence_definition_prefix": {
+              "__class__": "OccurrenceDefinitionPrefix",
+              "basic_definition_keyword": null,
+              "extension_keywords": [],
+              "is_individual": false
+            }
           },
           "member_prefix": null
         },
@@ -2287,22 +2556,110 @@
               "is_parallel": false,
               "state_body_members": [
                 {
-                  "__class__": "RawElement",
-                  "member_prefix": "",
-                  "source_text": "in attribute isInitOff;"
+                  "__class__": "NonOccurrenceUsageMember",
+                  "member_prefix": null,
+                  "usage": {
+                    "__class__": "AttributeUsage",
+                    "usage": {
+                      "__class__": "Usage",
+                      "body": {
+                        "__class__": "DefinitionBody",
+                        "declaration_only": true,
+                        "items": []
+                      },
+                      "declaration": {
+                        "__class__": "UsageDeclaration",
+                        "identification": {
+                          "__class__": "Identification",
+                          "declared_name": "isInitOff",
+                          "short_name": null
+                        },
+                        "specialization": null
+                      },
+                      "value_part": null
+                    },
+                    "usage_prefix": {
+                      "__class__": "UsagePrefix",
+                      "extension_keywords": [],
+                      "feature_direction": "in",
+                      "is_abstract": false,
+                      "is_constant": false,
+                      "is_derived": false,
+                      "is_reference": false,
+                      "is_variation": false
+                    }
+                  }
                 },
                 {
-                  "__class__": "RawElement",
-                  "member_prefix": "",
-                  "source_text": "in attribute isEnabled;"
+                  "__class__": "NonOccurrenceUsageMember",
+                  "member_prefix": null,
+                  "usage": {
+                    "__class__": "AttributeUsage",
+                    "usage": {
+                      "__class__": "Usage",
+                      "body": {
+                        "__class__": "DefinitionBody",
+                        "declaration_only": true,
+                        "items": []
+                      },
+                      "declaration": {
+                        "__class__": "UsageDeclaration",
+                        "identification": {
+                          "__class__": "Identification",
+                          "declared_name": "isEnabled",
+                          "short_name": null
+                        },
+                        "specialization": null
+                      },
+                      "value_part": null
+                    },
+                    "usage_prefix": {
+                      "__class__": "UsagePrefix",
+                      "extension_keywords": [],
+                      "feature_direction": "in",
+                      "is_abstract": false,
+                      "is_constant": false,
+                      "is_derived": false,
+                      "is_reference": false,
+                      "is_variation": false
+                    }
+                  }
                 },
                 {
                   "__class__": "StructureUsageMember",
                   "member_prefix": null,
                   "structure_usage": {
-                    "__class__": "RawElement",
-                    "member_prefix": "",
-                    "source_text": "port commPort;"
+                    "__class__": "PortUsage",
+                    "occurrence_usage_prefix": {
+                      "__class__": "OccurrenceUsagePrefix",
+                      "extension_keywords": [],
+                      "feature_direction": null,
+                      "is_abstract": false,
+                      "is_constant": false,
+                      "is_derived": false,
+                      "is_individual": false,
+                      "is_reference": false,
+                      "is_variation": false,
+                      "portion_kind": null
+                    },
+                    "usage": {
+                      "__class__": "Usage",
+                      "body": {
+                        "__class__": "DefinitionBody",
+                        "declaration_only": true,
+                        "items": []
+                      },
+                      "declaration": {
+                        "__class__": "UsageDeclaration",
+                        "identification": {
+                          "__class__": "Identification",
+                          "declared_name": "commPort",
+                          "short_name": null
+                        },
+                        "specialization": null
+                      },
+                      "value_part": null
+                    }
                   }
                 },
                 {
@@ -2892,9 +3249,30 @@
         {
           "__class__": "PackageMember",
           "element": {
-            "__class__": "RawElement",
-            "member_prefix": "",
-            "source_text": "item def TimeoutSignal;"
+            "__class__": "ItemDefinition",
+            "definition": {
+              "__class__": "Definition",
+              "body": {
+                "__class__": "DefinitionBody",
+                "declaration_only": true,
+                "items": []
+              },
+              "declaration": {
+                "__class__": "DefinitionDeclaration",
+                "identification": {
+                  "__class__": "Identification",
+                  "declared_name": "TimeoutSignal",
+                  "short_name": null
+                },
+                "subclassification": null
+              }
+            },
+            "occurrence_definition_prefix": {
+              "__class__": "OccurrenceDefinitionPrefix",
+              "basic_definition_keyword": null,
+              "extension_keywords": [],
+              "is_individual": false
+            }
           },
           "member_prefix": null
         },
@@ -2923,22 +3301,110 @@
               "is_parallel": false,
               "state_body_members": [
                 {
-                  "__class__": "RawElement",
-                  "member_prefix": "",
-                  "source_text": "in attribute isInitOff;"
+                  "__class__": "NonOccurrenceUsageMember",
+                  "member_prefix": null,
+                  "usage": {
+                    "__class__": "AttributeUsage",
+                    "usage": {
+                      "__class__": "Usage",
+                      "body": {
+                        "__class__": "DefinitionBody",
+                        "declaration_only": true,
+                        "items": []
+                      },
+                      "declaration": {
+                        "__class__": "UsageDeclaration",
+                        "identification": {
+                          "__class__": "Identification",
+                          "declared_name": "isInitOff",
+                          "short_name": null
+                        },
+                        "specialization": null
+                      },
+                      "value_part": null
+                    },
+                    "usage_prefix": {
+                      "__class__": "UsagePrefix",
+                      "extension_keywords": [],
+                      "feature_direction": "in",
+                      "is_abstract": false,
+                      "is_constant": false,
+                      "is_derived": false,
+                      "is_reference": false,
+                      "is_variation": false
+                    }
+                  }
                 },
                 {
-                  "__class__": "RawElement",
-                  "member_prefix": "",
-                  "source_text": "in attribute isEnabled;"
+                  "__class__": "NonOccurrenceUsageMember",
+                  "member_prefix": null,
+                  "usage": {
+                    "__class__": "AttributeUsage",
+                    "usage": {
+                      "__class__": "Usage",
+                      "body": {
+                        "__class__": "DefinitionBody",
+                        "declaration_only": true,
+                        "items": []
+                      },
+                      "declaration": {
+                        "__class__": "UsageDeclaration",
+                        "identification": {
+                          "__class__": "Identification",
+                          "declared_name": "isEnabled",
+                          "short_name": null
+                        },
+                        "specialization": null
+                      },
+                      "value_part": null
+                    },
+                    "usage_prefix": {
+                      "__class__": "UsagePrefix",
+                      "extension_keywords": [],
+                      "feature_direction": "in",
+                      "is_abstract": false,
+                      "is_constant": false,
+                      "is_derived": false,
+                      "is_reference": false,
+                      "is_variation": false
+                    }
+                  }
                 },
                 {
                   "__class__": "StructureUsageMember",
                   "member_prefix": null,
                   "structure_usage": {
-                    "__class__": "RawElement",
-                    "member_prefix": "",
-                    "source_text": "port commPort;"
+                    "__class__": "PortUsage",
+                    "occurrence_usage_prefix": {
+                      "__class__": "OccurrenceUsagePrefix",
+                      "extension_keywords": [],
+                      "feature_direction": null,
+                      "is_abstract": false,
+                      "is_constant": false,
+                      "is_derived": false,
+                      "is_individual": false,
+                      "is_reference": false,
+                      "is_variation": false,
+                      "portion_kind": null
+                    },
+                    "usage": {
+                      "__class__": "Usage",
+                      "body": {
+                        "__class__": "DefinitionBody",
+                        "declaration_only": true,
+                        "items": []
+                      },
+                      "declaration": {
+                        "__class__": "UsageDeclaration",
+                        "identification": {
+                          "__class__": "Identification",
+                          "declared_name": "commPort",
+                          "short_name": null
+                        },
+                        "specialization": null
+                      },
+                      "value_part": null
+                    }
                   }
                 },
                 {
@@ -3387,9 +3853,30 @@
         {
           "__class__": "PackageMember",
           "element": {
-            "__class__": "RawElement",
-            "member_prefix": "",
-            "source_text": "item def Abort;"
+            "__class__": "ItemDefinition",
+            "definition": {
+              "__class__": "Definition",
+              "body": {
+                "__class__": "DefinitionBody",
+                "declaration_only": true,
+                "items": []
+              },
+              "declaration": {
+                "__class__": "DefinitionDeclaration",
+                "identification": {
+                  "__class__": "Identification",
+                  "declared_name": "Abort",
+                  "short_name": null
+                },
+                "subclassification": null
+              }
+            },
+            "occurrence_definition_prefix": {
+              "__class__": "OccurrenceDefinitionPrefix",
+              "basic_definition_keyword": null,
+              "extension_keywords": [],
+              "is_individual": false
+            }
           },
           "member_prefix": null
         },
@@ -3421,9 +3908,37 @@
                   "__class__": "StructureUsageMember",
                   "member_prefix": null,
                   "structure_usage": {
-                    "__class__": "RawElement",
-                    "member_prefix": "",
-                    "source_text": "port commPort;"
+                    "__class__": "PortUsage",
+                    "occurrence_usage_prefix": {
+                      "__class__": "OccurrenceUsagePrefix",
+                      "extension_keywords": [],
+                      "feature_direction": null,
+                      "is_abstract": false,
+                      "is_constant": false,
+                      "is_derived": false,
+                      "is_individual": false,
+                      "is_reference": false,
+                      "is_variation": false,
+                      "portion_kind": null
+                    },
+                    "usage": {
+                      "__class__": "Usage",
+                      "body": {
+                        "__class__": "DefinitionBody",
+                        "declaration_only": true,
+                        "items": []
+                      },
+                      "declaration": {
+                        "__class__": "UsageDeclaration",
+                        "identification": {
+                          "__class__": "Identification",
+                          "declared_name": "commPort",
+                          "short_name": null
+                        },
+                        "specialization": null
+                      },
+                      "value_part": null
+                    }
                   }
                 },
                 {

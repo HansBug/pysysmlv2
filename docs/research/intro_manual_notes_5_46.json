@@ -83,10 +83,10 @@
   ],
   "18": [
     {"anchor": "connection def PressureSeat", "text": "A connection definition is a part definition whose usages are connections between its ends."},
-    {"anchor": "connect [0..1] lugBoltJoints to [1] wheel.w.mountingHoles", "text": "Cross multiplicities constrain the number of connections, rather than end values. E.g., for every TireBead there must be a PressureSeat connection to exactly one TireMountingRim."},
+    {"anchor": "end [1] part bead", "text": "Cross multiplicities constrain the number of connections, rather than end values. E.g., for every TireBead there must be a PressureSeat connection to exactly one TireMountingRim."},
     {"anchor": "connection : PressureSeat", "text": "A connection is a usage of a connection definition, which connects two other features."},
-    {"anchor": "connect [0..1] lugBoltJoints to [1] wheel.w.mountingHoles", "text": "If a connection definition is not specified, a generic connection definition (called Connection) is used."},
-    {"anchor": "connect bead references t.bead", "text": "Reference subsetting (references or :>) relates feature to a connector ends. “Dot” notation specifies paths to nested features."}
+    {"anchor": "connect [0..1] lugBoltJoints to [1] hub.h", "text": "If a connection definition is not specified, a generic connection definition (called Connection) is used."},
+    {"anchor": "connect bead references t.bead", "text": "Reference subsetting (references or ::>) relates feature to a connector ends. “Dot” notation specifies paths to nested features."}
   ],
   "20": [
     {"anchor": "port def FuelOutPort", "text": "A port definition defines features that can be made available via ports. (Replaces interface blocks in SysML v1)."},
@@ -170,7 +170,7 @@
   ],
   "38": [
     {"anchor": "then decide", "text": "A decision node (decide keyword) chooses exactly one successor to happen after it."},
-    {"anchor": "if monitor.batteryCharge < 100 then addCharge", "text": "A decision node is typically followed by one or more conditional successions (the last “if...then” can be replaced by “else”)."},
+    {"anchor": "if monitor.batteryCharge < 100 then addCharge", "text": "A decision node is typically followed by one or more conditional successions (the last “if … then” can be replaced by “else”)."},
     {"anchor": "then done", "text": "References the end of the action as the target of a succession."}
   ],
   "39": [
@@ -179,7 +179,7 @@
     {"anchor": "loop action charging", "text": "This is the body action, which is given the name charging. (The default name is body.)"},
     {"anchor": "then if monitor.charge < 100", "text": "An if action performs its body if a Boolean condition is true. (It can also have an else part, which is performed if the condition is false.)"},
     {"anchor": "} until charging.monitor.charge >= 100", "text": "until introduces a Boolean condition that terminates the loop when it is true."},
-    {"anchor": "then if monitor.charge < 100", "text": "If used in this way represents an action, not a succession."},
+    {"anchor": "then if monitor.charge < 100", "text": "if used in this way represents an action, not a succession."},
     {"anchor": "loop action charging", "text": "A loop action can also begin with while (instead of loop), introducing a Boolean condition that terminates the loop when it is false."}
   ],
   "40": [

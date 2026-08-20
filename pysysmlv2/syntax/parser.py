@@ -123,10 +123,31 @@ class _DiagnosticListener(ErrorListener):
         start_column = column + 1
         end_column = start_column
         token_text = getattr(offendingSymbol, "text", None)
+        if not token_text and e is not None:
+            start_index = getattr(e, "startIndex", -1)
+            input_stream = getattr(recognizer, "inputStream", None)
+            source_text = getattr(input_stream, "strdata", None)
+            current_index = getattr(input_stream, "index", -1)
+            if (
+                isinstance(source_text, str)
+                and isinstance(start_index, int)
+                and isinstance(current_index, int)
+                and 0 <= start_index <= current_index <= len(source_text)
+            ):
+                token_text = source_text[start_index:current_index]
         if token_text and token_text != "<EOF>":
-            end_column = start_column + len(token_text)
+            normalized_text = token_text.replace("\r\n", "\n").replace("\r", "\n")
+            lines = normalized_text.split("\n")
+            if len(lines) == 1:
+                end_column = start_column + len(lines[0])
+                end_line = line
+            else:
+                end_line = line + len(lines) - 1
+                end_column = len(lines[-1]) + 1
+        else:
+            end_line = line
         self.items.append(
-            Diagnostic("error", msg, line, start_column, line, end_column, self.source_path)
+            Diagnostic("error", msg, line, start_column, end_line, end_column, self.source_path)
         )
 
 
@@ -175,6 +196,46 @@ class ParseResult:
         return not any(item.severity == "error" for item in self.diagnostics)
 
 
+def _ordered_diagnostics(*groups: List[Diagnostic]) -> List[Diagnostic]:
+    """Merge diagnostic groups into stable source order.
+
+    ANTLR reports lexer and parser failures through separate listeners. A
+    simple listener concatenation can therefore place a later lexical failure
+    before an earlier parser failure. Sorting the combined records by their
+    source range preserves the public :class:`ParseResult` contract while the
+    final group/sequence keys keep ties deterministic.
+
+    :param groups: Diagnostic lists collected by independent listeners.
+    :type groups: list[pysysmlv2.syntax.parser.Diagnostic]
+    :return: Combined diagnostics ordered by source position.
+    :rtype: list[pysysmlv2.syntax.parser.Diagnostic]
+
+    Example::
+
+        >>> late = Diagnostic("error", "late", 2, 1, 2, 2)
+        >>> early = Diagnostic("error", "early", 1, 3, 1, 4)
+        >>> [item.message for item in _ordered_diagnostics([late], [early])]
+        ['early', 'late']
+    """
+    indexed = []
+    for group_index, group in enumerate(groups):
+        indexed.extend((item, group_index, item_index) for item_index, item in enumerate(group))
+    return [
+        item
+        for item, _, _ in sorted(
+            indexed,
+            key=lambda entry: (
+                entry[0].line,
+                entry[0].column,
+                entry[0].end_line,
+                entry[0].end_column,
+                entry[1],
+                entry[2],
+            ),
+        )
+    ]
+
+
 def parse(text: str, source_path: Optional[str] = None) -> ParseResult:
     """Parse SysML text with the generated ANTLR lexer/parser.
 
@@ -203,7 +264,7 @@ def parse(text: str, source_path: Optional[str] = None) -> ParseResult:
     parser.removeErrorListeners()
     parser.addErrorListener(parser_errors)
     tree = parser.rootNamespace()
-    diagnostics = lexer_errors.items + parser_errors.items
+    diagnostics = _ordered_diagnostics(lexer_errors.items, parser_errors.items)
     if diagnostics:
         ast = Model()
     else:
@@ -341,7 +402,7 @@ def parse_with_grammar_entry(
     except (AttributeError, TypeError) as error:
         raise ASTParseError(
             "Parser entry {!r} could not be invoked: {}".format(entry_name, error),
-            lexer_errors.items + parser_errors.items,
+            _ordered_diagnostics(lexer_errors.items, parser_errors.items),
         ) from error
 
     if force_finished:
@@ -359,7 +420,7 @@ def parse_with_grammar_entry(
                     source_path,
                 )
             )
-    diagnostics = lexer_errors.items + parser_errors.items
+    diagnostics = _ordered_diagnostics(lexer_errors.items, parser_errors.items)
     if diagnostics:
         raise ASTParseError(
             "Could not parse {!r}: {}".format(

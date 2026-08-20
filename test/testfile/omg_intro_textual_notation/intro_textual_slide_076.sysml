@@ -12,6 +12,7 @@ calc def Power {
     attribute drag = Cd * v;
     attribute friction = Cf * tm * v;
     // The calculation result expression must conform to the return type.
+    // There is no semicolon at the end of a result expression.
     whlpwr - drag - friction
 }
 calc def Acceleration { in tp: PowerValue; in tm : MassValue; in v: SpeedValue;

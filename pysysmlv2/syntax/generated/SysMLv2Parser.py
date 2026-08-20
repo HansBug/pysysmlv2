@@ -1939,49 +1939,10 @@ def serializedATN():
         0,
         1,
         0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
         3,
         0,
-        972,
+        962,
         8,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        3,
-        0,
-        979,
-        8,
-        0,
-        1,
-        0,
-        1,
         0,
         1,
         0,
@@ -2009,8 +1970,47 @@ def serializedATN():
         0,
         3,
         0,
-        995,
+        976,
         8,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        3,
+        0,
+        982,
+        8,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
         0,
         5,
         0,
@@ -10120,6 +10120,12 @@ def serializedATN():
         898,
         0,
         26,
+        2,
+        0,
+        191,
+        191,
+        210,
+        210,
         4,
         0,
         107,
@@ -10132,10 +10138,34 @@ def serializedATN():
         217,
         2,
         0,
-        191,
-        191,
-        210,
-        210,
+        179,
+        179,
+        213,
+        213,
+        3,
+        0,
+        194,
+        194,
+        198,
+        198,
+        203,
+        203,
+        2,
+        0,
+        199,
+        199,
+        201,
+        201,
+        4,
+        0,
+        186,
+        186,
+        189,
+        189,
+        206,
+        206,
+        208,
+        208,
         3,
         0,
         174,
@@ -10144,36 +10174,6 @@ def serializedATN():
         178,
         187,
         187,
-        4,
-        0,
-        186,
-        186,
-        189,
-        189,
-        206,
-        206,
-        208,
-        208,
-        2,
-        0,
-        199,
-        199,
-        201,
-        201,
-        3,
-        0,
-        194,
-        194,
-        198,
-        198,
-        203,
-        203,
-        2,
-        0,
-        179,
-        179,
-        213,
-        213,
         3,
         0,
         76,
@@ -13072,9 +13072,9 @@ def serializedATN():
         909,
         916,
         3,
+        2,
+        1,
         0,
-        0,
-        14,
         910,
         911,
         7,
@@ -13084,9 +13084,9 @@ def serializedATN():
         911,
         916,
         3,
-        2,
-        1,
         0,
+        0,
+        16,
         912,
         913,
         5,
@@ -13144,13 +13144,13 @@ def serializedATN():
         917,
         918,
         10,
-        27,
+        15,
         0,
         0,
         918,
         919,
-        5,
-        190,
+        7,
+        2,
         0,
         0,
         919,
@@ -13158,17 +13158,17 @@ def serializedATN():
         3,
         0,
         0,
-        28,
+        15,
         920,
         921,
         10,
-        26,
+        14,
         0,
         0,
         921,
         922,
-        5,
-        78,
+        7,
+        3,
         0,
         0,
         922,
@@ -13176,17 +13176,17 @@ def serializedATN():
         3,
         0,
         0,
-        27,
+        15,
         923,
         924,
         10,
-        25,
+        13,
         0,
         0,
         924,
         925,
-        5,
-        112,
+        7,
+        4,
         0,
         0,
         925,
@@ -13194,17 +13194,17 @@ def serializedATN():
         3,
         0,
         0,
-        26,
+        14,
         926,
         927,
         10,
-        24,
+        12,
         0,
         0,
         927,
         928,
         5,
-        12,
+        181,
         0,
         0,
         928,
@@ -13212,17 +13212,17 @@ def serializedATN():
         3,
         0,
         0,
-        25,
+        13,
         929,
         930,
         10,
-        23,
+        11,
         0,
         0,
         930,
         931,
+        7,
         5,
-        173,
         0,
         0,
         931,
@@ -13230,17 +13230,17 @@ def serializedATN():
         3,
         0,
         0,
-        24,
+        12,
         932,
         933,
         10,
-        22,
+        10,
         0,
         0,
         933,
         934,
-        5,
-        215,
+        7,
+        6,
         0,
         0,
         934,
@@ -13248,11 +13248,11 @@ def serializedATN():
         3,
         0,
         0,
-        23,
+        11,
         935,
         936,
         10,
-        21,
+        9,
         0,
         0,
         936,
@@ -13266,372 +13266,372 @@ def serializedATN():
         3,
         0,
         0,
-        22,
+        10,
         938,
         939,
-        10,
-        20,
-        0,
-        0,
-        939,
-        940,
-        7,
-        2,
-        0,
-        0,
-        940,
-        997,
-        3,
-        0,
-        0,
-        21,
-        941,
-        942,
-        10,
-        19,
-        0,
-        0,
-        942,
-        943,
-        7,
-        3,
-        0,
-        0,
-        943,
-        997,
-        3,
-        0,
-        0,
-        20,
-        944,
-        945,
-        10,
-        18,
-        0,
-        0,
-        945,
-        946,
-        5,
-        181,
-        0,
-        0,
-        946,
-        997,
-        3,
-        0,
-        0,
-        19,
-        947,
-        948,
-        10,
-        17,
-        0,
-        0,
-        948,
-        949,
-        7,
-        4,
-        0,
-        0,
-        949,
-        997,
-        3,
-        0,
-        0,
-        18,
-        950,
-        951,
-        10,
-        16,
-        0,
-        0,
-        951,
-        952,
-        7,
-        5,
-        0,
-        0,
-        952,
-        997,
-        3,
-        0,
-        0,
-        17,
-        953,
-        954,
-        10,
-        15,
-        0,
-        0,
-        954,
-        955,
-        7,
-        6,
-        0,
-        0,
-        955,
-        997,
-        3,
-        0,
-        0,
-        15,
-        956,
-        957,
-        10,
-        12,
-        0,
-        0,
-        957,
-        958,
-        7,
-        7,
-        0,
-        0,
-        958,
-        997,
-        3,
-        2,
-        1,
-        0,
-        959,
-        960,
-        10,
-        11,
-        0,
-        0,
-        960,
-        961,
-        5,
-        13,
-        0,
-        0,
-        961,
-        997,
-        3,
-        2,
-        1,
-        0,
-        962,
-        963,
-        10,
-        10,
-        0,
-        0,
-        963,
-        964,
-        5,
-        191,
-        0,
-        0,
-        964,
-        997,
-        3,
-        2,
-        1,
-        0,
-        965,
-        966,
-        10,
-        9,
-        0,
-        0,
-        966,
-        967,
-        5,
-        100,
-        0,
-        0,
-        967,
-        997,
-        3,
-        2,
-        1,
-        0,
-        968,
-        969,
         10,
         8,
         0,
         0,
-        969,
-        971,
+        939,
+        940,
         5,
-        211,
+        215,
         0,
         0,
-        970,
-        972,
-        3,
-        4,
-        2,
-        0,
-        971,
-        970,
-        1,
-        0,
-        0,
-        0,
-        971,
-        972,
-        1,
-        0,
-        0,
-        0,
-        972,
-        973,
-        1,
-        0,
-        0,
-        0,
-        973,
+        940,
         997,
-        5,
-        212,
+        3,
         0,
         0,
-        974,
-        975,
+        9,
+        941,
+        942,
         10,
         7,
         0,
         0,
-        975,
-        976,
+        942,
+        943,
+        5,
+        173,
+        0,
+        0,
+        943,
+        997,
+        3,
+        0,
+        0,
+        8,
+        944,
+        945,
+        10,
+        6,
+        0,
+        0,
+        945,
+        946,
+        5,
+        12,
+        0,
+        0,
+        946,
+        997,
+        3,
+        0,
+        0,
+        7,
+        947,
+        948,
+        10,
+        5,
+        0,
+        0,
+        948,
+        949,
+        5,
+        112,
+        0,
+        0,
+        949,
+        997,
+        3,
+        0,
+        0,
+        6,
+        950,
+        951,
+        10,
+        4,
+        0,
+        0,
+        951,
+        952,
+        5,
+        78,
+        0,
+        0,
+        952,
+        997,
+        3,
+        0,
+        0,
+        5,
+        953,
+        954,
+        10,
+        3,
+        0,
+        0,
+        954,
+        955,
+        5,
+        190,
+        0,
+        0,
+        955,
+        997,
+        3,
+        0,
+        0,
+        4,
+        956,
+        957,
+        10,
+        27,
+        0,
+        0,
+        957,
+        958,
+        5,
+        180,
+        0,
+        0,
+        958,
+        961,
+        3,
+        88,
+        44,
+        0,
+        959,
+        962,
+        3,
+        14,
+        7,
+        0,
+        960,
+        962,
+        3,
+        16,
+        8,
+        0,
+        961,
+        959,
+        1,
+        0,
+        0,
+        0,
+        961,
+        960,
+        1,
+        0,
+        0,
+        0,
+        962,
+        997,
+        1,
+        0,
+        0,
+        0,
+        963,
+        964,
+        10,
+        26,
+        0,
+        0,
+        964,
+        965,
+        5,
+        182,
+        0,
+        0,
+        965,
+        997,
+        3,
+        14,
+        7,
+        0,
+        966,
+        967,
+        10,
+        25,
+        0,
+        0,
+        967,
+        968,
+        5,
+        202,
+        0,
+        0,
+        968,
+        997,
+        3,
+        88,
+        44,
+        0,
+        969,
+        970,
+        10,
+        24,
+        0,
+        0,
+        970,
+        997,
+        3,
+        16,
+        8,
+        0,
+        971,
+        972,
+        10,
+        23,
+        0,
+        0,
+        972,
+        973,
         5,
         192,
         0,
         0,
-        976,
-        978,
+        973,
+        975,
         5,
         196,
         0,
         0,
-        977,
-        979,
+        974,
+        976,
         3,
         4,
         2,
         0,
-        978,
+        975,
+        974,
+        1,
+        0,
+        0,
+        0,
+        975,
+        976,
+        1,
+        0,
+        0,
+        0,
+        976,
         977,
         1,
         0,
         0,
         0,
-        978,
-        979,
-        1,
-        0,
-        0,
-        0,
-        979,
-        980,
-        1,
-        0,
-        0,
-        0,
-        980,
+        977,
         997,
         5,
         197,
         0,
         0,
+        978,
+        979,
+        10,
+        22,
+        0,
+        0,
+        979,
+        981,
+        5,
+        211,
+        0,
+        0,
+        980,
+        982,
+        3,
+        4,
+        2,
+        0,
+        981,
+        980,
+        1,
+        0,
+        0,
+        0,
         981,
         982,
-        10,
-        6,
+        1,
+        0,
         0,
         0,
         982,
-        997,
-        3,
-        16,
-        8,
+        983,
+        1,
+        0,
+        0,
         0,
         983,
-        984,
-        10,
-        5,
-        0,
-        0,
-        984,
-        985,
-        5,
-        202,
-        0,
-        0,
-        985,
         997,
-        3,
-        88,
-        44,
+        5,
+        212,
+        0,
+        0,
+        984,
+        985,
+        10,
+        21,
+        0,
+        0,
+        985,
+        986,
+        5,
+        100,
+        0,
         0,
         986,
-        987,
-        10,
-        4,
-        0,
-        0,
-        987,
-        988,
-        5,
-        182,
-        0,
-        0,
-        988,
         997,
         3,
-        14,
-        7,
+        2,
+        1,
+        0,
+        987,
+        988,
+        10,
+        20,
+        0,
+        0,
+        988,
+        989,
+        5,
+        191,
+        0,
         0,
         989,
+        997,
+        3,
+        2,
+        1,
+        0,
         990,
+        991,
         10,
-        3,
+        19,
         0,
         0,
-        990,
         991,
+        992,
         5,
-        180,
+        13,
         0,
-        0,
-        991,
-        994,
-        3,
-        88,
-        44,
         0,
         992,
-        995,
+        997,
         3,
-        14,
+        2,
+        1,
+        0,
+        993,
+        994,
+        10,
+        18,
+        0,
+        0,
+        994,
+        995,
         7,
-        0,
-        993,
-        995,
-        3,
-        16,
-        8,
-        0,
-        994,
-        992,
-        1,
-        0,
-        0,
-        0,
-        994,
-        993,
-        1,
-        0,
+        7,
         0,
         0,
         995,
         997,
+        3,
+        2,
         1,
-        0,
-        0,
         0,
         996,
         917,
@@ -13718,55 +13718,55 @@ def serializedATN():
         0,
         0,
         996,
-        959,
+        963,
         1,
         0,
         0,
         0,
         996,
-        962,
+        966,
         1,
         0,
         0,
         0,
         996,
-        965,
+        969,
         1,
         0,
         0,
         0,
         996,
-        968,
+        971,
         1,
         0,
         0,
         0,
         996,
-        974,
+        978,
         1,
         0,
         0,
         0,
         996,
-        981,
+        984,
         1,
         0,
         0,
         0,
         996,
-        983,
+        987,
         1,
         0,
         0,
         0,
         996,
-        986,
+        990,
         1,
         0,
         0,
         0,
         996,
-        989,
+        993,
         1,
         0,
         0,
@@ -39159,9 +39159,9 @@ def serializedATN():
         0,
         507,
         915,
-        971,
-        978,
-        994,
+        961,
+        975,
+        981,
         996,
         998,
         1008,
@@ -41298,6 +41298,15 @@ class SysMLv2Parser(Parser):
         def ELSE(self):
             return self.getToken(SysMLv2Parser.ELSE, 0)
 
+        def typeReference(self):
+            return self.getTypedRuleContext(SysMLv2Parser.TypeReferenceContext, 0)
+
+        def AT_SIGN(self):
+            return self.getToken(SysMLv2Parser.AT_SIGN, 0)
+
+        def AT_AT(self):
+            return self.getToken(SysMLv2Parser.AT_AT, 0)
+
         def PLUS(self):
             return self.getToken(SysMLv2Parser.PLUS, 0)
 
@@ -41310,53 +41319,29 @@ class SysMLv2Parser(Parser):
         def NOT(self):
             return self.getToken(SysMLv2Parser.NOT, 0)
 
-        def typeReference(self):
-            return self.getTypedRuleContext(SysMLv2Parser.TypeReferenceContext, 0)
-
-        def AT_SIGN(self):
-            return self.getToken(SysMLv2Parser.AT_SIGN, 0)
-
-        def AT_AT(self):
-            return self.getToken(SysMLv2Parser.AT_AT, 0)
-
         def ALL(self):
             return self.getToken(SysMLv2Parser.ALL, 0)
 
         def baseExpression(self):
             return self.getTypedRuleContext(SysMLv2Parser.BaseExpressionContext, 0)
 
-        def QUESTION_QUESTION(self):
-            return self.getToken(SysMLv2Parser.QUESTION_QUESTION, 0)
+        def STAR_STAR(self):
+            return self.getToken(SysMLv2Parser.STAR_STAR, 0)
 
-        def IMPLIES(self):
-            return self.getToken(SysMLv2Parser.IMPLIES, 0)
+        def CARET(self):
+            return self.getToken(SysMLv2Parser.CARET, 0)
 
-        def OR(self):
-            return self.getToken(SysMLv2Parser.OR, 0)
+        def STAR(self):
+            return self.getToken(SysMLv2Parser.STAR, 0)
 
-        def AND(self):
-            return self.getToken(SysMLv2Parser.AND, 0)
+        def SLASH(self):
+            return self.getToken(SysMLv2Parser.SLASH, 0)
 
-        def XOR(self):
-            return self.getToken(SysMLv2Parser.XOR, 0)
+        def PERCENT(self):
+            return self.getToken(SysMLv2Parser.PERCENT, 0)
 
-        def PIPE(self):
-            return self.getToken(SysMLv2Parser.PIPE, 0)
-
-        def AMP(self):
-            return self.getToken(SysMLv2Parser.AMP, 0)
-
-        def EQ_EQ(self):
-            return self.getToken(SysMLv2Parser.EQ_EQ, 0)
-
-        def BANG_EQ(self):
-            return self.getToken(SysMLv2Parser.BANG_EQ, 0)
-
-        def EQ_EQ_EQ(self):
-            return self.getToken(SysMLv2Parser.EQ_EQ_EQ, 0)
-
-        def BANG_EQ_EQ(self):
-            return self.getToken(SysMLv2Parser.BANG_EQ_EQ, 0)
+        def DOT_DOT(self):
+            return self.getToken(SysMLv2Parser.DOT_DOT, 0)
 
         def LT(self):
             return self.getToken(SysMLv2Parser.LT, 0)
@@ -41370,44 +41355,56 @@ class SysMLv2Parser(Parser):
         def GE(self):
             return self.getToken(SysMLv2Parser.GE, 0)
 
-        def DOT_DOT(self):
-            return self.getToken(SysMLv2Parser.DOT_DOT, 0)
+        def EQ_EQ(self):
+            return self.getToken(SysMLv2Parser.EQ_EQ, 0)
 
-        def STAR(self):
-            return self.getToken(SysMLv2Parser.STAR, 0)
+        def BANG_EQ(self):
+            return self.getToken(SysMLv2Parser.BANG_EQ, 0)
 
-        def SLASH(self):
-            return self.getToken(SysMLv2Parser.SLASH, 0)
+        def EQ_EQ_EQ(self):
+            return self.getToken(SysMLv2Parser.EQ_EQ_EQ, 0)
 
-        def PERCENT(self):
-            return self.getToken(SysMLv2Parser.PERCENT, 0)
+        def BANG_EQ_EQ(self):
+            return self.getToken(SysMLv2Parser.BANG_EQ_EQ, 0)
 
-        def STAR_STAR(self):
-            return self.getToken(SysMLv2Parser.STAR_STAR, 0)
+        def AMP(self):
+            return self.getToken(SysMLv2Parser.AMP, 0)
 
-        def CARET(self):
-            return self.getToken(SysMLv2Parser.CARET, 0)
+        def PIPE(self):
+            return self.getToken(SysMLv2Parser.PIPE, 0)
 
-        def ISTYPE(self):
-            return self.getToken(SysMLv2Parser.ISTYPE, 0)
+        def XOR(self):
+            return self.getToken(SysMLv2Parser.XOR, 0)
 
-        def HASTYPE(self):
-            return self.getToken(SysMLv2Parser.HASTYPE, 0)
+        def AND(self):
+            return self.getToken(SysMLv2Parser.AND, 0)
 
-        def AS(self):
-            return self.getToken(SysMLv2Parser.AS, 0)
+        def OR(self):
+            return self.getToken(SysMLv2Parser.OR, 0)
 
-        def META(self):
-            return self.getToken(SysMLv2Parser.META, 0)
+        def IMPLIES(self):
+            return self.getToken(SysMLv2Parser.IMPLIES, 0)
 
-        def LBRACK(self):
-            return self.getToken(SysMLv2Parser.LBRACK, 0)
+        def QUESTION_QUESTION(self):
+            return self.getToken(SysMLv2Parser.QUESTION_QUESTION, 0)
 
-        def RBRACK(self):
-            return self.getToken(SysMLv2Parser.RBRACK, 0)
+        def ARROW(self):
+            return self.getToken(SysMLv2Parser.ARROW, 0)
 
-        def sequenceExpressionList(self):
-            return self.getTypedRuleContext(SysMLv2Parser.SequenceExpressionListContext, 0)
+        def qualifiedName(self):
+            return self.getTypedRuleContext(SysMLv2Parser.QualifiedNameContext, 0)
+
+        def bodyExpression(self):
+            return self.getTypedRuleContext(SysMLv2Parser.BodyExpressionContext, 0)
+
+        def argumentList(self):
+            return self.getTypedRuleContext(SysMLv2Parser.ArgumentListContext, 0)
+
+        def DOT_QUESTION(self):
+            return self.getToken(SysMLv2Parser.DOT_QUESTION, 0)
+
+        def DOT(self):
+            return self.getToken(SysMLv2Parser.DOT, 0)
 
         def HASH(self):
             return self.getToken(SysMLv2Parser.HASH, 0)
@@ -41418,23 +41415,26 @@ class SysMLv2Parser(Parser):
         def RPAREN(self):
             return self.getToken(SysMLv2Parser.RPAREN, 0)
 
-        def argumentList(self):
-            return self.getTypedRuleContext(SysMLv2Parser.ArgumentListContext, 0)
+        def sequenceExpressionList(self):
+            return self.getTypedRuleContext(SysMLv2Parser.SequenceExpressionListContext, 0)
 
-        def DOT(self):
-            return self.getToken(SysMLv2Parser.DOT, 0)
+        def LBRACK(self):
+            return self.getToken(SysMLv2Parser.LBRACK, 0)
 
-        def qualifiedName(self):
-            return self.getTypedRuleContext(SysMLv2Parser.QualifiedNameContext, 0)
+        def RBRACK(self):
+            return self.getToken(SysMLv2Parser.RBRACK, 0)
 
-        def DOT_QUESTION(self):
-            return self.getToken(SysMLv2Parser.DOT_QUESTION, 0)
+        def META(self):
+            return self.getToken(SysMLv2Parser.META, 0)
 
-        def bodyExpression(self):
-            return self.getTypedRuleContext(SysMLv2Parser.BodyExpressionContext, 0)
+        def AS(self):
+            return self.getToken(SysMLv2Parser.AS, 0)
 
-        def ARROW(self):
-            return self.getToken(SysMLv2Parser.ARROW, 0)
+        def ISTYPE(self):
+            return self.getToken(SysMLv2Parser.ISTYPE, 0)
+
+        def HASTYPE(self):
+            return self.getToken(SysMLv2Parser.HASTYPE, 0)
 
         def getRuleIndex(self):
             return SysMLv2Parser.RULE_ownedExpression
@@ -41474,8 +41474,19 @@ class SysMLv2Parser(Parser):
                 self.state = 906
                 self.ownedExpression(28)
                 pass
-            elif token in [107, 199, 201, 217]:
+            elif token in [191, 210]:
                 self.state = 908
+                _la = self._input.LA(1)
+                if not (_la == 191 or _la == 210):
+                    self._errHandler.recoverInline(self)
+                else:
+                    self._errHandler.reportMatch(self)
+                    self.consume()
+                self.state = 909
+                self.typeReference()
+                pass
+            elif token in [107, 199, 201, 217]:
+                self.state = 910
                 _la = self._input.LA(1)
                 if not (
                     _la == 107
@@ -41485,19 +41496,8 @@ class SysMLv2Parser(Parser):
                 else:
                     self._errHandler.reportMatch(self)
                     self.consume()
-                self.state = 909
-                self.ownedExpression(14)
-                pass
-            elif token in [191, 210]:
-                self.state = 910
-                _la = self._input.LA(1)
-                if not (_la == 191 or _la == 210):
-                    self._errHandler.recoverInline(self)
-                else:
-                    self._errHandler.reportMatch(self)
-                    self.consume()
                 self.state = 911
-                self.typeReference()
+                self.ownedExpression(16)
                 pass
             elif token in [8]:
                 self.state = 912
@@ -41561,14 +41561,19 @@ class SysMLv2Parser(Parser):
                             localctx, _startState, self.RULE_ownedExpression
                         )
                         self.state = 917
-                        if not self.precpred(self._ctx, 27):
+                        if not self.precpred(self._ctx, 15):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 27)")
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 15)")
                         self.state = 918
-                        self.match(SysMLv2Parser.QUESTION_QUESTION)
+                        _la = self._input.LA(1)
+                        if not (_la == 179 or _la == 213):
+                            self._errHandler.recoverInline(self)
+                        else:
+                            self._errHandler.reportMatch(self)
+                            self.consume()
                         self.state = 919
-                        self.ownedExpression(28)
+                        self.ownedExpression(15)
                         pass
 
                     elif la_ == 2:
@@ -41579,14 +41584,19 @@ class SysMLv2Parser(Parser):
                             localctx, _startState, self.RULE_ownedExpression
                         )
                         self.state = 920
-                        if not self.precpred(self._ctx, 26):
+                        if not self.precpred(self._ctx, 14):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 26)")
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 14)")
                         self.state = 921
-                        self.match(SysMLv2Parser.IMPLIES)
+                        _la = self._input.LA(1)
+                        if not (((_la - 194) & ~0x3F) == 0 and ((1 << (_la - 194)) & 529) != 0):
+                            self._errHandler.recoverInline(self)
+                        else:
+                            self._errHandler.reportMatch(self)
+                            self.consume()
                         self.state = 922
-                        self.ownedExpression(27)
+                        self.ownedExpression(15)
                         pass
 
                     elif la_ == 3:
@@ -41597,14 +41607,19 @@ class SysMLv2Parser(Parser):
                             localctx, _startState, self.RULE_ownedExpression
                         )
                         self.state = 923
-                        if not self.precpred(self._ctx, 25):
+                        if not self.precpred(self._ctx, 13):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 25)")
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 13)")
                         self.state = 924
-                        self.match(SysMLv2Parser.OR)
+                        _la = self._input.LA(1)
+                        if not (_la == 199 or _la == 201):
+                            self._errHandler.recoverInline(self)
+                        else:
+                            self._errHandler.reportMatch(self)
+                            self.consume()
                         self.state = 925
-                        self.ownedExpression(26)
+                        self.ownedExpression(14)
                         pass
 
                     elif la_ == 4:
@@ -41615,14 +41630,14 @@ class SysMLv2Parser(Parser):
                             localctx, _startState, self.RULE_ownedExpression
                         )
                         self.state = 926
-                        if not self.precpred(self._ctx, 24):
+                        if not self.precpred(self._ctx, 12):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 24)")
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 12)")
                         self.state = 927
-                        self.match(SysMLv2Parser.AND)
+                        self.match(SysMLv2Parser.DOT_DOT)
                         self.state = 928
-                        self.ownedExpression(25)
+                        self.ownedExpression(13)
                         pass
 
                     elif la_ == 5:
@@ -41633,14 +41648,19 @@ class SysMLv2Parser(Parser):
                             localctx, _startState, self.RULE_ownedExpression
                         )
                         self.state = 929
-                        if not self.precpred(self._ctx, 23):
+                        if not self.precpred(self._ctx, 11):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 23)")
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 11)")
                         self.state = 930
-                        self.match(SysMLv2Parser.XOR)
+                        _la = self._input.LA(1)
+                        if not (((_la - 186) & ~0x3F) == 0 and ((1 << (_la - 186)) & 5242889) != 0):
+                            self._errHandler.recoverInline(self)
+                        else:
+                            self._errHandler.reportMatch(self)
+                            self.consume()
                         self.state = 931
-                        self.ownedExpression(24)
+                        self.ownedExpression(12)
                         pass
 
                     elif la_ == 6:
@@ -41651,14 +41671,19 @@ class SysMLv2Parser(Parser):
                             localctx, _startState, self.RULE_ownedExpression
                         )
                         self.state = 932
-                        if not self.precpred(self._ctx, 22):
+                        if not self.precpred(self._ctx, 10):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 22)")
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 10)")
                         self.state = 933
-                        self.match(SysMLv2Parser.PIPE)
+                        _la = self._input.LA(1)
+                        if not (((_la - 174) & ~0x3F) == 0 and ((1 << (_la - 174)) & 8217) != 0):
+                            self._errHandler.recoverInline(self)
+                        else:
+                            self._errHandler.reportMatch(self)
+                            self.consume()
                         self.state = 934
-                        self.ownedExpression(23)
+                        self.ownedExpression(11)
                         pass
 
                     elif la_ == 7:
@@ -41669,14 +41694,14 @@ class SysMLv2Parser(Parser):
                             localctx, _startState, self.RULE_ownedExpression
                         )
                         self.state = 935
-                        if not self.precpred(self._ctx, 21):
+                        if not self.precpred(self._ctx, 9):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 21)")
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 9)")
                         self.state = 936
                         self.match(SysMLv2Parser.AMP)
                         self.state = 937
-                        self.ownedExpression(22)
+                        self.ownedExpression(10)
                         pass
 
                     elif la_ == 8:
@@ -41687,19 +41712,14 @@ class SysMLv2Parser(Parser):
                             localctx, _startState, self.RULE_ownedExpression
                         )
                         self.state = 938
-                        if not self.precpred(self._ctx, 20):
+                        if not self.precpred(self._ctx, 8):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 20)")
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 8)")
                         self.state = 939
-                        _la = self._input.LA(1)
-                        if not (((_la - 174) & ~0x3F) == 0 and ((1 << (_la - 174)) & 8217) != 0):
-                            self._errHandler.recoverInline(self)
-                        else:
-                            self._errHandler.reportMatch(self)
-                            self.consume()
+                        self.match(SysMLv2Parser.PIPE)
                         self.state = 940
-                        self.ownedExpression(21)
+                        self.ownedExpression(9)
                         pass
 
                     elif la_ == 9:
@@ -41710,19 +41730,14 @@ class SysMLv2Parser(Parser):
                             localctx, _startState, self.RULE_ownedExpression
                         )
                         self.state = 941
-                        if not self.precpred(self._ctx, 19):
+                        if not self.precpred(self._ctx, 7):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 19)")
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 7)")
                         self.state = 942
-                        _la = self._input.LA(1)
-                        if not (((_la - 186) & ~0x3F) == 0 and ((1 << (_la - 186)) & 5242889) != 0):
-                            self._errHandler.recoverInline(self)
-                        else:
-                            self._errHandler.reportMatch(self)
-                            self.consume()
+                        self.match(SysMLv2Parser.XOR)
                         self.state = 943
-                        self.ownedExpression(20)
+                        self.ownedExpression(8)
                         pass
 
                     elif la_ == 10:
@@ -41733,14 +41748,14 @@ class SysMLv2Parser(Parser):
                             localctx, _startState, self.RULE_ownedExpression
                         )
                         self.state = 944
-                        if not self.precpred(self._ctx, 18):
+                        if not self.precpred(self._ctx, 6):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 18)")
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 6)")
                         self.state = 945
-                        self.match(SysMLv2Parser.DOT_DOT)
+                        self.match(SysMLv2Parser.AND)
                         self.state = 946
-                        self.ownedExpression(19)
+                        self.ownedExpression(7)
                         pass
 
                     elif la_ == 11:
@@ -41751,19 +41766,14 @@ class SysMLv2Parser(Parser):
                             localctx, _startState, self.RULE_ownedExpression
                         )
                         self.state = 947
-                        if not self.precpred(self._ctx, 17):
+                        if not self.precpred(self._ctx, 5):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 17)")
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 5)")
                         self.state = 948
-                        _la = self._input.LA(1)
-                        if not (_la == 199 or _la == 201):
-                            self._errHandler.recoverInline(self)
-                        else:
-                            self._errHandler.reportMatch(self)
-                            self.consume()
+                        self.match(SysMLv2Parser.OR)
                         self.state = 949
-                        self.ownedExpression(18)
+                        self.ownedExpression(6)
                         pass
 
                     elif la_ == 12:
@@ -41774,19 +41784,14 @@ class SysMLv2Parser(Parser):
                             localctx, _startState, self.RULE_ownedExpression
                         )
                         self.state = 950
-                        if not self.precpred(self._ctx, 16):
+                        if not self.precpred(self._ctx, 4):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 16)")
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 4)")
                         self.state = 951
-                        _la = self._input.LA(1)
-                        if not (((_la - 194) & ~0x3F) == 0 and ((1 << (_la - 194)) & 529) != 0):
-                            self._errHandler.recoverInline(self)
-                        else:
-                            self._errHandler.reportMatch(self)
-                            self.consume()
+                        self.match(SysMLv2Parser.IMPLIES)
                         self.state = 952
-                        self.ownedExpression(17)
+                        self.ownedExpression(5)
                         pass
 
                     elif la_ == 13:
@@ -41797,19 +41802,14 @@ class SysMLv2Parser(Parser):
                             localctx, _startState, self.RULE_ownedExpression
                         )
                         self.state = 953
-                        if not self.precpred(self._ctx, 15):
+                        if not self.precpred(self._ctx, 3):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 15)")
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 3)")
                         self.state = 954
-                        _la = self._input.LA(1)
-                        if not (_la == 179 or _la == 213):
-                            self._errHandler.recoverInline(self)
-                        else:
-                            self._errHandler.reportMatch(self)
-                            self.consume()
+                        self.match(SysMLv2Parser.QUESTION_QUESTION)
                         self.state = 955
-                        self.ownedExpression(15)
+                        self.ownedExpression(4)
                         pass
 
                     elif la_ == 14:
@@ -41820,19 +41820,28 @@ class SysMLv2Parser(Parser):
                             localctx, _startState, self.RULE_ownedExpression
                         )
                         self.state = 956
-                        if not self.precpred(self._ctx, 12):
+                        if not self.precpred(self._ctx, 27):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 12)")
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 27)")
                         self.state = 957
-                        _la = self._input.LA(1)
-                        if not (_la == 76 or _la == 90 or _la == 210):
-                            self._errHandler.recoverInline(self)
-                        else:
-                            self._errHandler.reportMatch(self)
-                            self.consume()
+                        self.match(SysMLv2Parser.ARROW)
                         self.state = 958
-                        self.typeReference()
+                        self.qualifiedName()
+                        self.state = 961
+                        self._errHandler.sync(self)
+                        token = self._input.LA(1)
+                        if token in [214]:
+                            self.state = 959
+                            self.bodyExpression()
+                            pass
+                        elif token in [196]:
+                            self.state = 960
+                            self.argumentList()
+                            pass
+                        else:
+                            raise NoViableAltException(self)
+
                         pass
 
                     elif la_ == 15:
@@ -41842,15 +41851,15 @@ class SysMLv2Parser(Parser):
                         self.pushNewRecursionContext(
                             localctx, _startState, self.RULE_ownedExpression
                         )
-                        self.state = 959
-                        if not self.precpred(self._ctx, 11):
+                        self.state = 963
+                        if not self.precpred(self._ctx, 26):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 11)")
-                        self.state = 960
-                        self.match(SysMLv2Parser.AS)
-                        self.state = 961
-                        self.typeReference()
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 26)")
+                        self.state = 964
+                        self.match(SysMLv2Parser.DOT_QUESTION)
+                        self.state = 965
+                        self.bodyExpression()
                         pass
 
                     elif la_ == 16:
@@ -41860,15 +41869,15 @@ class SysMLv2Parser(Parser):
                         self.pushNewRecursionContext(
                             localctx, _startState, self.RULE_ownedExpression
                         )
-                        self.state = 962
-                        if not self.precpred(self._ctx, 10):
+                        self.state = 966
+                        if not self.precpred(self._ctx, 25):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 10)")
-                        self.state = 963
-                        self.match(SysMLv2Parser.AT_AT)
-                        self.state = 964
-                        self.typeReference()
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 25)")
+                        self.state = 967
+                        self.match(SysMLv2Parser.DOT)
+                        self.state = 968
+                        self.qualifiedName()
                         pass
 
                     elif la_ == 17:
@@ -41878,15 +41887,13 @@ class SysMLv2Parser(Parser):
                         self.pushNewRecursionContext(
                             localctx, _startState, self.RULE_ownedExpression
                         )
-                        self.state = 965
-                        if not self.precpred(self._ctx, 9):
+                        self.state = 969
+                        if not self.precpred(self._ctx, 24):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 9)")
-                        self.state = 966
-                        self.match(SysMLv2Parser.META)
-                        self.state = 967
-                        self.typeReference()
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 24)")
+                        self.state = 970
+                        self.argumentList()
                         pass
 
                     elif la_ == 18:
@@ -41896,14 +41903,16 @@ class SysMLv2Parser(Parser):
                         self.pushNewRecursionContext(
                             localctx, _startState, self.RULE_ownedExpression
                         )
-                        self.state = 968
-                        if not self.precpred(self._ctx, 8):
+                        self.state = 971
+                        if not self.precpred(self._ctx, 23):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 8)")
-                        self.state = 969
-                        self.match(SysMLv2Parser.LBRACK)
-                        self.state = 971
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 23)")
+                        self.state = 972
+                        self.match(SysMLv2Parser.HASH)
+                        self.state = 973
+                        self.match(SysMLv2Parser.LPAREN)
+                        self.state = 975
                         self._errHandler.sync(self)
                         _la = self._input.LA(1)
                         if (
@@ -41918,11 +41927,11 @@ class SysMLv2Parser(Parser):
                             )
                             or (((_la - 210) & ~0x3F) == 0 and ((1 << (_la - 210)) & 16273) != 0)
                         ):
-                            self.state = 970
+                            self.state = 974
                             self.sequenceExpressionList()
 
-                        self.state = 973
-                        self.match(SysMLv2Parser.RBRACK)
+                        self.state = 977
+                        self.match(SysMLv2Parser.RPAREN)
                         pass
 
                     elif la_ == 19:
@@ -41932,16 +41941,14 @@ class SysMLv2Parser(Parser):
                         self.pushNewRecursionContext(
                             localctx, _startState, self.RULE_ownedExpression
                         )
-                        self.state = 974
-                        if not self.precpred(self._ctx, 7):
+                        self.state = 978
+                        if not self.precpred(self._ctx, 22):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 7)")
-                        self.state = 975
-                        self.match(SysMLv2Parser.HASH)
-                        self.state = 976
-                        self.match(SysMLv2Parser.LPAREN)
-                        self.state = 978
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 22)")
+                        self.state = 979
+                        self.match(SysMLv2Parser.LBRACK)
+                        self.state = 981
                         self._errHandler.sync(self)
                         _la = self._input.LA(1)
                         if (
@@ -41956,11 +41963,11 @@ class SysMLv2Parser(Parser):
                             )
                             or (((_la - 210) & ~0x3F) == 0 and ((1 << (_la - 210)) & 16273) != 0)
                         ):
-                            self.state = 977
+                            self.state = 980
                             self.sequenceExpressionList()
 
-                        self.state = 980
-                        self.match(SysMLv2Parser.RPAREN)
+                        self.state = 983
+                        self.match(SysMLv2Parser.RBRACK)
                         pass
 
                     elif la_ == 20:
@@ -41970,13 +41977,15 @@ class SysMLv2Parser(Parser):
                         self.pushNewRecursionContext(
                             localctx, _startState, self.RULE_ownedExpression
                         )
-                        self.state = 981
-                        if not self.precpred(self._ctx, 6):
+                        self.state = 984
+                        if not self.precpred(self._ctx, 21):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 6)")
-                        self.state = 982
-                        self.argumentList()
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 21)")
+                        self.state = 985
+                        self.match(SysMLv2Parser.META)
+                        self.state = 986
+                        self.typeReference()
                         pass
 
                     elif la_ == 21:
@@ -41986,15 +41995,15 @@ class SysMLv2Parser(Parser):
                         self.pushNewRecursionContext(
                             localctx, _startState, self.RULE_ownedExpression
                         )
-                        self.state = 983
-                        if not self.precpred(self._ctx, 5):
+                        self.state = 987
+                        if not self.precpred(self._ctx, 20):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 5)")
-                        self.state = 984
-                        self.match(SysMLv2Parser.DOT)
-                        self.state = 985
-                        self.qualifiedName()
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 20)")
+                        self.state = 988
+                        self.match(SysMLv2Parser.AT_AT)
+                        self.state = 989
+                        self.typeReference()
                         pass
 
                     elif la_ == 22:
@@ -42004,15 +42013,15 @@ class SysMLv2Parser(Parser):
                         self.pushNewRecursionContext(
                             localctx, _startState, self.RULE_ownedExpression
                         )
-                        self.state = 986
-                        if not self.precpred(self._ctx, 4):
+                        self.state = 990
+                        if not self.precpred(self._ctx, 19):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 4)")
-                        self.state = 987
-                        self.match(SysMLv2Parser.DOT_QUESTION)
-                        self.state = 988
-                        self.bodyExpression()
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 19)")
+                        self.state = 991
+                        self.match(SysMLv2Parser.AS)
+                        self.state = 992
+                        self.typeReference()
                         pass
 
                     elif la_ == 23:
@@ -42022,29 +42031,20 @@ class SysMLv2Parser(Parser):
                         self.pushNewRecursionContext(
                             localctx, _startState, self.RULE_ownedExpression
                         )
-                        self.state = 989
-                        if not self.precpred(self._ctx, 3):
+                        self.state = 993
+                        if not self.precpred(self._ctx, 18):
                             from antlr4.error.Errors import FailedPredicateException
 
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 3)")
-                        self.state = 990
-                        self.match(SysMLv2Parser.ARROW)
-                        self.state = 991
-                        self.qualifiedName()
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 18)")
                         self.state = 994
-                        self._errHandler.sync(self)
-                        token = self._input.LA(1)
-                        if token in [214]:
-                            self.state = 992
-                            self.bodyExpression()
-                            pass
-                        elif token in [196]:
-                            self.state = 993
-                            self.argumentList()
-                            pass
+                        _la = self._input.LA(1)
+                        if not (_la == 76 or _la == 90 or _la == 210):
+                            self._errHandler.recoverInline(self)
                         else:
-                            raise NoViableAltException(self)
-
+                            self._errHandler.reportMatch(self)
+                            self.consume()
+                        self.state = 995
+                        self.typeReference()
                         pass
 
                 self.state = 1000
@@ -71526,70 +71526,70 @@ class SysMLv2Parser(Parser):
 
     def ownedExpression_sempred(self, localctx: OwnedExpressionContext, predIndex: int):
         if predIndex == 0:
-            return self.precpred(self._ctx, 27)
-
-        if predIndex == 1:
-            return self.precpred(self._ctx, 26)
-
-        if predIndex == 2:
-            return self.precpred(self._ctx, 25)
-
-        if predIndex == 3:
-            return self.precpred(self._ctx, 24)
-
-        if predIndex == 4:
-            return self.precpred(self._ctx, 23)
-
-        if predIndex == 5:
-            return self.precpred(self._ctx, 22)
-
-        if predIndex == 6:
-            return self.precpred(self._ctx, 21)
-
-        if predIndex == 7:
-            return self.precpred(self._ctx, 20)
-
-        if predIndex == 8:
-            return self.precpred(self._ctx, 19)
-
-        if predIndex == 9:
-            return self.precpred(self._ctx, 18)
-
-        if predIndex == 10:
-            return self.precpred(self._ctx, 17)
-
-        if predIndex == 11:
-            return self.precpred(self._ctx, 16)
-
-        if predIndex == 12:
             return self.precpred(self._ctx, 15)
 
-        if predIndex == 13:
+        if predIndex == 1:
+            return self.precpred(self._ctx, 14)
+
+        if predIndex == 2:
+            return self.precpred(self._ctx, 13)
+
+        if predIndex == 3:
             return self.precpred(self._ctx, 12)
 
-        if predIndex == 14:
+        if predIndex == 4:
             return self.precpred(self._ctx, 11)
 
-        if predIndex == 15:
+        if predIndex == 5:
             return self.precpred(self._ctx, 10)
 
-        if predIndex == 16:
+        if predIndex == 6:
             return self.precpred(self._ctx, 9)
 
-        if predIndex == 17:
+        if predIndex == 7:
             return self.precpred(self._ctx, 8)
 
-        if predIndex == 18:
+        if predIndex == 8:
             return self.precpred(self._ctx, 7)
 
-        if predIndex == 19:
+        if predIndex == 9:
             return self.precpred(self._ctx, 6)
 
-        if predIndex == 20:
+        if predIndex == 10:
             return self.precpred(self._ctx, 5)
 
-        if predIndex == 21:
+        if predIndex == 11:
             return self.precpred(self._ctx, 4)
 
-        if predIndex == 22:
+        if predIndex == 12:
             return self.precpred(self._ctx, 3)
+
+        if predIndex == 13:
+            return self.precpred(self._ctx, 27)
+
+        if predIndex == 14:
+            return self.precpred(self._ctx, 26)
+
+        if predIndex == 15:
+            return self.precpred(self._ctx, 25)
+
+        if predIndex == 16:
+            return self.precpred(self._ctx, 24)
+
+        if predIndex == 17:
+            return self.precpred(self._ctx, 23)
+
+        if predIndex == 18:
+            return self.precpred(self._ctx, 22)
+
+        if predIndex == 19:
+            return self.precpred(self._ctx, 21)
+
+        if predIndex == 20:
+            return self.precpred(self._ctx, 20)
+
+        if predIndex == 21:
+            return self.precpred(self._ctx, 19)
+
+        if predIndex == 22:
+            return self.precpred(self._ctx, 18)

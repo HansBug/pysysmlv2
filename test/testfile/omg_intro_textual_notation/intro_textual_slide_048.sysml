@@ -1,6 +1,6 @@
 // A state definition is like a state machine in UML and SysML v1. It defines a behavioral state that can be exhibited by a system.
 state def VehicleStates {
-    // This indicates the initial state after entry is "off".
+    // This indicates the the initial state after entry is "off".
     first start then off;
     // A state definition can specify a set of discrete nested states.
     state off;

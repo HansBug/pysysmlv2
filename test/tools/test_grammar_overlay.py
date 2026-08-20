@@ -1,6 +1,7 @@
 """Regression tests for the generated SysML v2 grammar overlay."""
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -47,7 +48,7 @@ def test_manifest_records_automatic_upstream_and_effective_hashes():
             "describe": "v2026.05.0",
             "parser_sha256": "1" * 64,
         },
-        "overlay": "pysysmlv2-sysml-state-v1",
+        "overlay": grammar_overlay.OVERLAY_IDENTIFIER,
         "overlay_notes": list(grammar_overlay.OVERLAY_NOTES),
         "effective_parser_sha256": "2" * 64,
     }
@@ -83,3 +84,24 @@ def test_every_overlay_transformation_has_a_review_note_and_generated_comment():
     for item in grammar_overlay.OVERLAY_NOTES:
         marker = "[pysysmlv2 overlay: {}]".format(item["id"])
         assert marker in generated_text
+
+
+def test_target_transition_rule_remains_upstream_without_guard_first_overlay():
+    """Keep target shorthand trigger-first or guard-only at the grammar boundary."""
+    assert all(not item["id"].startswith("target-") for item in grammar_overlay.OVERLAY_NOTES)
+    assert all(
+        "targetTransitionUsage" not in before + after
+        for _, before, after in grammar_overlay._TRANSFORMATIONS
+    )
+
+    root = Path(grammar_overlay.__file__).parents[1]
+    generated = (root / "pysysmlv2/syntax/generated/SysMLv2Parser.g4").read_text(encoding="utf-8")
+    upstream = (root / "upstream/sysml-v2-grammar/grammar/SysMLv2Parser.g4").read_text(
+        encoding="utf-8"
+    )
+
+    def rule_body(text: str) -> str:
+        start = text.rfind("\ntargetTransitionUsage\n") + 1
+        return text[start:].split("\ntriggerActionMember\n", 1)[0]
+
+    assert rule_body(generated) == rule_body(upstream)

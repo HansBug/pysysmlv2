@@ -15,6 +15,6 @@ state healthStates {
     }
     accept MaintenanceDone
     then normal;
-    // DurationOf returns the time duration of an occurrence (the difference between its start and done times).
+    // DurationOf returns the time duration of an occurrence (the different between its start and done times).
     constraint { DurationOf(maintenance) <= 48 [h] }
 }

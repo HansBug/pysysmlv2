@@ -480,6 +480,187 @@ def test_listener_expression_normal_callbacks_and_operator_tokens():
     )
 
 
+def test_listener_metadata_callbacks_cover_typed_and_defensive_paths():
+    """Exercise metadata wrappers, alternatives, and validation branches."""
+    listener = _fake_listener()
+
+    owned_typing_context = _FakeContext()
+    listener.nodes[owned_typing_context] = _node("A", "featureTyping")
+    listener.exitPrefixMetadataUsage(_FakeContext(ownedFeatureTyping=owned_typing_context))
+    _error(
+        "exitPrefixMetadataMember",
+        _FakeContext(prefixMetadataFeature=None, prefixMetadataUsage=None),
+    )
+
+    listener.exitMetadataFeatureDeclaration(
+        _FakeContext(
+            ownedFeatureTyping=owned_typing_context,
+            identification=None,
+            COLON=None,
+            TYPED=_FakeToken(),
+        )
+    )
+    _error(
+        "exitMetadataFeatureDeclaration",
+        _FakeContext(ownedFeatureTyping=_FakeContext(), identification=None),
+    )
+    invalid_identification = _FakeContext()
+    listener.nodes[invalid_identification] = ast.RawElement("bad identification")
+    _error(
+        "exitMetadataFeatureDeclaration",
+        _FakeContext(
+            ownedFeatureTyping=owned_typing_context,
+            identification=invalid_identification,
+            COLON=None,
+            TYPED=None,
+        ),
+        (owned_typing_context, listener.node_for(owned_typing_context)),
+        (invalid_identification, ast.RawElement("bad identification")),
+    )
+
+    incomplete_metadata_body = _FakeContext(
+        SEMI=None,
+        metadataBodyElement=[_FakeContext()],
+        definitionMember=[],
+        metadataBodyUsageMember=[],
+        aliasMember=[],
+        importRule=[],
+    )
+    incomplete_metadata_body.children = []
+    _error("exitMetadataBody", incomplete_metadata_body)
+    _error(
+        "exitMetadataBodyElement",
+        _FakeContext(
+            nonFeatureMember=None,
+            metadataBodyFeatureMember=None,
+            aliasMember=None,
+            importRule=None,
+        ),
+    )
+
+    reference_context = _FakeContext()
+    body_context = _FakeContext()
+    listener.nodes[reference_context] = QualifiedReference(["A"])
+    listener.nodes[body_context] = ast.MetadataBody(declaration_only=True)
+    _error(
+        "exitMetadataBodyFeature",
+        _FakeContext(
+            ownedRedefinition=None,
+            metadataBody=body_context,
+            featureSpecializationPart=None,
+            valuePart=None,
+        ),
+        (body_context, ast.MetadataBody(declaration_only=True)),
+    )
+    bad_specialization = _FakeContext()
+    listener.nodes[bad_specialization] = ast.RawElement("bad specialization")
+    _error(
+        "exitMetadataBodyFeature",
+        _FakeContext(
+            ownedRedefinition=reference_context,
+            metadataBody=body_context,
+            featureSpecializationPart=bad_specialization,
+            valuePart=None,
+        ),
+        (reference_context, QualifiedReference(["A"])),
+        (body_context, ast.MetadataBody(declaration_only=True)),
+        (bad_specialization, ast.RawElement("bad specialization")),
+    )
+    bad_value = _FakeContext()
+    listener.nodes[bad_value] = ast.RawElement("bad value")
+    _error(
+        "exitMetadataBodyFeature",
+        _FakeContext(
+            ownedRedefinition=reference_context,
+            metadataBody=body_context,
+            featureSpecializationPart=None,
+            valuePart=bad_value,
+        ),
+        (reference_context, QualifiedReference(["A"])),
+        (body_context, ast.MetadataBody(declaration_only=True)),
+        (bad_value, ast.RawElement("bad value")),
+    )
+
+    _error(
+        "exitMetadataBodyUsage",
+        _FakeContext(
+            ownedRedefinition=None,
+            metadataBody=None,
+            featureSpecializationPart=None,
+            valuePart=None,
+        ),
+    )
+    _error(
+        "exitMetadataBodyUsage",
+        _FakeContext(
+            ownedRedefinition=reference_context,
+            metadataBody=body_context,
+            featureSpecializationPart=bad_specialization,
+            valuePart=None,
+        ),
+        (reference_context, QualifiedReference(["A"])),
+        (body_context, ast.MetadataBody(declaration_only=True)),
+        (bad_specialization, ast.RawElement("bad specialization")),
+    )
+    _error(
+        "exitMetadataBodyUsage",
+        _FakeContext(
+            ownedRedefinition=reference_context,
+            metadataBody=body_context,
+            featureSpecializationPart=None,
+            valuePart=bad_value,
+        ),
+        (reference_context, QualifiedReference(["A"])),
+        (body_context, ast.MetadataBody(declaration_only=True)),
+        (bad_value, ast.RawElement("bad value")),
+    )
+
+    declaration_context = _FakeContext()
+    body_context = _FakeContext()
+    listener.nodes[declaration_context] = ast.MetadataFeatureDeclaration(
+        listener.node_for(owned_typing_context)
+    )
+    listener.nodes[body_context] = ast.MetadataBody(declaration_only=True)
+    _error(
+        "exitMetadataFeature",
+        _FakeContext(
+            metadataFeatureDeclaration=None,
+            metadataBody=body_context,
+            prefixMetadataMember=[],
+            annotation=[],
+        ),
+        (body_context, ast.MetadataBody(declaration_only=True)),
+    )
+    bad_prefix = _FakeContext()
+    listener.nodes[bad_prefix] = ast.RawElement("bad prefix")
+    _error(
+        "exitMetadataFeature",
+        _FakeContext(
+            metadataFeatureDeclaration=declaration_context,
+            metadataBody=body_context,
+            prefixMetadataMember=[bad_prefix],
+            annotation=[],
+        ),
+        (declaration_context, listener.node_for(declaration_context)),
+        (body_context, ast.MetadataBody(declaration_only=True)),
+        (bad_prefix, ast.RawElement("bad prefix")),
+    )
+    bad_annotation = _FakeContext()
+    listener.nodes[bad_annotation] = ast.RawElement("bad annotation")
+    _error(
+        "exitMetadataFeature",
+        _FakeContext(
+            metadataFeatureDeclaration=declaration_context,
+            metadataBody=body_context,
+            prefixMetadataMember=[],
+            annotation=[bad_annotation],
+        ),
+        (declaration_context, listener.node_for(declaration_context)),
+        (body_context, ast.MetadataBody(declaration_only=True)),
+        (bad_annotation, ast.RawElement("bad annotation")),
+    )
+
+
 def test_listener_action_and_succession_validation_paths():
     """Exercise action-node, succession, and state-action callback guards."""
     error_callbacks = [
@@ -1535,3 +1716,193 @@ def test_listener_remaining_state_transition_and_containment_branches():
         (invalid_package_element_context, ast.ASTNode()),
     )
     listener.exitPackageBody(_FakeContext(SEMI=_FakeToken()))
+
+
+def test_listener_generic_definition_usage_guards_and_conjugated_port_passes():
+    """Cover defensive generic-node paths and optional conjugated-port dispatch."""
+    for callback, context in (
+        (
+            "exitNonOccurrenceUsageMember",
+            _FakeContext(nonOccurrenceUsageElement=_FakeContext()),
+        ),
+        (
+            "exitItemDefinition",
+            _FakeContext(occurrenceDefinitionPrefix=_FakeContext(), definition=_FakeContext()),
+        ),
+        (
+            "exitAttributeDefinition",
+            _FakeContext(definitionPrefix=_FakeContext(), definition=_FakeContext()),
+        ),
+        (
+            "exitAttributeUsage",
+            _FakeContext(usagePrefix=_FakeContext(), usage=_FakeContext()),
+        ),
+        (
+            "exitPortDefinition",
+            _FakeContext(definitionPrefix=_FakeContext(), definition=_FakeContext()),
+        ),
+        (
+            "exitPortUsage",
+            _FakeContext(occurrenceUsagePrefix=_FakeContext(), usage=_FakeContext()),
+        ),
+    ):
+        _error(callback, context)
+
+    listener = _fake_listener()
+    conjugated = ast.ConjugatedPortTyping(ast.QualifiedReference(["P"]))
+    conjugated_context = _FakeContext()
+    listener.nodes[conjugated_context] = conjugated
+    member_context = _FakeContext(conjugatedPortDefinition=conjugated_context)
+    listener.exitConjugatedPortDefinitionMember(member_context)
+    assert listener.node_for(member_context) == conjugated
+
+    port_conjugation_context = _FakeContext()
+    listener.nodes[port_conjugation_context] = conjugated
+    definition_context = _FakeContext(portConjugation=port_conjugation_context)
+    listener.exitConjugatedPortDefinition(definition_context)
+    assert listener.node_for(definition_context) == conjugated
+
+
+def test_listener_new_typed_callbacks_cover_invalid_context_and_prefix_fallbacks():
+    """Exercise the explicit error paths for the newly typed grammar entries."""
+    for callback, context in (
+        (
+            "exitOccurrenceDefinition",
+            _FakeContext(occurrenceDefinitionPrefix=_FakeContext(), definition=_FakeContext()),
+        ),
+        ("exitIndividualDefinition", _FakeContext(definition=_FakeContext())),
+        (
+            "exitReferenceUsage",
+            _FakeContext(usage=_FakeContext(), refPrefix=None, endUsagePrefix=None),
+        ),
+        ("exitDefaultReferenceUsage", _FakeContext(usage=_FakeContext(), refPrefix=None)),
+        (
+            "exitOccurrenceUsage",
+            _FakeContext(occurrenceUsagePrefix=_FakeContext(), usage=_FakeContext()),
+        ),
+        ("exitIndividualUsage", _FakeContext(usage=_FakeContext())),
+        ("exitPortionUsage", _FakeContext(usage=_FakeContext())),
+        (
+            "exitEventOccurrenceUsage",
+            _FakeContext(occurrenceUsagePrefix=_FakeContext(), usageCompletion=_FakeContext()),
+        ),
+    ):
+        _error(callback, context)
+
+    class _BareContext:
+        """Provide only source text for the extension-prefix fallback."""
+
+        start = None
+        stop = None
+
+        def getText(self):
+            return "extension"
+
+    listener = _fake_listener()
+    assert listener._usage_prefix_from_ref_prefix(_BareContext()).extension_keywords == [
+        "extension"
+    ]
+
+    # The selected child exists but has not been assembled, so the dispatcher
+    # must retain the enclosing non-occurrence element as raw syntax.
+    listener.exitNonOccurrenceUsageElement(
+        _FakeContext(referenceUsage=_FakeContext(), defaultReferenceUsage=None, attributeUsage=None)
+    )
+
+
+def test_listener_namespace_import_and_definition_dispatch_guards():
+    """Cover explicit namespace/import guards and the raw compatibility branch."""
+    listener = _fake_listener()
+
+    # An alias without an identification is a valid grammar alternative; the
+    # target and relationship body remain typed children.
+    target_context = _FakeContext()
+    body_context = _FakeContext()
+    listener.nodes[target_context] = ast.QualifiedReference(["Target"])
+    listener.nodes[body_context] = ast.RelationshipBody(";")
+    alias_context = _FakeContext(
+        name=[],
+        LT=None,
+        qualifiedName=target_context,
+        relationshipBody=body_context,
+        memberPrefix=_FakeContext(),
+    )
+    listener.exitAliasMember(alias_context)
+    assert listener.node_for(alias_context) == ast.AliasMember(
+        target=ast.QualifiedReference(["Target"]),
+        relationship_body=ast.RelationshipBody(";"),
+    )
+
+    # Every required child guard is explicit instead of silently creating a
+    # partially populated AST node.
+    for callback, context in (
+        (
+            "exitAliasMember",
+            _FakeContext(
+                name=[],
+                qualifiedName=None,
+                relationshipBody=None,
+                memberPrefix=_FakeContext(),
+            ),
+        ),
+        ("exitMembershipImport", _FakeContext(qualifiedName=None)),
+        ("exitNamespaceImportDirect", _FakeContext(qualifiedName=None)),
+        (
+            "exitNamespaceImport",
+            _FakeContext(filterPackage=None, qualifiedName=None),
+        ),
+        (
+            "exitFilterPackageImportDeclaration",
+            _FakeContext(membershipImport=None, namespaceImportDirect=None),
+        ),
+        ("exitFilterPackageMember", _FakeContext(ownedExpression=None)),
+        (
+            "exitFilterPackage",
+            _FakeContext(filterPackageImportDeclaration=None, filterPackageMember=[]),
+        ),
+        ("exitImportDeclaration", _FakeContext(membershipImport=None, namespaceImport=None)),
+        ("exitImportRule", _FakeContext(importDeclaration=None, relationshipBody=None)),
+        (
+            "exitElementFilterMember",
+            _FakeContext(ownedExpression=None, memberPrefix=_FakeContext()),
+        ),
+    ):
+        _error(callback, context)
+
+    # The generic body dispatcher still has an explicit, lossless fallback for
+    # grammar alternatives that do not yet have a typed node.
+    raw_context = _FakeContext(
+        ALIAS=None,
+        VARIANT=None,
+        definitionElement=None,
+        nonOccurrenceUsageElement=None,
+    )
+    listener.exitDefinitionBodyItemContent(raw_context)
+    assert isinstance(listener.node_for(raw_context), ast.RawElement)
+
+    listener.exitNonBehaviorBodyItem(
+        _FakeContext(
+            importRule=None,
+            aliasMember=None,
+            definitionMember=None,
+            structureUsageMember=None,
+            nonOccurrenceUsageMember=None,
+        )
+    )
+
+    # Import is a required typed child of a definition body item; a wrong
+    # listener value must fail rather than be treated as a generic element.
+    import_context = _FakeContext()
+    listener.nodes[import_context] = ast.RawElement("import A::*;")
+    _error(
+        "exitDefinitionBodyItem",
+        _FakeContext(
+            importRule=import_context,
+            sourceSuccessionMember=None,
+            memberPrefix=None,
+            definitionBodyItemContent=None,
+            endOccurrenceUsageElement=None,
+            occurrenceUsageElement=None,
+        ),
+        (import_context, ast.RawElement("import A::*;")),
+    )

@@ -25,7 +25,7 @@ standard library package CauseAndEffect {
     :> CausationMetadata, SemanticMetadata {
         ref :>> baseType = multicausations meta SysML::Usage;
     }
-    // Semantic metadata for binary causation.
+    // Semantic metadata for binary cauasation.
     metadata def <causation> CausationSemanticMetadadata
     :> CausationMetadata, SemanticMetadata {
         ref :>> baseType = causations meta SysML::Usage;

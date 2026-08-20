@@ -7,6 +7,7 @@ import pytest
 from pysysmlv2.syntax import (
     ArgumentList,
     ASTParseError,
+    AttributeUsage,
     BinaryExpression,
     BodyExpression,
     BracketExpression,
@@ -24,13 +25,17 @@ from pysysmlv2.syntax import (
     Identification,
     IndexExpression,
     IntegerLiteral,
+    ItemDefinition,
     ItemUsage,
+    Model,
     NonFeatureMember,
     OccurrenceDefinitionPrefix,
     OccurrenceUsagePrefix,
     OwnedFeatureTyping,
     PackageMember,
+    ParenthesizedExpression,
     PartDefinition,
+    PortUsage,
     QualifiedReference,
     RawElement,
     ResultExpressionMember,
@@ -43,10 +48,12 @@ from pysysmlv2.syntax import (
     UnaryExpression,
     Usage,
     UsageDeclaration,
+    UsagePrefix,
     parse,
     parse_as_ast_node,
     supported_grammar_entries,
 )
+from pysysmlv2.syntax.parser import Diagnostic, _ordered_diagnostics
 
 pytestmark = pytest.mark.unit
 
@@ -74,11 +81,113 @@ def test_parser_diagnostic_ranges_are_one_based_and_eof_is_zero_width():
     assert eof.end_column == eof.column
 
 
+def test_parser_diagnostic_range_tracks_multiline_offending_tokens():
+    """Use the token's line breaks when reporting a lexer/parser range."""
+    result = parse('package Demo { attribute x = "a\nb; }')
+    assert result.diagnostics
+    diagnostic = result.diagnostics[0]
+    assert diagnostic.end_line >= diagnostic.line
+    if diagnostic.end_line > diagnostic.line:
+        assert diagnostic.end_column > 0
+
+
+def test_lexer_and_parser_diagnostics_are_merged_in_source_order():
+    """Sort independent ANTLR listener records by their concrete ranges."""
+    late = Diagnostic("error", "late", 3, 4, 3, 5)
+    tied_lexer = Diagnostic("error", "lexer", 2, 1, 2, 2)
+    tied_parser = Diagnostic("error", "parser", 2, 1, 2, 2)
+    early = Diagnostic("error", "early", 1, 8, 1, 9)
+
+    ordered = _ordered_diagnostics([late, tied_lexer], [early, tied_parser])
+
+    assert [item.message for item in ordered] == ["early", "lexer", "parser", "late"]
+
+
 def test_ast_export_can_be_parsed_again():
     first = parse("package Demo { part def Vehicle; }")
     second = parse(str(first.ast))
     assert first.ok and second.ok
     assert str(second.ast) == str(first.ast)
+
+
+def test_state_adjacent_non_occurrence_and_structure_nodes_are_fully_typed():
+    """Assert exact fields for item, port, and directional attribute syntax."""
+    source = "item def TurnOn; port commPort; in attribute isInitOff;"
+    result = parse(source, "state-members.sysml")
+    assert result.ok, result.diagnostics
+    assert result.ast == Model(
+        members=[
+            PackageMember(
+                ItemDefinition(
+                    occurrence_definition_prefix=OccurrenceDefinitionPrefix(),
+                    definition=Definition(
+                        declaration=DefinitionDeclaration(
+                            identification=Identification(declared_name="TurnOn")
+                        ),
+                        body=DefinitionBody(declaration_only=True),
+                    ),
+                )
+            ),
+            PackageMember(
+                PortUsage(
+                    occurrence_usage_prefix=OccurrenceUsagePrefix(),
+                    usage=Usage(
+                        body=DefinitionBody(declaration_only=True),
+                        declaration=UsageDeclaration(
+                            identification=Identification(declared_name="commPort")
+                        ),
+                    ),
+                )
+            ),
+            PackageMember(
+                AttributeUsage(
+                    usage_prefix=UsagePrefix(feature_direction="in"),
+                    usage=Usage(
+                        body=DefinitionBody(declaration_only=True),
+                        declaration=UsageDeclaration(
+                            identification=Identification(declared_name="isInitOff")
+                        ),
+                    ),
+                )
+            ),
+        ]
+    )
+
+
+def test_expression_ast_uses_the_normative_precedence_and_associativity():
+    """Check precedence independently of the parser's own round-trip output."""
+    additive = parse_as_ast_node("a + b * c", grammar_node="ownedExpression")
+    assert isinstance(additive, BinaryExpression)
+    assert additive.operator == "+"
+    assert isinstance(additive.right, BinaryExpression)
+    assert additive.right.operator == "*"
+
+    logical = parse_as_ast_node("a or b and c", grammar_node="ownedExpression")
+    assert isinstance(logical, BinaryExpression)
+    assert logical.operator == "or"
+    assert isinstance(logical.right, BinaryExpression)
+    assert logical.right.operator == "and"
+
+    exponent = parse_as_ast_node("a ** b ** c", grammar_node="ownedExpression")
+    assert isinstance(exponent, BinaryExpression)
+    assert exponent.operator == "**"
+    assert isinstance(exponent.right, BinaryExpression)
+    assert exponent.right.operator == "**"
+
+
+def test_binary_expression_export_preserves_manual_grouping():
+    """Do not lose a right-hand same-precedence grouping during export."""
+    left = FeatureReferenceExpression(QualifiedReference(["a"]))
+    middle = FeatureReferenceExpression(QualifiedReference(["b"]))
+    right = FeatureReferenceExpression(QualifiedReference(["c"]))
+    expected = BinaryExpression(
+        left,
+        "-",
+        ParenthesizedExpression(SequenceExpression([BinaryExpression(middle, "-", right)])),
+    )
+    assert str(expected) == "a - (b - c)"
+    reparsed = parse_as_ast_node(str(expected), grammar_node="ownedExpression")
+    assert reparsed == expected
 
 
 def test_target_transition_shorthand_keeps_only_normative_orders():
@@ -97,7 +206,16 @@ def test_target_transition_shorthand_keeps_only_normative_orders():
     ]
     assert len(target_nodes) == 2
     assert all(isinstance(node, TargetTransitionUsage) for node in target_nodes)
-    assert all(item.name != "guard_before_trigger" for item in fields(TargetTransitionUsage))
+    assert [item.name for item in fields(TargetTransitionUsage)] == [
+        "span",
+        "transition_succession_member",
+        "action_body",
+        "form",
+        "input_parameter_count",
+        "trigger_action_member",
+        "guard_expression_member",
+        "effect_behavior_member",
+    ]
     exported = str(result.ast)
     assert "accept E if enabled then A;" in exported
     assert "if enabled then A;" in exported

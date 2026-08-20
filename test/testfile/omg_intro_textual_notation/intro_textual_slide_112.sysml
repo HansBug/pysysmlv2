@@ -11,6 +11,7 @@ library package FailureModeling {
         attribute severity : Level;
     }
     abstract occurrence failures : Failure[*] nonunique :> situations;
+    // HappensBefore is the base type for successions, from the Kernel Library Occurrences package.
     abstract connection def Causation :> Occurrences::HappensBefore {
         end cause : Situation[*];
         end effect : Situation[*];

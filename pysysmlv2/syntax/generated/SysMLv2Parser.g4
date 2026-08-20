@@ -20,32 +20,40 @@ options {
 // ===== Expression rules (precedence-climbing) =====
 
 ownedExpression
+    // [pysysmlv2 overlay: expression-precedence-order]
+    // Difference from pinned upstream ANTLR rule: the upstream generator
+    // writes SysML Table 6 from lowest to highest precedence, but ANTLR's
+    // direct-left-recursive alternatives must be emitted highest to lowest.
+    // Otherwise ``a + b * c`` becomes ``(a + b) * c``. Source evidence:
+    // Upstream source: https://github.com/daltskin/sysml-v2-grammar/blob/v2026.05.0/grammar/SysMLv2Parser.g4
+    // https://github.com/daltskin/sysml-v2-grammar/blob/v2026.05.0/scripts/generate_grammar.py
+    // https://www.omg.org/spec/SysML/2.0/Language/PDF (Clause 8.2.2.1.3, Table 6)
     : IF ownedExpression QUESTION ownedExpression ELSE ownedExpression
-    | ownedExpression QUESTION_QUESTION ownedExpression
-    | ownedExpression IMPLIES ownedExpression
-    | ownedExpression OR ownedExpression
-    | ownedExpression AND ownedExpression
-    | ownedExpression XOR ownedExpression
-    | ownedExpression PIPE ownedExpression
-    | ownedExpression AMP ownedExpression
-    | ownedExpression ( EQ_EQ | BANG_EQ | EQ_EQ_EQ | BANG_EQ_EQ ) ownedExpression
-    | ownedExpression ( LT | GT | LE | GE ) ownedExpression
-    | ownedExpression DOT_DOT ownedExpression
-    | ownedExpression ( PLUS | MINUS ) ownedExpression
-    | ownedExpression ( STAR | SLASH | PERCENT ) ownedExpression
-    | <assoc=right> ownedExpression ( STAR_STAR | CARET ) ownedExpression
-    | ( PLUS | MINUS | TILDE | NOT ) ownedExpression
-    | ( AT_SIGN | AT_AT ) typeReference
-    | ownedExpression ( ISTYPE | HASTYPE | AT_SIGN ) typeReference
-    | ownedExpression AS typeReference
-    | ownedExpression AT_AT typeReference
-    | ownedExpression META typeReference
-    | ownedExpression LBRACK sequenceExpressionList? RBRACK
-    | ownedExpression HASH LPAREN sequenceExpressionList? RPAREN
-    | ownedExpression argumentList
-    | ownedExpression DOT qualifiedName
-    | ownedExpression DOT_QUESTION bodyExpression
     | ownedExpression ARROW qualifiedName ( bodyExpression | argumentList )
+    | ownedExpression DOT_QUESTION bodyExpression
+    | ownedExpression DOT qualifiedName
+    | ownedExpression argumentList
+    | ownedExpression HASH LPAREN sequenceExpressionList? RPAREN
+    | ownedExpression LBRACK sequenceExpressionList? RBRACK
+    | ownedExpression META typeReference
+    | ownedExpression AT_AT typeReference
+    | ownedExpression AS typeReference
+    | ownedExpression ( ISTYPE | HASTYPE | AT_SIGN ) typeReference
+    | ( AT_SIGN | AT_AT ) typeReference
+    | ( PLUS | MINUS | TILDE | NOT ) ownedExpression
+    | <assoc=right> ownedExpression ( STAR_STAR | CARET ) ownedExpression
+    | ownedExpression ( STAR | SLASH | PERCENT ) ownedExpression
+    | ownedExpression ( PLUS | MINUS ) ownedExpression
+    | ownedExpression DOT_DOT ownedExpression
+    | ownedExpression ( LT | GT | LE | GE ) ownedExpression
+    | ownedExpression ( EQ_EQ | BANG_EQ | EQ_EQ_EQ | BANG_EQ_EQ ) ownedExpression
+    | ownedExpression AMP ownedExpression
+    | ownedExpression PIPE ownedExpression
+    | ownedExpression XOR ownedExpression
+    | ownedExpression AND ownedExpression
+    | ownedExpression OR ownedExpression
+    | ownedExpression IMPLIES ownedExpression
+    | ownedExpression QUESTION_QUESTION ownedExpression
     | ALL typeReference
     | baseExpression
     ;

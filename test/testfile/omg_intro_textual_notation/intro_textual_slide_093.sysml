@@ -6,7 +6,9 @@ attribute def WayPoint {
 analysis def FuelEconomyAnalysis {
     subject vehicle : Vehicle;
     objective fuelEconomyAnalysisObjective { ... }
+    // Additional parameters can be specified in the case body.
     in attribute scenario : WayPoint[*];
+    // The steps of an analysis case are actions that, together, compute the analysis result.
     // The first step solves for the engine power needed for a given position/velocity scenario.
     action solveForPower {
         out power: PowerValue[*];
@@ -21,6 +23,7 @@ analysis def FuelEconomyAnalysis {
                 acceleration#(i+1)))
             }
         }
+        // The second step computes the fuel economy result, given the power profile determined in the first step.
         then action solveForFuelEconomy {
             in power : PowerValue[*] = solveForPower.power;
             out fuelEconomy : DistancePerVolumeValue;

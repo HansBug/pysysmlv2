@@ -57,6 +57,11 @@ traversal/rendering mechanism.
        :class:`FeatureChain`, :class:`DefinitionDeclaration`,
        :class:`UsageDeclaration`
      - Unresolved syntax names; workspace linking is deferred.
+   * - Namespace membership
+     - :class:`AliasMember`, :class:`ImportRule`, :class:`MembershipImport`,
+       :class:`NamespaceImport`, :class:`FilterPackage`,
+       :class:`ElementFilterMember`
+     - Import, alias, and package-filter syntax; name resolution is deferred.
    * - Expressions
      - :class:`BooleanLiteral`, :class:`UnaryExpression`, :class:`BinaryExpression`,
        :class:`ConditionalExpression`, :class:`InvocationExpression`,
@@ -248,6 +253,56 @@ def _append_body(prefix: str, body: str) -> str:
     if body.startswith("{"):
         return prefix + " " + body
     return _join([prefix, body])
+
+
+_BINARY_PRECEDENCE = {
+    "??": 2,
+    "implies": 3,
+    "or": 4,
+    "and": 5,
+    "xor": 6,
+    "|": 7,
+    "&": 8,
+    "==": 9,
+    "!=": 9,
+    "===": 9,
+    "!==": 9,
+    "<": 10,
+    ">": 10,
+    "<=": 10,
+    ">=": 10,
+    "..": 11,
+    "+": 12,
+    "-": 12,
+    "*": 13,
+    "/": 13,
+    "%": 13,
+    "**": 14,
+    "^": 14,
+}
+
+
+def _expression_precedence(expression: "Expression") -> int:
+    """Return the precedence used by canonical expression output."""
+    if isinstance(expression, BinaryExpression):
+        return _BINARY_PRECEDENCE.get(expression.operator, 1)
+    if isinstance(expression, CoalesceExpression):
+        return _BINARY_PRECEDENCE["??"]
+    if isinstance(expression, ConditionalExpression):
+        return 1
+    return 100
+
+
+def _render_expression_child(
+    expression: "Expression", parent_precedence: int, operator: str, side: str
+) -> str:
+    """Render one child with parentheses when its AST grouping needs them."""
+    rendered = str(expression)
+    child_precedence = _expression_precedence(expression)
+    needs_parentheses = child_precedence < parent_precedence
+    if child_precedence == parent_precedence:
+        needs_parentheses = side == ("left" if operator in ("**", "^") else "right")
+    return "(" + rendered + ")" if needs_parentheses else rendered
 
 
 def _relative_source(text: str) -> str:
@@ -840,6 +895,102 @@ class OccurrenceUsagePrefix(SourceElement):
 
 
 @dataclass
+class DefinitionPrefix(SourceElement):
+    """Represent the shared ``definitionPrefix`` grammar production.
+
+    ``definitionPrefix`` is used by non-occurrence definitions such as
+    ``attribute def`` and ``port def``.  It is kept separate from
+    :class:`OccurrenceDefinitionPrefix` because the two productions own
+    different keyword sets in the SysML grammar.
+
+    :param basic_definition_keyword: Optional ``abstract`` or ``variation``
+        keyword, defaults to ``None``.
+    :type basic_definition_keyword: str, optional
+    :param extension_keywords: Prefix metadata/extension spellings in source
+        order, defaults to an empty list.
+    :type extension_keywords: list[str], optional
+
+    Example::
+
+        >>> str(DefinitionPrefix("abstract"))
+        'abstract'
+    """
+
+    basic_definition_keyword: Optional[str] = None
+    extension_keywords: List[str] = field(default_factory=list)
+
+    def to_sysml(self) -> str:
+        """Render the optional basic and extension prefix fields."""
+        return _join([self.basic_definition_keyword or "", *self.extension_keywords])
+
+    def __str__(self) -> str:
+        """Return canonical definition-prefix text."""
+        return self.to_sysml()
+
+
+@dataclass
+class UsagePrefix(SourceElement):
+    """Represent the shared ``usagePrefix`` grammar production.
+
+    The prefix is intentionally not collapsed into an occurrence prefix:
+    generic usages such as attributes and references have a distinct grammar
+    production and therefore a distinct source AST contract.
+
+    :param feature_direction: Optional ``in``, ``out`` or ``inout`` keyword.
+    :type feature_direction: str, optional
+    :param is_derived: Whether ``derived`` is present, defaults to ``False``.
+    :type is_derived: bool, optional
+    :param is_abstract: Whether ``abstract`` is present, defaults to ``False``.
+    :type is_abstract: bool, optional
+    :param is_variation: Whether ``variation`` is present, defaults to
+        ``False``.
+    :type is_variation: bool, optional
+    :param is_constant: Whether ``constant`` is present, defaults to ``False``.
+    :type is_constant: bool, optional
+    :param is_reference: Whether ``ref`` is present, defaults to ``False``.
+    :type is_reference: bool, optional
+    :param extension_keywords: Usage-extension spellings in source order,
+        defaults to an empty list.
+    :type extension_keywords: list[str], optional
+
+    Example::
+
+        >>> str(UsagePrefix(feature_direction="in"))
+        'in'
+    """
+
+    feature_direction: Optional[str] = None
+    is_derived: bool = False
+    is_abstract: bool = False
+    is_variation: bool = False
+    is_constant: bool = False
+    is_reference: bool = False
+    extension_keywords: List[str] = field(default_factory=list)
+
+    def to_sysml(self) -> str:
+        """Render usage modifiers in their grammar-defined order."""
+        parts: List[str] = []
+        if self.feature_direction:
+            parts.append(self.feature_direction)
+        if self.is_derived:
+            parts.append("derived")
+        if self.is_abstract:
+            parts.append("abstract")
+        if self.is_variation:
+            parts.append("variation")
+        if self.is_constant:
+            parts.append("constant")
+        if self.is_reference:
+            parts.append("ref")
+        parts.extend(self.extension_keywords)
+        return _join(parts)
+
+    def __str__(self) -> str:
+        """Return canonical usage-prefix text."""
+        return self.to_sysml()
+
+
+@dataclass
 class ControlNodePrefix(SourceElement):
     """Represent the concrete ``controlNodePrefix`` grammar fields.
 
@@ -918,6 +1069,245 @@ class ValuePart(SourceElement):
 
     def __str__(self) -> str:
         """Return canonical value-part text."""
+        return self.to_sysml()
+
+
+@dataclass
+class MetadataFeatureDeclaration(SourceElement):
+    """Represent the declaration portion of a ``metadataFeature``.
+
+    :param owned_feature_typing: Required metadata type or feature reference.
+    :type owned_feature_typing: :class:`pysysmlv2.syntax.ast.OwnedFeatureTyping`
+    :param identification: Optional metadata feature identification.
+    :type identification: :class:`pysysmlv2.syntax.ast.Identification`, optional
+    :param operator: Optional ``:`` or ``typed by`` spelling, defaults to ``None``.
+    :type operator: str, optional
+
+    Example::
+
+        >>> declaration = MetadataFeatureDeclaration(
+        ...     OwnedFeatureTyping(DottedQualifiedReference([QualifiedReference(["Tool"])])),
+        ... )
+        >>> str(declaration)
+        'Tool'
+    """
+
+    owned_feature_typing: OwnedFeatureTyping
+    identification: Optional[Identification] = None
+    operator: Optional[str] = None
+
+    def to_sysml(self) -> str:
+        """Render identification, optional typing operator, and owned typing."""
+        return _join(
+            [
+                str(self.identification) if self.identification else "",
+                self.operator or "",
+                str(self.owned_feature_typing),
+            ]
+        )
+
+    def __str__(self) -> str:
+        """Return canonical metadata-feature-declaration text."""
+        return self.to_sysml()
+
+
+@dataclass
+class MetadataBody(SourceElement):
+    """Represent a metadata body and its ordered typed members.
+
+    :param declaration_only: Whether the grammar selected the terminating
+        semicolon form, defaults to ``False``.
+    :type declaration_only: bool, optional
+    :param items: Ordered metadata body members.
+    :type items: list[pysysmlv2.syntax.ast.SourceElement]
+
+    Example::
+
+        >>> str(MetadataBody(declaration_only=True))
+        ';'
+    """
+
+    declaration_only: bool = False
+    items: List[SourceElement] = field(default_factory=list)
+
+    def to_sysml(self) -> str:
+        """Render the metadata body's semicolon or brace form."""
+        return _render_block(self.items, declaration_only=self.declaration_only)
+
+    def __str__(self) -> str:
+        """Return canonical metadata-body text."""
+        return self.to_sysml()
+
+
+@dataclass
+class MetadataBodyFeature(SourceElement):
+    """Represent one metadata body feature and its optional value/body.
+
+    :param owned_redefinition: Required feature name being declared or
+        redefined.
+    :type owned_redefinition: :class:`pysysmlv2.syntax.ast.Reference`
+    :param body: Required nested metadata body.
+    :type body: :class:`pysysmlv2.syntax.ast.MetadataBody`
+    :param is_feature: Whether the optional ``feature`` keyword is present,
+        defaults to ``False``.
+    :type is_feature: bool, optional
+    :param redefinition_operator: Optional ``:>>`` or ``redefines`` spelling.
+    :type redefinition_operator: str, optional
+    :param feature_specialization_part: Optional specialization fields.
+    :type feature_specialization_part: :class:`pysysmlv2.syntax.ast.FeatureSpecializationPart`, optional
+    :param value_part: Optional value assignment.
+    :type value_part: :class:`pysysmlv2.syntax.ast.ValuePart`, optional
+
+    Example::
+
+        >>> feature = MetadataBodyFeature(
+        ...     QualifiedReference(["toolName"]),
+        ...     MetadataBody(declaration_only=True),
+        ...     value_part=ValuePart("=", StringLiteral('"x"')),
+        ... )
+        >>> str(feature)
+        'toolName = "x";'
+    """
+
+    owned_redefinition: Reference
+    body: MetadataBody
+    is_feature: bool = False
+    redefinition_operator: Optional[str] = None
+    feature_specialization_part: Optional[FeatureSpecializationPart] = None
+    value_part: Optional[ValuePart] = None
+
+    def to_sysml(self) -> str:
+        """Render keyword, redefinition, specialization, value, and body."""
+        return _append_body(
+            _join(
+                [
+                    "feature" if self.is_feature else "",
+                    self.redefinition_operator or "",
+                    str(self.owned_redefinition),
+                    str(self.feature_specialization_part)
+                    if self.feature_specialization_part
+                    else "",
+                    str(self.value_part) if self.value_part else "",
+                ]
+            ),
+            str(self.body),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical metadata-body-feature text."""
+        return self.to_sysml()
+
+
+@dataclass
+class MetadataBodyUsage(SourceElement):
+    """Represent one metadata body usage and its optional value/body.
+
+    :param owned_redefinition: Required referenced metadata feature name.
+    :type owned_redefinition: :class:`pysysmlv2.syntax.ast.Reference`
+    :param body: Required nested metadata body.
+    :type body: :class:`pysysmlv2.syntax.ast.MetadataBody`
+    :param is_ref: Whether the optional ``ref`` keyword is present, defaults
+        to ``False``.
+    :type is_ref: bool, optional
+    :param redefinition_operator: Optional ``:>>`` or ``redefines`` spelling.
+    :type redefinition_operator: str, optional
+    :param feature_specialization_part: Optional specialization fields.
+    :type feature_specialization_part: :class:`pysysmlv2.syntax.ast.FeatureSpecializationPart`, optional
+    :param value_part: Optional value assignment.
+    :type value_part: :class:`pysysmlv2.syntax.ast.ValuePart`, optional
+
+    Example::
+
+        >>> usage = MetadataBodyUsage(
+        ...     QualifiedReference(["toolName"]),
+        ...     MetadataBody(declaration_only=True),
+        ...     is_ref=True,
+        ... )
+        >>> str(usage)
+        'ref toolName;'
+    """
+
+    owned_redefinition: Reference
+    body: MetadataBody
+    is_ref: bool = False
+    redefinition_operator: Optional[str] = None
+    feature_specialization_part: Optional[FeatureSpecializationPart] = None
+    value_part: Optional[ValuePart] = None
+
+    def to_sysml(self) -> str:
+        """Render reference marker, redefinition, value, and nested body."""
+        return _append_body(
+            _join(
+                [
+                    "ref" if self.is_ref else "",
+                    self.redefinition_operator or "",
+                    str(self.owned_redefinition),
+                    str(self.feature_specialization_part)
+                    if self.feature_specialization_part
+                    else "",
+                    str(self.value_part) if self.value_part else "",
+                ]
+            ),
+            str(self.body),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical metadata-body-usage text."""
+        return self.to_sysml()
+
+
+@dataclass
+class MetadataFeature(SourceElement):
+    """Represent a model-owned ``metadata`` or ``@`` annotation.
+
+    :param declaration: Required metadata feature declaration.
+    :type declaration: :class:`pysysmlv2.syntax.ast.MetadataFeatureDeclaration`
+    :param body: Required metadata body.
+    :type body: :class:`pysysmlv2.syntax.ast.MetadataBody`
+    :param keyword: Concrete ``metadata`` or ``@`` marker.
+    :type keyword: str
+    :param about: Ordered annotation targets after optional ``about``.
+    :type about: list[pysysmlv2.syntax.ast.QualifiedReference]
+    :param prefix_metadata: Ordered ``#`` metadata prefixes, defaults to an
+        empty list.
+    :type prefix_metadata: list[pysysmlv2.syntax.ast.OwnedFeatureTyping], optional
+
+    Example::
+
+        >>> node = MetadataFeature(
+        ...     MetadataFeatureDeclaration(
+        ...         OwnedFeatureTyping(DottedQualifiedReference([QualifiedReference(["Tool"])]))
+        ...     ),
+        ...     MetadataBody(declaration_only=True),
+        ...     keyword="metadata",
+        ... )
+        >>> str(node)
+        'metadata Tool;'
+    """
+
+    declaration: MetadataFeatureDeclaration
+    body: MetadataBody
+    keyword: str
+    about: List[QualifiedReference] = field(default_factory=list)
+    prefix_metadata: List[OwnedFeatureTyping] = field(default_factory=list)
+
+    def to_sysml(self) -> str:
+        """Render prefixes, marker, declaration, targets, and body."""
+        about = ""
+        if self.about:
+            about = "about " + ", ".join(str(item) for item in self.about)
+        prefix = _join(
+            [
+                *[("#" + str(item)) for item in self.prefix_metadata],
+                self.keyword,
+                str(self.declaration),
+                about,
+            ]
+        )
+        return _append_body(prefix, str(self.body))
+
+    def __str__(self) -> str:
+        """Return canonical metadata-feature text."""
         return self.to_sysml()
 
 
@@ -1050,10 +1440,11 @@ class BinaryExpression(Expression):
 
     def to_sysml(self) -> str:
         """Render the binary expression with explicit operand grouping."""
+        precedence = _BINARY_PRECEDENCE.get(self.operator, 1)
         return "{} {} {}".format(
-            str(self.left),
+            _render_expression_child(self.left, precedence, self.operator, "left"),
             self.operator,
-            str(self.right),
+            _render_expression_child(self.right, precedence, self.operator, "right"),
         ).strip()
 
     def __str__(self) -> str:
@@ -1071,8 +1462,8 @@ class CoalesceExpression(Expression):
     def to_sysml(self) -> str:
         """Render the null-coalescing operands."""
         return "{} ?? {}".format(
-            str(self.left),
-            str(self.right),
+            _render_expression_child(self.left, _BINARY_PRECEDENCE["??"], "??", "left"),
+            _render_expression_child(self.right, _BINARY_PRECEDENCE["??"], "??", "right"),
         ).strip()
 
     def __str__(self) -> str:
@@ -1091,9 +1482,9 @@ class ConditionalExpression(Expression):
     def to_sysml(self) -> str:
         """Render all three conditional operands."""
         return "if {} ? {} else {}".format(
-            self.condition,
-            self.then_expression,
-            self.else_expression,
+            _render_expression_child(self.condition, 1, "if", "left"),
+            _render_expression_child(self.then_expression, 1, "if", "right"),
+            _render_expression_child(self.else_expression, 1, "if", "right"),
         )
 
     def __str__(self) -> str:
@@ -1660,16 +2051,65 @@ class PartDefinition(SourceElement):
 
     def to_sysml(self) -> str:
         """Render part-definition prefix, keyword, and nested definition."""
-        return _join(
-            [
-                str(self.occurrence_definition_prefix),
-                "part def",
-                str(self.definition),
-            ]
+        return _append_body(
+            _join([str(self.occurrence_definition_prefix), "part def"]),
+            str(self.definition),
         )
 
     def __str__(self) -> str:
         """Return canonical part-definition text."""
+        return self.to_sysml()
+
+
+@dataclass
+class OccurrenceDefinition(SourceElement):
+    """Represent an ``occurrence def`` with its concrete prefix and body.
+
+    The occurrence family is distinct from ``part`` and ``item`` even though
+    all three use the same definition completion.  Keeping the keyword in a
+    dedicated node prevents the generic dispatcher from losing the semantic
+    distinction needed by later workspace extraction.
+    """
+
+    occurrence_definition_prefix: OccurrenceDefinitionPrefix
+    definition: Definition
+
+    def to_sysml(self) -> str:
+        """Render the occurrence-definition prefix and definition."""
+        return _append_body(
+            _join([str(self.occurrence_definition_prefix), "occurrence def"]),
+            str(self.definition),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical occurrence-definition text."""
+        return self.to_sysml()
+
+
+@dataclass
+class IndividualDefinition(SourceElement):
+    """Represent the separate ``individual ... def`` grammar alternative."""
+
+    basic_definition_keyword: Optional[str]
+    extension_keywords: List[str]
+    definition: Definition
+
+    def to_sysml(self) -> str:
+        """Render the individual-definition prefix and completion."""
+        return _append_body(
+            _join(
+                [
+                    self.basic_definition_keyword or "",
+                    "individual",
+                    *self.extension_keywords,
+                    "def",
+                ]
+            ),
+            str(self.definition),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical individual-definition text."""
         return self.to_sysml()
 
 
@@ -1727,6 +2167,245 @@ class ItemUsage(SourceElement):
 
     def __str__(self) -> str:
         """Return canonical item-usage text."""
+        return self.to_sysml()
+
+
+@dataclass
+class OccurrenceUsage(SourceElement):
+    """Represent an ``occurrence`` usage and its completion."""
+
+    occurrence_usage_prefix: OccurrenceUsagePrefix
+    usage: Usage
+
+    def to_sysml(self) -> str:
+        """Render occurrence modifiers, keyword, and usage completion."""
+        return _append_body(
+            _join([str(self.occurrence_usage_prefix), "occurrence"]),
+            str(self.usage),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical occurrence-usage text."""
+        return self.to_sysml()
+
+
+@dataclass
+class IndividualUsage(SourceElement):
+    """Represent the ``individual`` usage alternative."""
+
+    basic_usage_prefix: UsagePrefix
+    usage: Usage
+    extension_keywords: List[str] = field(default_factory=list)
+
+    def to_sysml(self) -> str:
+        """Render the individual usage prefix and completion."""
+        return _append_body(
+            _join([str(self.basic_usage_prefix), "individual", *self.extension_keywords]),
+            str(self.usage),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical individual-usage text."""
+        return self.to_sysml()
+
+
+@dataclass
+class PortionUsage(SourceElement):
+    """Represent a ``snapshot`` or ``timeslice`` usage alternative."""
+
+    occurrence_usage_prefix: OccurrenceUsagePrefix
+    usage: Usage
+
+    def to_sysml(self) -> str:
+        """Render the portion prefix and usage completion."""
+        return _append_body(
+            _join([str(self.occurrence_usage_prefix)]),
+            str(self.usage),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical portion-usage text."""
+        return self.to_sysml()
+
+
+@dataclass
+class EventOccurrenceUsage(SourceElement):
+    """Represent either concrete ``event`` occurrence grammar alternative.
+
+    Exactly one of ``owned_reference_subsetting`` or ``occurrence`` is
+    normally populated.  The parser keeps both fields explicit so semantic
+    linking can distinguish the shorthand ``event occ1`` from the named
+    ``event occurrence evt`` form without reparsing source text.
+    """
+
+    occurrence_usage_prefix: OccurrenceUsagePrefix
+    usage: Usage
+    owned_reference_subsetting: Optional[Reference] = None
+    feature_specialization_part: Optional[FeatureSpecializationPart] = None
+    occurrence: bool = False
+    usage_declaration: Optional[UsageDeclaration] = None
+
+    def to_sysml(self) -> str:
+        """Render the selected event-occurrence alternative."""
+        if self.owned_reference_subsetting is not None:
+            head = _join(
+                [
+                    str(self.occurrence_usage_prefix),
+                    "event",
+                    str(self.owned_reference_subsetting),
+                    str(self.feature_specialization_part)
+                    if self.feature_specialization_part
+                    else "",
+                ]
+            )
+        else:
+            head = _join(
+                [
+                    str(self.occurrence_usage_prefix),
+                    "event",
+                    "occurrence" if self.occurrence else "",
+                    str(self.usage_declaration) if self.usage_declaration else "",
+                ]
+            )
+        completion = str(self.usage)
+        if completion.startswith(";"):
+            return head + completion
+        if completion.startswith("{"):
+            return head + " " + completion
+        return _join([head, completion])
+
+    def __str__(self) -> str:
+        """Return canonical event-occurrence-usage text."""
+        return self.to_sysml()
+
+
+@dataclass
+class ItemDefinition(SourceElement):
+    """Represent an ``item def`` with its explicit definition fields.
+
+    :param occurrence_definition_prefix: Modifiers owned by the occurrence
+        definition prefix.
+    :type occurrence_definition_prefix: :class:`pysysmlv2.syntax.ast.OccurrenceDefinitionPrefix`
+    :param definition: Identification, specialization, and body owned by the
+        shared ``definition`` production.
+    :type definition: :class:`pysysmlv2.syntax.ast.Definition`
+
+    Example::
+
+        >>> str(ItemDefinition(OccurrenceDefinitionPrefix(), Definition(DefinitionDeclaration(), DefinitionBody(True))))
+        'item def;'
+    """
+
+    occurrence_definition_prefix: OccurrenceDefinitionPrefix
+    definition: Definition
+
+    def to_sysml(self) -> str:
+        """Render occurrence modifiers, ``item def``, and the definition."""
+        return _append_body(
+            _join([str(self.occurrence_definition_prefix), "item def"]),
+            str(self.definition),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical item-definition text."""
+        return self.to_sysml()
+
+
+@dataclass
+class AttributeDefinition(SourceElement):
+    """Represent an ``attribute def`` with explicit prefix and definition."""
+
+    definition_prefix: DefinitionPrefix
+    definition: Definition
+
+    def to_sysml(self) -> str:
+        """Render the definition prefix and attribute definition."""
+        return _append_body(
+            _join([str(self.definition_prefix), "attribute def"]),
+            str(self.definition),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical attribute-definition text."""
+        return self.to_sysml()
+
+
+@dataclass
+class AttributeUsage(SourceElement):
+    """Represent an ``attribute`` usage with its generic usage completion."""
+
+    usage_prefix: UsagePrefix
+    usage: Usage
+
+    def to_sysml(self) -> str:
+        """Render usage modifiers, the attribute keyword, and its usage."""
+        return _append_body(
+            _join([str(self.usage_prefix), "attribute"]),
+            str(self.usage),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical attribute-usage text."""
+        return self.to_sysml()
+
+
+@dataclass
+class ReferenceUsage(SourceElement):
+    """Represent ``referenceUsage`` and ``defaultReferenceUsage`` explicitly."""
+
+    usage_prefix: UsagePrefix
+    usage: Usage
+    has_ref_keyword: bool = True
+
+    def to_sysml(self) -> str:
+        """Render the prefix, optional ``ref`` keyword, and completion."""
+        head = _join([str(self.usage_prefix), "ref" if self.has_ref_keyword else ""])
+        return _append_body(head, str(self.usage))
+
+    def __str__(self) -> str:
+        """Return canonical reference-usage text."""
+        return self.to_sysml()
+
+
+@dataclass
+class PortDefinition(SourceElement):
+    """Represent a ``port def`` and its optional conjugation marker."""
+
+    definition_prefix: DefinitionPrefix
+    definition: Definition
+    conjugated_port_definition: Optional[ConjugatedPortTyping] = None
+
+    def to_sysml(self) -> str:
+        """Render the port definition and any conjugated-port suffix."""
+        rendered = _append_body(
+            _join([str(self.definition_prefix), "port def"]),
+            str(self.definition),
+        )
+        if self.conjugated_port_definition is not None:
+            rendered = _join([rendered, str(self.conjugated_port_definition)])
+        return rendered
+
+    def __str__(self) -> str:
+        """Return canonical port-definition text."""
+        return self.to_sysml()
+
+
+@dataclass
+class PortUsage(SourceElement):
+    """Represent a ``port`` usage with its occurrence prefix and completion."""
+
+    occurrence_usage_prefix: OccurrenceUsagePrefix
+    usage: Usage
+
+    def to_sysml(self) -> str:
+        """Render occurrence modifiers, ``port``, and its usage."""
+        return _append_body(
+            _join([str(self.occurrence_usage_prefix), "port"]),
+            str(self.usage),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical port-usage text."""
         return self.to_sysml()
 
 
@@ -2160,6 +2839,185 @@ class RelationshipBody(SourceElement):
 
     def __str__(self) -> str:
         """Return canonical relationship-body text."""
+        return self.to_sysml()
+
+
+@dataclass
+class ImportDeclaration(SourceElement):
+    """Base class for the concrete ``importDeclaration`` alternatives.
+
+    The grammar wrapper itself is a one-child dispatch rule and is therefore
+    passed through by the listener.  This marker gives all retained import
+    alternatives a precise field type without exposing a generic AST node.
+    """
+
+
+@dataclass
+class MembershipImport(ImportDeclaration):
+    """Represent a membership import target and optional member wildcard.
+
+    :param target: Unresolved namespace/member name being imported.
+    :type target: :class:`pysysmlv2.syntax.ast.QualifiedReference`
+    :param is_all_members: Whether the concrete ``::*`` suffix is present.
+    :type is_all_members: bool
+    """
+
+    target: QualifiedReference
+    is_all_members: bool = False
+
+    def to_sysml(self) -> str:
+        """Render the target and optional membership wildcard."""
+        return str(self.target) + ("::**" if self.is_all_members else "")
+
+    def __str__(self) -> str:
+        """Return canonical membership-import text."""
+        return self.to_sysml()
+
+
+@dataclass
+class NamespaceImport(ImportDeclaration):
+    """Represent a namespace wildcard import.
+
+    :param target: Namespace selected by the required qualified name.
+    :type target: :class:`pysysmlv2.syntax.ast.QualifiedReference`
+    :param is_recursive: Whether the optional trailing ``::**`` is present.
+    :type is_recursive: bool
+    """
+
+    target: QualifiedReference
+    is_recursive: bool = False
+
+    def to_sysml(self) -> str:
+        """Render namespace wildcard and optional recursive wildcard."""
+        suffix = "::*" + ("::**" if self.is_recursive else "")
+        return str(self.target) + suffix
+
+    def __str__(self) -> str:
+        """Return canonical namespace-import text."""
+        return self.to_sysml()
+
+
+@dataclass
+class FilterPackage(ImportDeclaration):
+    """Represent a filtered import and its ordered filter expressions.
+
+    ``filterPackage`` is an import declaration alternative, not a package
+    declaration.  Its base declaration is either a membership import or the
+    direct namespace wildcard form; each bracket expression remains a typed
+    :class:`Expression` for downstream model queries.
+
+    :param import_declaration: Unfiltered import selected by the grammar.
+    :type import_declaration: :class:`pysysmlv2.syntax.ast.ImportDeclaration`
+    :param filters: Ordered expressions enclosed in ``[...]``.
+    :type filters: list[pysysmlv2.syntax.ast.Expression]
+    """
+
+    import_declaration: ImportDeclaration
+    filters: List[Expression] = field(default_factory=list)
+
+    def to_sysml(self) -> str:
+        """Render the base import followed by each bracketed expression."""
+        return str(self.import_declaration) + "".join(
+            "[{}]".format(expression) for expression in self.filters
+        )
+
+    def __str__(self) -> str:
+        """Return canonical filtered-import text."""
+        return self.to_sysml()
+
+
+@dataclass
+class ImportRule(SourceElement):
+    """Represent an ``import`` declaration and its relationship body.
+
+    :param import_declaration: Typed membership, namespace, or filtered import.
+    :type import_declaration: :class:`pysysmlv2.syntax.ast.ImportDeclaration`
+    :param relationship_body: Required terminating relationship body.
+    :type relationship_body: :class:`pysysmlv2.syntax.ast.RelationshipBody`
+    :param visibility: Optional visibility indicator owned by the import rule.
+    :type visibility: str, optional
+    :param is_all: Whether the optional ``all`` keyword follows ``import``.
+    :type is_all: bool
+    """
+
+    import_declaration: ImportDeclaration
+    relationship_body: RelationshipBody
+    visibility: Optional[str] = None
+    is_all: bool = False
+
+    def to_sysml(self) -> str:
+        """Render visibility, import keyword, declaration, and body."""
+        prefix = _join(
+            [
+                self.visibility or "",
+                "import",
+                "all" if self.is_all else "",
+                str(self.import_declaration),
+            ]
+        )
+        return _append_body(prefix, str(self.relationship_body))
+
+    def __str__(self) -> str:
+        """Return canonical import-rule text."""
+        return self.to_sysml()
+
+
+@dataclass
+class AliasMember(SourceElement):
+    """Represent an alias member with explicit names and target relation.
+
+    :param target: Unresolved qualified name after ``for``.
+    :type target: :class:`pysysmlv2.syntax.ast.QualifiedReference`
+    :param relationship_body: Required alias relationship body.
+    :type relationship_body: :class:`pysysmlv2.syntax.ast.RelationshipBody`
+    :param identification: Optional ``<short> name`` alias identification.
+    :type identification: :class:`pysysmlv2.syntax.ast.Identification`, optional
+    :param member_prefix: Optional visibility indicator.
+    :type member_prefix: str, optional
+    """
+
+    target: QualifiedReference
+    relationship_body: RelationshipBody
+    identification: Optional[Identification] = None
+    member_prefix: Optional[str] = None
+
+    def to_sysml(self) -> str:
+        """Render visibility, alias identification, target, and body."""
+        prefix = _join(
+            [
+                self.member_prefix or "",
+                "alias",
+                str(self.identification) if self.identification else "",
+                "for",
+                str(self.target),
+            ]
+        )
+        return _append_body(prefix, str(self.relationship_body))
+
+    def __str__(self) -> str:
+        """Return canonical alias-member text."""
+        return self.to_sysml()
+
+
+@dataclass
+class ElementFilterMember(SourceElement):
+    """Represent a package ``filter`` member and its typed expression.
+
+    :param expression: Structured filter predicate expression.
+    :type expression: :class:`pysysmlv2.syntax.ast.Expression`
+    :param member_prefix: Optional visibility indicator.
+    :type member_prefix: str, optional
+    """
+
+    expression: Expression
+    member_prefix: Optional[str] = None
+
+    def to_sysml(self) -> str:
+        """Render visibility, filter keyword, expression, and semicolon."""
+        return _join([self.member_prefix or "", "filter", str(self.expression)]) + ";"
+
+    def __str__(self) -> str:
+        """Return canonical element-filter-member text."""
         return self.to_sysml()
 
 
@@ -2960,6 +3818,22 @@ class StructureUsageMember(SourceElement):
 
 
 @dataclass
+class NonOccurrenceUsageMember(SourceElement):
+    """Represent a non-occurrence usage with its member visibility prefix."""
+
+    usage: SourceElement
+    member_prefix: Optional[str] = None
+
+    def to_sysml(self) -> str:
+        """Render visibility followed by the non-occurrence usage."""
+        return _join([self.member_prefix or "", str(self.usage)])
+
+    def __str__(self) -> str:
+        """Return canonical non-occurrence-usage-member text."""
+        return self.to_sysml()
+
+
+@dataclass
 class TargetTransitionUsageMember(SourceElement):
     """Represent a target-transition member attached to a behavior usage."""
 
@@ -3439,6 +4313,8 @@ __all__ = [
     "ActionUsage",
     "ActionUsageDeclaration",
     "AllExpression",
+    "AttributeDefinition",
+    "AttributeUsage",
     "AcceptNodeDeclaration",
     "ArgumentList",
     "BracketExpression",
@@ -3463,11 +4339,13 @@ __all__ = [
     "DefinitionDeclaration",
     "DefinitionBody",
     "DefinitionBodyItem",
+    "DefinitionPrefix",
     "Documentation",
     "EmptyActionUsage",
     "EffectBehaviorMember",
     "EntryActionMember",
     "EntryTransitionMember",
+    "EventOccurrenceUsage",
     "EndOccurrenceUsageElement",
     "ExhibitStateUsage",
     "FeatureChain",
@@ -3484,8 +4362,11 @@ __all__ = [
     "GuardedSuccessionMember",
     "GuardedTargetSuccession",
     "Identification",
+    "IndividualDefinition",
+    "IndividualUsage",
     "InfinityLiteral",
     "IfNode",
+    "ItemDefinition",
     "ItemUsage",
     "InitialNodeMember",
     "IndexExpression",
@@ -3493,20 +4374,31 @@ __all__ = [
     "InvocationExpression",
     "LiteralKind",
     "MetadataAccessExpression",
+    "MetadataBody",
+    "MetadataBodyFeature",
+    "MetadataBodyUsage",
+    "MetadataFeature",
+    "MetadataFeatureDeclaration",
     "MetadataCastExpression",
     "MergeNode",
     "Model",
     "NamedArgument",
     "NodeParameter",
     "NonFeatureMember",
+    "NonOccurrenceUsageMember",
     "NullExpression",
+    "OccurrenceDefinition",
     "OccurrenceDefinitionPrefix",
+    "OccurrenceUsage",
     "OccurrenceUsagePrefix",
     "OwnedFeatureTyping",
     "Package",
     "PackageMember",
     "PartDefinition",
     "PartUsage",
+    "PortionUsage",
+    "PortDefinition",
+    "PortUsage",
     "ParenthesizedExpression",
     "PayloadFeature",
     "PayloadParameter",
@@ -3514,10 +4406,18 @@ __all__ = [
     "PerformActionUsageDeclaration",
     "QualifiedReference",
     "Reference",
+    "ReferenceUsage",
     "DottedQualifiedReference",
+    "ElementFilterMember",
     "RawElement",
     "RealLiteral",
     "RelationshipBody",
+    "ImportDeclaration",
+    "MembershipImport",
+    "NamespaceImport",
+    "FilterPackage",
+    "ImportRule",
+    "AliasMember",
     "ReturnFeatureMember",
     "ResultExpressionMember",
     "SequenceExpression",
@@ -3552,6 +4452,7 @@ __all__ = [
     "TriggerExpression",
     "UnaryExpression",
     "UsageDeclaration",
+    "UsagePrefix",
     "ValuePart",
     "VariantUsage",
     "DoActionMember",

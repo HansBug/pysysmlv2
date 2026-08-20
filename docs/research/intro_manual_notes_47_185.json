@@ -20,7 +20,7 @@
     },
     {
       "anchor": "first start then off",
-      "text": "This indicates the initial state after entry is \"off\"."
+      "text": "This indicates the the initial state after entry is \"off\"."
     },
     {
       "anchor": "state off",
@@ -163,6 +163,10 @@
     {
       "anchor": "snapshot junked",
       "text": "done is the name of the end-of-life snapshot of any occurrence."
+    },
+    {
+      "anchor": "timeslice assembly",
+      "text": "Timeslices and snapshots are suboccurrences."
     }
   ],
   "58": [
@@ -324,7 +328,7 @@
     },
     {
       "anchor": "ref individual item :>> driver : Alice",
-      "text": "During this time slice of Vehicle_1, Alice has the role of the driver."
+      "text": "During this time slice of Vehicle_1, the Alice has the role of the driver."
     },
     {
       "anchor": "then timeslice bobDriving",
@@ -366,7 +370,7 @@
   "74": [
     {
       "anchor": "attribute totalMass :> ISQ::mass default simpleMass",
-      "text": "A default value is a feature value that applies unless explicitly overridden."
+      "text": "A default value is feature value that applies unless explicitly overridden."
     },
     {
       "anchor": "attribute :>> totalMass default",
@@ -423,6 +427,10 @@
     {
       "anchor": "return : AccelerationValue =",
       "text": "The result expression can also be bound directly to the return parameter."
+    },
+    {
+      "anchor": "whlpwr - drag",
+      "text": "There is no semicolon at the end of a result expression."
     }
   ],
   "77": [
@@ -477,6 +485,10 @@
     {
       "anchor": "constraint def MassConstraint",
       "text": "A constraint may be violated (false) without making the model inconsistent."
+    },
+    {
+      "anchor": "sum(partMasses)",
+      "text": "There is no semicolon at the end of a constraint expression."
     }
   ],
   "80": [
@@ -560,7 +572,7 @@
     },
     {
       "anchor": "constraint { DurationOf(maintenance)",
-      "text": "DurationOf returns the time duration of an occurrence (the difference between its start and done times)."
+      "text": "DurationOf returns the time duration of an occurrence (the different between its start and done times)."
     }
   ],
   "86": [
@@ -682,216 +694,164 @@
     }
   ],
   "93": [
-    {
-      "anchor": "action solveForPower",
-      "text": "The first step solves for the engine power needed for a given position/velocity scenario."
-    }
+    {"anchor": "action solveForPower", "text": "The steps of an analysis case are actions that, together, compute the analysis result."},
+    {"anchor": "action solveForPower", "text": "The first step solves for the engine power needed for a given position/velocity scenario."},
+    {"anchor": "in attribute scenario", "text": "Additional parameters can be specified in the case body."},
+    {"anchor": "then action solveForFuelEconomy", "text": "The second step computes the fuel economy result, given the power profile determined in the first step."}
   ],
   "94": [
-    {
-      "anchor": "analysis cityAnalysis",
-      "text": "The previously defined analysis is carried out for a specific vehicle configuration for two different scenarios."
-    }
+    {"anchor": "analysis cityAnalysis", "text": "The previously defined analysis is carried out for a specific vehicle configuration for two different scenarios."},
+    {"anchor": "analysis highwayAnalysis", "text": "The subject and parameters are automatically redefined, so redefinition does not need to be specified explicitly."},
+    {"anchor": "satisfy vehicleFuelEconomyRequirements", "text": "If the vehicle fuel economy is set to the results of the analysis, then this configuration is asserted to satisfy the desired fuel economy requirements."}
   ],
   "95": [
-    {
-      "anchor": "analysis engineTradeStudy",
-      "text": "A trade-off study is an analysis with the objective of selecting the optimum alternative from a given set based on an evaluation of each alternative."
-    }
+    {"anchor": "analysis engineTradeStudy", "text": "The TradeStudy analysis definition from the TradeStudies domain library model provides a general framework for defining basic trade study analyses."},
+    {"anchor": "analysis engineTradeStudy", "text": "A trade-off study is an analysis with the objective of selecting the optimum alternative from a given set based on an evaluation of each alternative."},
+    {"anchor": "subject : Engine", "text": "Bind the analysis subject to the set of study alternatives. Select either MaximizeObjective or MinimizeObjective."},
+    {"anchor": "calc :>> evaluationFunction", "text": "Redefine the evaluationFunction calculation to provide an evaluation of each one of the alternatives."},
+    {"anchor": "return part :>> selectedAlternative", "text": "The result of the analysis will be the alternative with either the maximum or minimum evaluated value."}
   ],
   "96": [
-    {
-      "anchor": "verification def VehicleMassTest",
-      "text": "A verification case definition defines a process for verifying whether a subject satisfies one or more requirements."
-    },
-    {
-      "anchor": "objective vehicleMassVerificationObjective",
-      "text": "The requirements to be verified are declared in the verification case objective. The subject of the verification case is automatically bound to the subject of the verified requirements."
-    },
-    {
-      "anchor": "return verdict",
-      "text": "A verification case always returns a verdict of type VerdictKind. (The default name is verdict, but a different name can be used if desired.)"
-    }
+    {"anchor": "in massActual", "text": "Parameterizing the requirement allows it to be checked against a measured massActual, while asserting (below) that this must be equal to the vehicle.mass."},
+    {"anchor": "verification def VehicleMassTest", "text": "A verification case definition defines a process for verifying whether a subject satisfies one or more requirements."},
+    {"anchor": "subject testVehicle", "text": "The subject may be specified similarly to the subject of a requirement or analysis case."},
+    {"anchor": "objective vehicleMassVerificationObjective", "text": "The requirements to be verified are declared in the verification case objective. The subject of the verification case is automatically bound to the subject of the verified requirements."},
+    {"anchor": "return verdict", "text": "A verification case always returns a verdict of type VerdictKind. (The default name is verdict, but a different name can be used if desired.)"},
+    {"anchor": "return verdict", "occurrence": 1, "text": "VerdictKind is an enumeration with allowed values pass, fail, inconclusive and error."}
   ],
   "97": [
-    {
-      "anchor": "action collectData",
-      "text": "The steps of a verification case are actions that, together, determine the verdict."
-    }
+    {"anchor": "action collectData", "text": "The steps of a verification case are actions that, together, determine the verdict."},
+    {"anchor": "PassIf(vehicleMassRequirement", "text": "PassIf is a utility function that returns a pass or fail verdict depending on whether its argument is true or false."},
+    {"anchor": "vehicle = testVehicle", "text": "The use of named argument notation here is optional."},
+    {"anchor": "PassIf(vehicleMassRequirement", "text": "This is a check of whether the requirement is satisfied for the given parameter values."}
   ],
   "98": [
-    {
-      "anchor": "verification vehicleMassTest",
-      "text": "This is a verification case usage in which the subject has been restricted to a specific test configuration."
-    }
+    {"anchor": "verification vehicleMassTest", "text": "This is a verification case usage in which the subject has been restricted to a specific test configuration."},
+    {"anchor": "perform vehicleMassTest", "text": "A verification case can be performed as an action by a verification system."},
+    {"anchor": "perform vehicleMassTest.collectData", "text": "Parts of the verification system can perform steps in the overall verification process."},
+    {"anchor": "bind measurement", "text": "In reality, this would be some more involved process to determine the measured mass."}
   ],
   "99": [
-    {
-      "anchor": "individual testSystem",
-      "text": "Individuals can be used to model the carrying out of actual tests."
-    }
+    {"anchor": "individual testSystem", "text": "Individuals can be used to model the carrying out of actual tests."},
+    {"anchor": "perform action :>> vehicleMassTest", "occurrence": 1, "text": "The keyword action is required here to permit the local redefinition."},
+    {"anchor": "individual :>> testVehicle : TestVehicle1", "text": "The test on the individual TestVehicle1 should pass."},
+    {"anchor": "individual :>> testVehicle : TestVehicle2", "text": "The test on the individual TestVehicle2 should fail."}
   ],
   "100": [
-    {
-      "anchor": "use case def 'Provide Transportation'",
-      "text": "A use case definition defines a required interaction between its subject and certain external actors."
-    },
-    {
-      "anchor": "objective",
-      "text": "The objective of the use case is for the subject to provide a result of value to one or more of the actors."
-    }
+    {"anchor": "use case def 'Provide Transportation'", "text": "A use case definition defines a required interaction between its subject and certain external actors."},
+    {"anchor": "actor driver", "text": "An actor is a parameter of the use case representing a role played by entity external to the subject."},
+    {"anchor": "actor passengers", "text": "Actors are (referential) part usages and so must have part definitions."},
+    {"anchor": "objective", "text": "The objective of the use case is for the subject to provide a result of value to one or more of the actors."},
+    {"anchor": "use case def 'Enter Vehicle'", "text": "Actors may also be specified for other kinds of cases and for requirements."}
   ],
   "101": [
-    {
-      "anchor": "then include use case 'exit vehicle'",
-      "text": "A use case can include the performance of a use case defined elsewhere (similar to performing an action)."
-    },
-    {
-      "anchor": "then include use case 'exit vehicle'",
-      "text": "The subject of a nested use case is implicitly bound to that of its containing use case, but actors need to be explicitly bound."
-    }
+    {"anchor": "first start", "text": "The required behavior of a use case can be specified as for an action."},
+    {"anchor": "then use case 'drive vehicle'", "text": "A use case can define sub-use cases within its behavior."},
+    {"anchor": "then include use case 'exit vehicle'", "text": "A use case can include the performance of a use case defined elsewhere (similar to performing an action)."},
+    {"anchor": "subject vehicle", "occurrence": 4, "text": "A subject must be declared first, before any actors. It can only be omitted if there are no actors or other parameters."},
+    {"anchor": "then include use case 'exit vehicle'", "occurrence": 1, "text": "The subject of a nested use case is implicitly bound to that of its containing use case, but actors need to be explicitly bound."},
+    {"anchor": "then use case 'drive vehicle'", "text": "The traditional use case “extend” relationship is not supported yet."},
+    {"anchor": "use case 'add fuel'", "text": "A use case can also be specified without an explicit use case definition."}
   ],
   "102": [
-    {
-      "anchor": "variation attribute def DiameterChoices",
-      "text": "Any kind of definition can be marked as a variation, expressing variability within a product line model."
-    },
-    {
-      "anchor": "variation attribute def DiameterChoices",
-      "text": "A variation defines one or more variant usages, which represent the allowed choices for that variation."
-    }
+    {"anchor": "variation attribute def DiameterChoices", "text": "Any kind of definition can be marked as a variation, expressing variability within a product line model."},
+    {"anchor": "variation attribute def DiameterChoices", "occurrence": 1, "text": "A variation defines one or more variant usages, which represent the allowed choices for that variation."},
+    {"anchor": "variation part def EngineChoices", "text": "A variation definition will typically specialize a definition from a design model, representing the type of thing being varied. The variants must then be valid usages of this type."},
+    {"anchor": "variation part def EngineChoices", "text": "Variants can also be declared by reference to usages defined elsewhere."}
   ],
   "103": [
-    {
-      "anchor": "variation part transmission",
-      "text": "Any kind of usage can also be a variation, defining allowable variants without a separate variation definition."
-    }
+    {"anchor": "variation part transmission", "text": "Any kind of usage can also be a variation, defining allowable variants without a separate variation definition."},
+    {"anchor": "part engine : EngineChoices", "text": "A variation definition can be used like any other definition, but valid values of the usage are restricted to the allowed variants of the variation."},
+    {"anchor": "assert constraint", "text": "A constraint can be used to model restrictions across the choices that can be made."},
+    {"anchor": "(engine == engine::'4cylEngine' and", "text": "The operator xor means \"exclusive or\". So, this constraint means \"choose either a 4cylEngine and a manualTransmission, or a 6cylEngine and an automaticTransmission\"."}
   ],
   "104": [
-    {
-      "anchor": "part redefines engine",
-      "text": "A selection is made for a variation by binding one of the allowed variants to the variation usage."
-    }
+    {"anchor": "part vehicle4Cyl", "text": "An element from a variability model with variation usages can be configured by specializing it and making selections for each of the variations."},
+    {"anchor": "part redefines engine", "text": "A selection is made for a variation by binding one of the allowed variants to the variation usage."},
+    {"anchor": "part vehicle6Cyl", "text": "Choosing a manualTransmission with a 6cylEngine is not allowed by the constraint asserted on vehicleFamily, so this model of vehicle6Cyl is invalid."}
   ],
   "105": [
-    {
-      "anchor": "dependency from 'System Assembly'",
-      "text": "A dependency is a relationship that indicates that one or more client elements require one or more supplier elements for their complete specification. A dependency is entirely a model-level relationship, without instance-level semantics."
-    }
+    {"anchor": "dependency from 'System Assembly'", "text": "A dependency is a relationship that indicates that one or more client elements require one more supplier elements for their complete specification. A dependency is entirely a model-level relationship, without instance-level semantics."},
+    {"anchor": "dependency from 'System Assembly'", "text": "A dependency can be between any kinds of elements, generally meaning that a change to a supplier may necessitate a change to the client element."},
+    {"anchor": "dependency Schemata", "text": "A dependency can have multiple clients and/or suppliers."}
   ],
   "106": [
-    {
-      "anchor": "allocate torqueGenerator to powerTrain",
-      "text": "An allocation specifies that some or all of the responsibility for realizing the intent of the source is allocated to the target."
-    },
-    {
-      "anchor": "allocate torqueGenerator.generateTorque",
-      "text": "An allocation can be refined using nested allocations that give a finer-grained decomposition of the containing allocation mapping."
-    }
+    {"anchor": "allocate torqueGenerator to powerTrain", "text": "An allocation specifies that some or all of the responsibility for realizing the intent of the source is allocated to the target."},
+    {"anchor": "allocate torqueGenerator.generateTorque", "text": "An allocation can be refined using nested allocations that give a finer-grained decomposition of the containing allocation mapping."},
+    {"anchor": "allocate torqueGenerator to powerTrain", "text": "Allocations define traceable links across the various structures and hierarchies of a system model, perhaps as a precursor to more rigorous specifications and implementations."}
   ],
   "107": [
-    {
-      "anchor": "allocation def LogicalToPhysical",
-      "text": "An allocation definition defines a class of allocations between features of specific types."
-    },
-    {
-      "anchor": "allocation torqueGenAlloc",
-      "text": "An allocation usage must allocate features that conform to the types of the ends of its allocation definition."
-    }
+    {"anchor": "allocation def LogicalToPhysical", "text": "An allocation definition defines a class of allocations between features of specific types."},
+    {"anchor": "allocation torqueGenAlloc", "text": "An allocation usage must allocate features that conform to the types of the ends of its allocation definition."},
+    {"anchor": "allocation def LogicalToPhysical", "text": "Unlike SysML v1, an allocation in SysML v2 is not a dependency but, rather, an instantiable connection across model features."}
   ],
   "108": [
-    {
-      "anchor": "metadata def SafetyFeature",
-      "text": "Metadata is defined using a metadata definition."
-    },
-    {
-      "anchor": "metadata SafetyFeature about",
-      "text": "A specific type of metadata can then be applied as an annotation to one or more model elements."
-    }
+    {"anchor": "part vehicle", "text": "Metadata is additional data that can be used to annotate the elements of a model."},
+    {"anchor": "metadata def SafetyFeature", "text": "Metadata is defined using a metadata definition."},
+    {"anchor": "metadata def SecurityFeature", "text": "The KerML and SysML library models include all the metaclasses from the KerML and SysML abstract syntax."},
+    {"anchor": ":> annotatedElement", "text": "To restrict what kind of element can be annotated, subset the annotatedElement feature with the desired element type(s)."},
+    {"anchor": "metadata SafetyFeature about", "text": "A specific type of metadata can then be applied as an annotation to one or more model elements."},
+    {"anchor": "metadata SecurityFeature about", "text": "At its simplest, a metadata annotation can be used to simply \"tag\" certain elements, so that they can, e.g., be grouped by tooling."}
   ],
   "109": [
-    {
-      "anchor": "standard library package AnalysisTooling",
-      "text": "The AnalysisTooling package is part of the Analysis domain library."
-    }
+    {"anchor": "standard library package AnalysisTooling", "text": "The AnalysisTooling package is part of the Analysis domain library."},
+    {"anchor": "metadata ToolExecution", "text": "A metadata annotation contained in the body of a namespace (package, definition or usage) is, by default, about that namespace."},
+    {"anchor": "metadata ToolExecution", "text": "If the metadata definition has nested features, these must be bound to values in the metadata annotation."},
+    {"anchor": "in dt : ISQ::TimeValue", "text": "The @ symbol is equivalent to the metadata keyword."}
   ],
   "110": [
-    {
-      "anchor": "filter @Safety",
-      "text": "A filter is a Boolean condition that must be true for an element to actually be imported into a package."
-    }
+    {"anchor": "public import vehicle::**", "text": "A recursive import (using **) imports members of a namespace and, recursively, members of any nested namespaces."},
+    {"anchor": "@Safety { isMandatory", "text": "Currently, a metadata annotation must be owned by the annotated element to be accessed in a filter condition."},
+    {"anchor": "filter @Safety", "text": "A filter is a Boolean condition that must be true for an element to actually be imported into a package."},
+    {"anchor": "filter @Safety and", "text": "@ checks life an element has the given metadata and as “casts” to that metadata type."}
   ],
   "111": [
-    {
-      "anchor": "public import vehicle::**[@Safety and",
-      "text": "Filter conditions can also be combined with the import itself."
-    }
+    {"anchor": "public import vehicle::**[@Safety]", "text": "The filter keyword is only allowed in a package (or view), but a filtered import can be used anyplace an import is allowed."},
+    {"anchor": "public import vehicle::**[@Safety and", "text": "Filter conditions can also be combined with the import itself."},
+    {"anchor": "public import vehicle::**[@Safety and", "text": "A filter condition expression must be model-level evaluable. It can reference only literals and metadata annotations and attributes, connected using basic arithmetic, comparison and Boolean operators."}
   ],
   "112": [
-    {
-      "anchor": "library package FailureModeling",
-      "text": "For a domain-specific extension to SysML, first create a library model of domain-specific concepts. This can be explicitly identified as a library package."
-    },
-    {
-      "anchor": "abstract occurrence def Situation",
-      "text": "For each concept, provide a base definition and a base usage modeling the concept semantics."
-    }
+    {"anchor": "library package FailureModeling", "text": "For a domain-specific extension to SysML, first create a library model of domain-specific concepts. This can be explicitly identified as a library package."},
+    {"anchor": "abstract occurrence def Situation", "text": "For each concept, provide a base definition and a base usage modeling the concept semantics."},
+    {"anchor": "abstract connection def Causation", "text": "HappensBefore is the base type for successions, from the Kernel Library Occurrences package."}
   ],
   "113": [
-    {
-      "anchor": "metadata def situation",
-      "text": "Declare semantic metadata for each concept to be included in the language extension."
-    }
+    {"anchor": "metadata def situation", "text": "Declare semantic metadata for each concept to be included in the language extension."},
+    {"anchor": ":>> baseType = situations", "text": "Bind baseType to the base usage for the relevant concept."},
+    {"anchor": ":>> baseType = failures", "text": "The meta-cast \"meta SysML::Usage\" allows failures to be referenced as a usage, rather than evaluated as an expression."}
   ],
   "114": [
-    {
-      "anchor": "#scenario def DeviceFailure",
-      "text": "A user-defined keyword, starting with # and referencing a semantic metadata definition, can be used to declare a definition or usage."
-    }
+    {"anchor": "#scenario def DeviceFailure", "text": "A user-defined keyword, starting with # and referencing a semantic metadata definition, can be used to declare a definition or usage."},
+    {"anchor": "#scenario def DeviceFailure", "text": "Implicitly specializes the library definition Scenario (the definition of the scenarios base type)."},
+    {"anchor": "#situation 'power low'", "text": "Implicitly specializes the library usage situations (as given in the semantic metadata situation)."},
+    {"anchor": "#failure 'device shutoff'", "text": "Inheritance and redefinition work as for explicit specialization."}
   ],
   "115": [
-    {
-      "anchor": "concern 'system breakdown'",
-      "text": "A concern is a specific topic that one or more stakeholders desire to be addressed."
-    },
-    {
-      "anchor": "stakeholder se",
-      "text": "A stakeholder is a person, organization or other entity with concerns to be addressed."
-    }
+    {"anchor": "concern 'system breakdown'", "text": "A concern is a specific topic that one or more stakeholders desire to be addressed."},
+    {"anchor": "subject system", "text": "A subject must be declared first, before any stakeholders. It can only be omitted if there are no stakeholders or other parameters."},
+    {"anchor": "stakeholder se", "text": "A stakeholder is a person, organization or other entity with concerns to be addressed."},
+    {"anchor": "concern modularity", "text": "Stakeholders may be specified for any kind of requirement, not just concerns."}
   ],
   "116": [
-    {
-      "anchor": "viewpoint 'system structure perspective'",
-      "text": "A viewpoint is a requirement to present information from a model in a view that addresses certain stakeholder concerns."
-    },
-    {
-      "anchor": "frame 'system breakdown'",
-      "text": "A viewpoint frames the concerns that will be addressed by a view that satisfies the viewpoint."
-    }
+    {"anchor": "viewpoint 'system structure perspective'", "text": "A viewpoint is a requirement to present information from a model in a view that addresses certain stakeholder concerns."},
+    {"anchor": "frame 'system breakdown'", "text": "A viewpoint frames the concerns that will be addressed by a view that satisfies the viewpoint."},
+    {"anchor": "viewpoint 'system structure perspective'", "text": "Any requirement may be modeled as framing relevant stakeholder concerns, not just viewpoints."}
   ],
   "117": [
-    {
-      "anchor": "view def 'Part Structure View'",
-      "text": "A view definition specifies how information can be extracted from a model in order to satisfy one or more viewpoints."
-    },
-    {
-      "anchor": "expose vehicle::**",
-      "text": "A view usage exposes the model elements to be included in the view, which are filtered as specified in the view definition."
-    },
-    {
-      "anchor": "render asTreeDiagram",
-      "text": "A view usage specifies how the view is to be rendered as a physical artifact."
-    }
+    {"anchor": "view def 'Part Structure View'", "text": "A view definition specifies how information can be extracted from a model in order to satisfy one or more viewpoints."},
+    {"anchor": "view def 'Part Structure View'", "text": "A view definition can filter the elements to be included in the views it specifies."},
+    {"anchor": "view 'vehicle structure view'", "text": "A view usage specifies a certain view conforming to a view definition."},
+    {"anchor": "expose vehicle::**", "text": "A view usage exposes the model elements to be included in the view, which are filtered as specified in the view definition."},
+    {"anchor": "render asTreeDiagram", "text": "A view usage specifies how the view is to be rendered as a physical artifact."},
+    {"anchor": "view def 'Part Structure View'", "text": "The SysML library package models the SysML abstract syntax, which can be used to filter on specific kinds of model elements."},
+    {"anchor": "view def 'Part Structure View'", "text": "The view rendering can also be given in the view definition, in which case it will be the same for all usages of that definition. But only view usages can expose elements to be viewed."}
   ],
   "118": [
-    {
-      "anchor": "rendering asTextualNotationTable",
-      "text": "Specialized kinds of renderings can be defined in a user model."
-    },
-    {
-      "anchor": "expose vehicle::**[@Safety]",
-      "text": "Views can specify additional filtering conditions on an expose, using the same notation as for an import."
-    }
+    {"anchor": "rendering asTextualNotationTable", "text": "Specialized kinds of renderings can be defined in a user model."},
+    {"anchor": "view 'vehicle tabular views'", "text": "Views can have subviews."},
+    {"anchor": "rendering asTextualNotationTable", "text": "The Views library package includes four basic kinds of rendering: asTreeDiagram, asInterconnectionDiagram, asTextualNotation and asElementTable."},
+    {"anchor": "rendering asTextualNotationTable", "text": "A more comprehensive rendering library model is planned for future release."},
+    {"anchor": "expose vehicle::**[@Safety]", "text": "Views can specify additional filtering conditions on an expose, using the same notation as for an import."}
   ],
   "119": []
 }

@@ -6,7 +6,7 @@ action def ChargeBattery {
     }
     // A decision node (decide keyword) chooses exactly one successor to happen after it.
     then decide;
-    // A decision node is typically followed by one or more conditional successions (the last “if...then” can be replaced by “else”).
+    // A decision node is typically followed by one or more conditional successions (the last “if … then” can be replaced by “else”).
     if monitor.batteryCharge < 100 then addCharge;
     if monitor.batteryCharge >= 100 then endCharging;
     action addCharge : AddCharge {

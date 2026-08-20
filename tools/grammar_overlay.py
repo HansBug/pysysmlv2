@@ -37,7 +37,7 @@ import subprocess
 from pathlib import Path
 from typing import Dict, Optional, Sequence, Tuple
 
-OVERLAY_IDENTIFIER = "pysysmlv2-sysml-state-v1"
+OVERLAY_IDENTIFIER = "pysysmlv2-sysml-state-v2"
 MANIFEST_SCHEMA_VERSION = 1
 
 # These notes are emitted into ``grammar-provenance.json`` and are deliberately
@@ -49,10 +49,17 @@ MANIFEST_SCHEMA_VERSION = 1
 # OMG example should be changed.
 OVERLAY_NOTES = (
     {
+        "id": "expression-precedence-order",
+        "rules": ["ownedExpression"],
+        "classification": "upstream_generator_bug",
+        "official_evidence": "OMG SysML 2.0 Language formal PDF, Clause 8.2.2.1.3 Table 6 defines operator precedence from lowest to highest (https://www.omg.org/spec/SysML/2.0/Language/PDF). The pinned daltskin generator emits that list directly as ANTLR left-recursive alternatives; ANTLR requires the recursive alternatives in highest-to-lowest precedence order. The source generator and pinned grammar are recorded at https://github.com/daltskin/sysml-v2-grammar/blob/v2026.05.0/scripts/generate_grammar.py and https://github.com/daltskin/sysml-v2-grammar/blob/v2026.05.0/grammar/SysMLv2Parser.g4.",
+        "reason": "The pinned generated rule parses ``a + b * c`` as ``(a + b) * c``. Reversing the recursive precedence alternatives restores the normative Table 6 hierarchy while leaving the upstream submodule untouched.",
+    },
+    {
         "id": "transition-trigger-guard-order",
         "rules": ["transitionUsage"],
         "classification": "upstream_gap",
-        "official_evidence": "OMG SysML 2.0 Language formal PDF, Clause 7.18.3 (State Examples), printed pages 120-121: complete TransitionUsage in OnOff3 uses trigger-before-guard and complete TransitionUsage in OnOff4 uses guard-before-trigger (https://www.omg.org/spec/SysML/2.0/Language/PDF). The official Pilot's corresponding rule is https://github.com/Systems-Modeling/SysML-v2-Pilot-Implementation/blob/fa709f28dfd49dfdb7ee83e4e19da2f57e0eb3aa/org.omg.sysml.xtext/src/org/omg/sysml/xtext/SysML.xtext#L1866-L1882.",
+        "official_evidence": "OMG SysML 2.0 Language formal PDF, Clause 7.18.3 (State Examples), printed pages 120-121: complete TransitionUsage in OnOff3 uses trigger-before-guard and complete TransitionUsage in OnOff4 uses guard-before-trigger (https://www.omg.org/spec/SysML/2.0/Language/PDF). The fixed Pilot source separately confirms that TargetTransitionUsage is trigger-before-guard or guard-only: https://github.com/Systems-Modeling/SysML-v2-Pilot-Implementation/blob/fa709f28dfd49dfdb7ee83e4e19da2f57e0eb3aa/org.omg.sysml.xtext/src/org/omg/sysml/xtext/SysML.xtext#L1866-L1882.",
         "reason": "The generated full TransitionUsage rule hard-codes trigger-before-guard, although the normative full-transition examples exercise both orders.",
     },
     {
@@ -75,6 +82,75 @@ OVERLAY_NOTES = (
         "reason": "The generated actionUsage requires actionBody after the declaration and rejects the official terminate shorthand.",
     },
 )
+
+_OWNED_EXPRESSION_BEFORE = """ownedExpression
+    : IF ownedExpression QUESTION ownedExpression ELSE ownedExpression
+    | ownedExpression QUESTION_QUESTION ownedExpression
+    | ownedExpression IMPLIES ownedExpression
+    | ownedExpression OR ownedExpression
+    | ownedExpression AND ownedExpression
+    | ownedExpression XOR ownedExpression
+    | ownedExpression PIPE ownedExpression
+    | ownedExpression AMP ownedExpression
+    | ownedExpression ( EQ_EQ | BANG_EQ | EQ_EQ_EQ | BANG_EQ_EQ ) ownedExpression
+    | ownedExpression ( LT | GT | LE | GE ) ownedExpression
+    | ownedExpression DOT_DOT ownedExpression
+    | ownedExpression ( PLUS | MINUS ) ownedExpression
+    | ownedExpression ( STAR | SLASH | PERCENT ) ownedExpression
+    | <assoc=right> ownedExpression ( STAR_STAR | CARET ) ownedExpression
+    | ( PLUS | MINUS | TILDE | NOT ) ownedExpression
+    | ( AT_SIGN | AT_AT ) typeReference
+    | ownedExpression ( ISTYPE | HASTYPE | AT_SIGN ) typeReference
+    | ownedExpression AS typeReference
+    | ownedExpression AT_AT typeReference
+    | ownedExpression META typeReference
+    | ownedExpression LBRACK sequenceExpressionList? RBRACK
+    | ownedExpression HASH LPAREN sequenceExpressionList? RPAREN
+    | ownedExpression argumentList
+    | ownedExpression DOT qualifiedName
+    | ownedExpression DOT_QUESTION bodyExpression
+    | ownedExpression ARROW qualifiedName ( bodyExpression | argumentList )
+    | ALL typeReference
+    | baseExpression
+    ;"""
+_OWNED_EXPRESSION_AFTER = """ownedExpression
+    // [pysysmlv2 overlay: expression-precedence-order]
+    // Difference from pinned upstream ANTLR rule: the upstream generator
+    // writes SysML Table 6 from lowest to highest precedence, but ANTLR's
+    // direct-left-recursive alternatives must be emitted highest to lowest.
+    // Otherwise ``a + b * c`` becomes ``(a + b) * c``. Source evidence:
+    // Upstream source: https://github.com/daltskin/sysml-v2-grammar/blob/v2026.05.0/grammar/SysMLv2Parser.g4
+    // https://github.com/daltskin/sysml-v2-grammar/blob/v2026.05.0/scripts/generate_grammar.py
+    // https://www.omg.org/spec/SysML/2.0/Language/PDF (Clause 8.2.2.1.3, Table 6)
+    : IF ownedExpression QUESTION ownedExpression ELSE ownedExpression
+    | ownedExpression ARROW qualifiedName ( bodyExpression | argumentList )
+    | ownedExpression DOT_QUESTION bodyExpression
+    | ownedExpression DOT qualifiedName
+    | ownedExpression argumentList
+    | ownedExpression HASH LPAREN sequenceExpressionList? RPAREN
+    | ownedExpression LBRACK sequenceExpressionList? RBRACK
+    | ownedExpression META typeReference
+    | ownedExpression AT_AT typeReference
+    | ownedExpression AS typeReference
+    | ownedExpression ( ISTYPE | HASTYPE | AT_SIGN ) typeReference
+    | ( AT_SIGN | AT_AT ) typeReference
+    | ( PLUS | MINUS | TILDE | NOT ) ownedExpression
+    | <assoc=right> ownedExpression ( STAR_STAR | CARET ) ownedExpression
+    | ownedExpression ( STAR | SLASH | PERCENT ) ownedExpression
+    | ownedExpression ( PLUS | MINUS ) ownedExpression
+    | ownedExpression DOT_DOT ownedExpression
+    | ownedExpression ( LT | GT | LE | GE ) ownedExpression
+    | ownedExpression ( EQ_EQ | BANG_EQ | EQ_EQ_EQ | BANG_EQ_EQ ) ownedExpression
+    | ownedExpression AMP ownedExpression
+    | ownedExpression PIPE ownedExpression
+    | ownedExpression XOR ownedExpression
+    | ownedExpression AND ownedExpression
+    | ownedExpression OR ownedExpression
+    | ownedExpression IMPLIES ownedExpression
+    | ownedExpression QUESTION_QUESTION ownedExpression
+    | ALL typeReference
+    | baseExpression
+    ;"""
 
 _TRANSITION_USAGE_BEFORE = """transitionUsage
     : TRANSITION ( usageDeclaration? FIRST )? featureChainMember emptyParameterMember ( emptyParameterMember triggerActionMember )? ( guardExpressionMember )? ( effectBehaviorMember )? THEN transitionSuccessionMember actionBody
@@ -171,6 +247,11 @@ _ACTION_USAGE_AFTER = """actionUsage
     | occurrenceUsagePrefix ACTION actionUsageDeclaration TERMINATE SEMI
     ;"""
 _TRANSFORMATIONS = (
+    (
+        "expression precedence order",
+        _OWNED_EXPRESSION_BEFORE,
+        _OWNED_EXPRESSION_AFTER,
+    ),
     (
         "transition trigger and guard ordering",
         _TRANSITION_USAGE_BEFORE,
@@ -289,7 +370,7 @@ def build_manifest(
     Example::
 
         >>> build_manifest("abc", "v0", "1" * 64, "2" * 64)["overlay"]
-        'pysysmlv2-sysml-state-v1'
+        'pysysmlv2-sysml-state-v2'
     """
     return {
         "schema_version": MANIFEST_SCHEMA_VERSION,

@@ -38,7 +38,7 @@
   ],
   "148": [
     {"anchor": "enum def StatusKind", "text": "To be used to annotate model elements with status information."},
-    {"anchor": "metadata def Rationale", "text": "To be used to give rationale for a model element."},
+    {"anchor": "metadata def Rationale", "text": "To be used to give a rationale for a model element."},
     {"anchor": "metadata def Issue", "text": "Generic issue annotation."},
     {"anchor": "metadata def <refinement>", "text": "To be used to model a dependency in which source elements refine target elements."},
     {"anchor": "ref explanation", "text": "This is an optional reference to a feature that further explains this rationale (e.g., a trade study analysis)."}
@@ -70,7 +70,7 @@
     {"anchor": "abstract action def StateSpaceDynamics", "text": "StateSpaceDynamics is the simplest form of state space representation, and getNextState directly computes the stateSpace of the next timestep."}
   ],
   "155": [
-    {"anchor": "abstract action def ContinuousStateSpaceDynamics", "text": "ContinuousStateSpaceDynamics represents continuous behavior. The derivative needs to return the derivative of stateSpace, i.e. dx/dt."},
+    {"anchor": "abstract action def ContinuousStateSpaceDynamics", "text": "ContinuousStateSpaceDynamics represents continuous behavior. The derivative needs to return a time derivative of stateSpace, i.e. dx/dt."},
     {"anchor": "abstract action def DiscreteStateSpaceDynamics", "text": "DiscreteStateSpaceDynamics represents discrete behavior. getDifference returns the difference of the stateSpace for each timestep."}
   ],
   "156": [
@@ -90,13 +90,13 @@
     {"anchor": "metadata def <effect>", "text": "Used to tag the \"effect\" ends of a multicausation."},
     {"anchor": "metadata def CausationMetadata", "text": "Additional metadata about a causation connection."},
     {"anchor": "metadata def <multicausation>", "text": "Semantic metadata for multicausation."},
-    {"anchor": "metadata def <causation>", "text": "Semantic metadata for binary causation."}
+    {"anchor": "metadata def <causation>", "text": "Semantic metadata for binary cauasation."}
   ],
   "161": [
     {"anchor": "abstract connection def Derivation", "text": "A connection between one original requirement and one or more derived requirements."},
     {"anchor": "requirement originalRequirements", "text": "Specializations add ends for specific original and derived requirements."},
-    {"anchor": "private assert constraint originalNotDerived", "text": "The original requirement must not be a derived requirement."},
-    {"anchor": "private assert constraint originalImpliesDerived", "text": "Whenever the original requirement is satisfied, all derived requirements must be satisfied."}
+    {"anchor": "private assert constraint originalNotDerived", "text": "Original requirement must not be a derived requirement."},
+    {"anchor": "private assert constraint originalImpliesDerived", "text": "Whenever the original requirement is satisfied, all the derived requirements must also be satisfied."}
   ],
   "162": [
     {"anchor": "metadata def <original>", "text": "Used to tag the \"original\" ends of a derivation."},
@@ -104,10 +104,12 @@
     {"anchor": "metadata def <derivation>", "text": "Semantic metadata for requirement derivation."}
   ],
   "164": [
-    {"anchor": "abstract attribute def TensorQuantityValue", "text": "A tensor quantity value represents the value of the most general kind of quantity, a tensor. The numeric value of a tensor is given as an array of numbers."},
+    {"anchor": "abstract attribute def TensorQuantityValue", "text": "A tensor quantity value represents the value of the most general kind of quantity, a tensor."},
+    {"anchor": "abstract attribute def TensorQuantityValue", "text": "The numeric value of the tensor is given as an array of numbers."},
     {"anchor": "abstract attribute def VectorQuantityValue", "text": "A vector is a tensor with a single dimension."},
-    {"anchor": "abstract attribute def ScalarQuantityValue", "text": "A scalar is a vector with a single dimension."},
-    {"anchor": "attribute mRef", "text": "The value of a tensor quantity is relative to a multi-dimensional tensor measurement reference."}
+    {"anchor": "abstract attribute def ScalarQuantityValue", "text": "A scalar is a vector with a single element. Its measurement reference may be a measurement unit if the scale is a ratio scale."},
+    {"anchor": "attribute mRef", "text": "The value of a tensor quantity is relative to a multi-dimensional tensor measurement reference."},
+    {"anchor": "alias tensorQuantities as quantity", "text": "A quantity is a usage of a quantity value to represent a feature of something."}
   ],
   "165": [
     {"anchor": "attribute def TensorMeasurementReference", "text": "A tensor measurement reference is defined as an array of scalar measurement references, one for each element of the tensor."},

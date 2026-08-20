@@ -3,6 +3,7 @@ attribute def Date;
 item def Person;
 part def Vehicle {
     // A time slice represents a portion of the lifetime of an occurrence over some period of time.
+    // Timeslices and snapshots are suboccurrences.
     timeslice assembly;
     // A succession asserts that the first occurrence ends before the second can begin.
     first assembly then delivery;

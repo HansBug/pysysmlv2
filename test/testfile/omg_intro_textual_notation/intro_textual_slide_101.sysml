@@ -1,16 +1,20 @@
 use case 'provide transportation' : 'Provide Transportation' {
     subject vehicle;
+    // The required behavior of a use case can be specified as for an action.
     first start;
     then include use case 'enter vehicle' : 'Enter Vehicle' {
         subject vehicle;
         actor :>> driver = 'provide transportation'::driver;
         actor :>> passengers = 'provide transportation'::passengers;
     }
+    // A use case can define sub-use cases within its behavior.
+    // The traditional use case “extend” relationship is not supported yet.
     then use case 'drive vehicle' {
         subject vehicle;
         actor driver = 'provide transportation'::driver;
         actor environment = 'provide transportation'::environment;
         include 'add fuel'[0..*] {
+            // A subject must be declared first, before any actors. It can only be omitted if there are no actors or other parameters.
             subject vehicle;
             actor :>> fueler = driver;
         }
@@ -24,6 +28,7 @@ use case 'provide transportation' : 'Provide Transportation' {
     }
     then done;
 }
+// A use case can also be specified without an explicit use case definition.
 use case 'add fuel' {
     subject vehicle : Vehicle;
     actor fueler : Person;

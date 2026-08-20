@@ -2,7 +2,7 @@ package MassRollup2 {
     private import ScalarFunctions::*;
     part def MassedThing {
         attribute simpleMass :> ISQ::mass;
-        // A default value is a feature value that applies unless explicitly overridden.
+        // A default value is feature value that applies unless explicitly overridden.
         attribute totalMass :> ISQ::mass default simpleMass;
     }
     part compositeThing : MassedThing {

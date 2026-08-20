@@ -32,3 +32,18 @@ def test_check_rejects_version_mismatch(tmp_path, monkeypatch):
 
     with pytest.raises(SystemExit, match="VERSION"):
         package_check.check()
+
+
+def test_check_requires_the_complete_generated_asset_set(tmp_path, monkeypatch):
+    meta = tmp_path / "pysysmlv2" / "config"
+    generated = tmp_path / "pysysmlv2" / "syntax" / "generated"
+    meta.mkdir(parents=True)
+    generated.mkdir(parents=True)
+    (meta / "meta.py").write_text('__VERSION__ = "1.0"\n', encoding="utf-8")
+    (tmp_path / "VERSION").write_text("1.0\n", encoding="utf-8")
+    for name in package_check.GENERATED_PACKAGE_FILES[:-1]:
+        (generated / name).write_text("generated", encoding="utf-8")
+    monkeypatch.setattr(package_check, "ROOT", tmp_path)
+
+    with pytest.raises(SystemExit, match="grammar-provenance.json"):
+        package_check.check()

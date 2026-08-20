@@ -4,6 +4,7 @@ SRC_DIR := pysysmlv2
 TEST_DIR := test
 RANGE_DIR ?= .
 UPSTREAM_GRAMMAR_DIR := upstream/sysml-v2-grammar/grammar
+UPSTREAM_GRAMMAR_ROOT := upstream/sysml-v2-grammar
 GENERATED_DIR := pysysmlv2/syntax/generated
 GRAMMAR_PROVENANCE := $(GENERATED_DIR)/grammar-provenance.json
 ANTLR_DIR := .antlr
@@ -73,6 +74,7 @@ antlr_update:
 	mkdir -p "$(GENERATED_DIR)"
 	cp "$(UPSTREAM_GRAMMAR_DIR)/SysMLv2Lexer.g4" "$(GENERATED_DIR)/SysMLv2Lexer.g4"
 	cp "$(UPSTREAM_GRAMMAR_DIR)/SysMLv2Parser.g4" "$(GENERATED_DIR)/SysMLv2Parser.g4"
+	cp "$(UPSTREAM_GRAMMAR_ROOT)/LICENSE" "$(GENERATED_DIR)/UPSTREAM_LICENSE.txt"
 	$(PYTHON) -m tools.grammar_overlay "$(GENERATED_DIR)/SysMLv2Parser.g4" "$(UPSTREAM_GRAMMAR_DIR)" "$(GRAMMAR_PROVENANCE)"
 	$(MAKE) antlr_build
 

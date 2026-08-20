@@ -8,7 +8,7 @@ action def ChargeBattery {
             out charge;
         }
         // An if action performs its body if a Boolean condition is true. (It can also have an else part, which is performed if the condition is false.)
-        // If used in this way represents an action, not a succession.
+        // if used in this way represents an action, not a succession.
         then if monitor.charge < 100 {
             action addCharge : AddCharge {
                 in charge = monitor.charge;
