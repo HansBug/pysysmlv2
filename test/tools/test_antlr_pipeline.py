@@ -74,6 +74,11 @@ def test_build_uses_argument_lists_and_replaces_generated_outputs(tmp_path, monk
             (temp / "SysMLv2Lexer.interp").write_bytes(b"interp\r\n")
             (temp / "SysMLv2Parser.interp").write_bytes(b"interp\r\n")
 
+    def fake_format(paths):
+        formatted.extend(paths)
+        for path in paths:
+            path.write_bytes(path.read_bytes().replace(b"\n", b"\r\n"))
+
     monkeypatch.setattr(antlr_pipeline, "GENERATED", generated)
     monkeypatch.setattr(antlr_pipeline, "ANTLR_TEMP", temp)
     monkeypatch.setattr(antlr_pipeline, "ANTLR_JAR", jar)
@@ -81,7 +86,7 @@ def test_build_uses_argument_lists_and_replaces_generated_outputs(tmp_path, monk
     monkeypatch.setattr(
         antlr_pipeline,
         "_format_generated_python",
-        lambda paths: formatted.extend(paths),
+        fake_format,
     )
     monkeypatch.setattr(antlr_pipeline.subprocess, "check_call", fake_check_call)
 
