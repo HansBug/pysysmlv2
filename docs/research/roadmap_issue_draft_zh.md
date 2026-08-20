@@ -32,7 +32,7 @@ target transition 的规范结论已经收紧并固定：`TargetTransitionUsage`
 - 建立严格源码镜像测试目录、英文 reStructuredText docstring、详细 module/init roadmap、双语 Sphinx、`rst_auto`、Makefile help、ANTLR/build/package smoke 和 `AGENTS.md -> CLAUDE.md` 真实 symlink。
 - 本地保留 2026-03-02 人工复核的 OMG SysML 2.0 Language PDF inventory，共 275 个可执行 source entries 和 147 个明确排除记录；保留 Intro textual notation PDF 的 167 个 slide 资产及页面解说注释；复制 OMG 2026-05 Release 中 251 个 `.sysml` 官方模型到 `test/testfile`，测试不直接读取 upstream。
 - Section 7.18 当前有 22 个提交的 parser-derived AST snapshot，其中 11 个状态/动作样例另有独立手写字段级 oracle；Section 8.4 的 8 个纳入样例具备独立字段级 AST/round-trip 回归，其他人工 ledger fixture 目前主要提供 source-preservation 与 fixed-point 回归。AST 和 listener 的专门 branch coverage 门禁要求 100%。这些数字代表当前已固化的本地资产，不代表完整 SysML 语义模型已经完成。
-- `RawElement` 的现有兼容分支已登记在 `docs/research/raw_element_compatibility_ledger.json`，每条记录包含 production、listener callback、保留理由、回归测试和后续 typed-node 任务；核心 state/action/transition/expression/import/alias/filter/connection/interface 路径有专门回归，不能把该私有桥接当成语义模型。
+- 导出的 `RawElement` 语法兼容节点已登记在 `docs/research/raw_element_compatibility_ledger.json`，每条记录包含 production、listener callback、保留理由、回归测试和后续 typed-node 任务；它不是语义模型节点，核心 state/action/transition/expression/import/alias/filter/connection/interface 路径有专门回归，不能把该兼容桥接当成语义模型。
 
 # 目标架构
 
@@ -80,7 +80,7 @@ target transition 的规范结论已经收紧并固定：`TargetTransitionUsage`
 
 # 当前已知限制与风险
 
-当前 `pysysmlv2/syntax/listener.py` 仍有面向未完成 production 的 `_raw_store`/`RawElement` 兼容路径，CLAUDE 中的“最终不得依赖 opaque fallback”是目标纪律，不应被当前 fixed-point round-trip 误解为已完成的全量 typed AST。当前官方 251 文件测试证明的是本地复制资产可被 parser 接受并达到 AST round-trip fixed point，不等价于每个文件都有独立的语义正确性 oracle；当前 275/147 manual inventory 也区分了可执行完整例子和上下文/图形/历史记录，不能把排除记录宣称为 parser 已支持。
+当前 `pysysmlv2/syntax/listener.py` 仍有面向未完成 production 的 `_raw_store`/`RawElement` 兼容路径；`RawElement` 虽从语法包导出以便调用方明确识别和拒绝，但不是语义模型 API。CLAUDE 中的“最终不得依赖 opaque fallback”是目标纪律，不应被当前 fixed-point round-trip 误解为已完成的全量 typed AST。当前官方 251 文件测试证明的是本地复制资产可被 parser 接受并达到 AST round-trip fixed point，不等价于每个文件都有独立的语义正确性 oracle；当前 275/147 manual inventory 也区分了可执行完整例子和上下文/图形/历史记录，不能把排除记录宣称为 parser 已支持。
 
 当前 GitHub Actions 的 runtime/test matrix 是 3 个 host 乘 8 个 Python line，共 24 个跨平台 test job；quality/generated、docs、package smoke 和 Codecov upload 只在 Ubuntu 22.04/Python 3.12 执行，且 Codecov action 配置为 `fail_ci_if_error: true`。这证明现有 CI 已覆盖运行时兼容性和主流程，但尚不足以证明三个平台都能 build/install wheel、运行 docs 或重生成 ANTLR；后续验收必须保留这一事实边界。
 

@@ -38,6 +38,17 @@ def test_overlay_rejects_unreviewed_upstream_rule_changes(tmp_path):
         grammar_overlay.apply_overlay(grammar)
 
 
+def test_overlay_writes_lf_bytes(tmp_path):
+    """Keep generated grammar bytes stable when the host newline is CRLF."""
+    grammar = tmp_path / "SysMLv2Parser.g4"
+    grammar.write_bytes(_unmodified_grammar().replace("\n", "\r\n").encode("utf-8"))
+
+    assert grammar_overlay.apply_overlay(grammar)
+    data = grammar.read_bytes()
+    assert b"\r\n" not in data
+    assert b"\n" in data
+
+
 def test_manifest_records_automatic_upstream_and_effective_hashes():
     manifest = grammar_overlay.build_manifest("abc", "v2026.05.0", "1" * 64, "2" * 64)
 

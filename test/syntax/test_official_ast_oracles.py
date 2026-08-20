@@ -197,7 +197,6 @@ def _state_member(
                 TargetTransitionUsage(
                     TransitionSuccession(_q(target)),
                     _empty_action_body(),
-                    input_parameter_count=1,
                 )
             )
         ]
@@ -285,7 +284,6 @@ def _transition(
             _empty_action_body(),
             usage_declaration=_decl(name) if name is not None else None,
             is_first=True,
-            input_parameter_count=1 + int(trigger is not None),
             trigger_action_member=trigger,
             guard_expression_member=guard,
             effect_behavior_member=effect,
@@ -307,7 +305,6 @@ def _target(
             TransitionSuccession(_q(target)),
             _empty_action_body(),
             form=TargetTransitionForm.BARE,
-            input_parameter_count=1 + int(trigger is not None),
             trigger_action_member=trigger,
             guard_expression_member=guard,
             effect_behavior_member=effect,

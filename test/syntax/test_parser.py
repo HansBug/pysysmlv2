@@ -211,7 +211,6 @@ def test_target_transition_shorthand_keeps_only_normative_orders():
         "transition_succession_member",
         "action_body",
         "form",
-        "input_parameter_count",
         "trigger_action_member",
         "guard_expression_member",
         "effect_behavior_member",

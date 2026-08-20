@@ -2567,6 +2567,88 @@ def test_listener_connection_interface_and_feature_defensive_paths():
     )
 
 
+def test_listener_binding_and_succession_defensive_paths():
+    """Cover required child validation for binding and succession usages."""
+    reference = ast.QualifiedReference(["A"])
+    connector_end = ast.ConnectorEnd(reference)
+    body = ast.DefinitionBody(declaration_only=True)
+
+    def context(listener, prefix, ends, declaration=None, usage_body=body):
+        prefix_context = _FakeContext()
+        end_contexts = [_FakeContext(), _FakeContext()]
+        declaration_context = _FakeContext() if declaration is not None else None
+        body_context = _FakeContext()
+        listener.nodes[prefix_context] = prefix
+        for end_context, end in zip(end_contexts, ends):
+            listener.nodes[end_context] = end
+        if declaration_context is not None:
+            listener.nodes[declaration_context] = declaration
+        listener.nodes[body_context] = usage_body
+        return _FakeContext(
+            usagePrefix=prefix_context,
+            usageDeclaration=declaration_context,
+            connectorEndMember=end_contexts,
+            usageBody=body_context,
+        )
+
+    def expect_error(listener, callback, parser_context):
+        with pytest.raises((ValueError, TypeError, AttributeError)):
+            getattr(listener, callback)(parser_context)
+
+    # Each production has the same four required-child guards. Keep the
+    # contexts independent so every branch is exercised without relying on
+    # parser recovery or private listener state.
+    for callback in ("exitBindingConnectorAsUsage", "exitSuccessionAsUsage"):
+        listener = _fake_listener()
+        expect_error(
+            listener,
+            callback,
+            context(listener, ast.RawElement("bad prefix"), [connector_end, connector_end]),
+        )
+
+        listener = _fake_listener()
+        one_end_context = _FakeContext()
+        body_context = _FakeContext()
+        prefix_context = _FakeContext()
+        listener.nodes[prefix_context] = ast.UsagePrefix()
+        listener.nodes[one_end_context] = connector_end
+        listener.nodes[body_context] = body
+        expect_error(
+            listener,
+            callback,
+            _FakeContext(
+                usagePrefix=prefix_context,
+                usageDeclaration=None,
+                connectorEndMember=[one_end_context],
+                usageBody=body_context,
+            ),
+        )
+
+        listener = _fake_listener()
+        expect_error(
+            listener,
+            callback,
+            context(
+                listener,
+                ast.UsagePrefix(),
+                [connector_end, connector_end],
+                declaration=ast.RawElement("bad declaration"),
+            ),
+        )
+
+        listener = _fake_listener()
+        expect_error(
+            listener,
+            callback,
+            context(
+                listener,
+                ast.UsagePrefix(),
+                [connector_end, connector_end],
+                usage_body=ast.RawElement("bad body"),
+            ),
+        )
+
+
 def test_listener_relation_and_body_error_paths_are_explicitly_covered():
     """Exercise defensive branches for relationship and body dispatch rules."""
 

@@ -1331,7 +1331,6 @@
                     "effect_behavior_member": null,
                     "guard_before_trigger": false,
                     "guard_expression_member": null,
-                    "input_parameter_count": 1,
                     "is_first": true,
                     "source_feature_chain": {
                       "__class__": "FeatureChain",
@@ -1382,7 +1381,6 @@
                     "effect_behavior_member": null,
                     "guard_before_trigger": false,
                     "guard_expression_member": null,
-                    "input_parameter_count": 1,
                     "is_first": true,
                     "source_feature_chain": {
                       "__class__": "FeatureChain",
@@ -1645,7 +1643,6 @@
                     "effect_behavior_member": null,
                     "guard_before_trigger": false,
                     "guard_expression_member": null,
-                    "input_parameter_count": 2,
                     "is_first": true,
                     "source_feature_chain": {
                       "__class__": "FeatureChain",
@@ -1744,7 +1741,6 @@
                     "effect_behavior_member": null,
                     "guard_before_trigger": false,
                     "guard_expression_member": null,
-                    "input_parameter_count": 2,
                     "is_first": true,
                     "source_feature_chain": {
                       "__class__": "FeatureChain",
@@ -2072,7 +2068,6 @@
                         }
                       }
                     },
-                    "input_parameter_count": 1,
                     "is_first": true,
                     "source_feature_chain": {
                       "__class__": "FeatureChain",
@@ -2132,7 +2127,6 @@
                         "operator": "not "
                       }
                     },
-                    "input_parameter_count": 1,
                     "is_first": true,
                     "source_feature_chain": {
                       "__class__": "FeatureChain",
@@ -2274,7 +2268,6 @@
                         }
                       }
                     },
-                    "input_parameter_count": 2,
                     "is_first": true,
                     "source_feature_chain": {
                       "__class__": "FeatureChain",
@@ -2386,7 +2379,6 @@
                         }
                       }
                     },
-                    "input_parameter_count": 2,
                     "is_first": true,
                     "source_feature_chain": {
                       "__class__": "FeatureChain",
@@ -2717,7 +2709,6 @@
                         }
                       }
                     },
-                    "input_parameter_count": 1,
                     "is_first": true,
                     "source_feature_chain": {
                       "__class__": "FeatureChain",
@@ -2777,7 +2768,6 @@
                         "operator": "not "
                       }
                     },
-                    "input_parameter_count": 1,
                     "is_first": true,
                     "source_feature_chain": {
                       "__class__": "FeatureChain",
@@ -2972,7 +2962,6 @@
                         }
                       }
                     },
-                    "input_parameter_count": 2,
                     "is_first": true,
                     "source_feature_chain": {
                       "__class__": "FeatureChain",
@@ -3131,7 +3120,6 @@
                         }
                       }
                     },
-                    "input_parameter_count": 2,
                     "is_first": true,
                     "source_feature_chain": {
                       "__class__": "FeatureChain",
@@ -3596,7 +3584,6 @@
                             }
                           }
                         },
-                        "input_parameter_count": 2,
                         "transition_succession_member": {
                           "__class__": "TransitionSuccession",
                           "connector_end": {
@@ -3783,7 +3770,6 @@
                             }
                           }
                         },
-                        "input_parameter_count": 2,
                         "transition_succession_member": {
                           "__class__": "TransitionSuccession",
                           "connector_end": {
@@ -4024,7 +4010,6 @@
                           "value": "bare"
                         },
                         "guard_expression_member": null,
-                        "input_parameter_count": 2,
                         "transition_succession_member": {
                           "__class__": "TransitionSuccession",
                           "connector_end": {
@@ -4103,7 +4088,6 @@
                           "value": "bare"
                         },
                         "guard_expression_member": null,
-                        "input_parameter_count": 2,
                         "transition_succession_member": {
                           "__class__": "TransitionSuccession",
                           "connector_end": {
@@ -4226,7 +4210,6 @@
                           "value": "bare"
                         },
                         "guard_expression_member": null,
-                        "input_parameter_count": 2,
                         "transition_succession_member": {
                           "__class__": "TransitionSuccession",
                           "connector_end": {
@@ -5013,7 +4996,6 @@
                         }
                       }
                     },
-                    "input_parameter_count": 2,
                     "is_first": true,
                     "source_feature_chain": {
                       "__class__": "FeatureChain",
@@ -5136,7 +5118,6 @@
                           "value": "bare"
                         },
                         "guard_expression_member": null,
-                        "input_parameter_count": 1,
                         "transition_succession_member": {
                           "__class__": "TransitionSuccession",
                           "connector_end": {
@@ -5906,7 +5887,6 @@
               }
             }
           },
-          "input_parameter_count": 2,
           "is_first": true,
           "source_feature_chain": {
             "__class__": "FeatureChain",

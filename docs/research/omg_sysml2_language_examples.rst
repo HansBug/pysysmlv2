@@ -82,7 +82,8 @@ the ``TargetTransitionUsage`` shorthand with the trigger before its guard;
 that target form is accepted by the pinned upstream grammar and is not a
 local grammar extension. OnOff5's closed transition effects are the separate
 legacy semicolon compatibility case. OnOff6 exercises the corresponding
-terminate action shorthand. OnOff4, OnOff5, and OnOff6 all parse successfully. Their
+terminate action shorthand. The OnOff4, OnOff5, and OnOff6 fixtures all parse
+successfully. Their
 parser-derived snapshots are compared field-for-field by the official corpus
 tests, while the handwritten state-oracle suite independently checks the
 concrete fields for OnOff1--OnOff6. No target guard-first alternative is

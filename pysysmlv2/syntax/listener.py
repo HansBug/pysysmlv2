@@ -88,6 +88,7 @@ from .ast import (
     BinaryConnectorPart,
     BinaryExpression,
     BinaryInterfacePart,
+    BindingConnectorAsUsage,
     BodyExpression,
     BooleanLiteral,
     BracketExpression,
@@ -266,6 +267,7 @@ from .ast import (
     StringLiteral,
     StructureUsageMember,
     SubclassificationPart,
+    SuccessionAsUsage,
     SuccessionFlowUsage,
     TargetSuccession,
     TargetTransitionForm,
@@ -3091,6 +3093,64 @@ class SysMLAstListener(SysMLv2ParserListener):
             ),
         )
 
+    def exitBindingConnectorAsUsage(
+        self, ctx: SysMLv2Parser.BindingConnectorAsUsageContext
+    ) -> None:
+        """Assemble the full and shorthand binding connector usages."""
+        prefix = self._child(ctx.usagePrefix())
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        ends = [self._child(item) for item in ctx.connectorEndMember()]
+        body = self._child(ctx.usageBody())
+        if not isinstance(prefix, UsagePrefix):
+            raise ValueError("bindingConnectorAsUsage requires usagePrefix")
+        if len(ends) != 2 or not all(isinstance(item, ConnectorEnd) for item in ends):
+            raise ValueError("bindingConnectorAsUsage requires two connector ends")
+        if declaration is not None and not isinstance(declaration, UsageDeclaration):
+            raise ValueError("bindingConnectorAsUsage declaration was not assembled")
+        if not isinstance(body, DefinitionBody):
+            raise ValueError("bindingConnectorAsUsage requires usageBody")
+        self._store(
+            ctx,
+            BindingConnectorAsUsage(
+                usage_prefix=prefix,
+                source=ends[0],
+                target=ends[1],
+                usage_body=body,
+                usage_declaration=declaration
+                if isinstance(declaration, UsageDeclaration)
+                else None,
+                has_binding_keyword=ctx.BINDING() is not None,
+            ),
+        )
+
+    def exitSuccessionAsUsage(self, ctx: SysMLv2Parser.SuccessionAsUsageContext) -> None:
+        """Assemble the full and shorthand succession usages."""
+        prefix = self._child(ctx.usagePrefix())
+        declaration = self._child(ctx.usageDeclaration()) if ctx.usageDeclaration() else None
+        ends = [self._child(item) for item in ctx.connectorEndMember()]
+        body = self._child(ctx.usageBody())
+        if not isinstance(prefix, UsagePrefix):
+            raise ValueError("successionAsUsage requires usagePrefix")
+        if len(ends) != 2 or not all(isinstance(item, ConnectorEnd) for item in ends):
+            raise ValueError("successionAsUsage requires two connector ends")
+        if declaration is not None and not isinstance(declaration, UsageDeclaration):
+            raise ValueError("successionAsUsage declaration was not assembled")
+        if not isinstance(body, DefinitionBody):
+            raise ValueError("successionAsUsage requires usageBody")
+        self._store(
+            ctx,
+            SuccessionAsUsage(
+                usage_prefix=prefix,
+                source=ends[0],
+                target=ends[1],
+                usage_body=body,
+                usage_declaration=declaration
+                if isinstance(declaration, UsageDeclaration)
+                else None,
+                has_succession_keyword=ctx.SUCCESSION() is not None,
+            ),
+        )
+
     def exitInterfaceEnd(self, ctx: SysMLv2Parser.InterfaceEndContext) -> None:
         """Assemble interface endpoint reference and concrete modifiers."""
         reference = self._child(ctx.ownedReferenceSubsetting())
@@ -3351,7 +3411,6 @@ class SysMLAstListener(SysMLv2ParserListener):
                 if isinstance(declaration, UsageDeclaration)
                 else None,
                 is_first=ctx.FIRST() is not None,
-                input_parameter_count=len(ctx.emptyParameterMember()),
                 trigger_action_member=trigger if isinstance(trigger, TriggerActionMember) else None,
                 guard_expression_member=guard if isinstance(guard, GuardExpressionMember) else None,
                 effect_behavior_member=effect if isinstance(effect, EffectBehaviorMember) else None,
@@ -3390,7 +3449,6 @@ class SysMLAstListener(SysMLv2ParserListener):
                 transition_succession_member=succession,
                 action_body=body,
                 form=form,
-                input_parameter_count=len(ctx.emptyParameterMember()),
                 trigger_action_member=trigger if isinstance(trigger, TriggerActionMember) else None,
                 guard_expression_member=guard if isinstance(guard, GuardExpressionMember) else None,
                 effect_behavior_member=effect if isinstance(effect, EffectBehaviorMember) else None,
@@ -4248,6 +4306,8 @@ class SysMLAstListener(SysMLv2ParserListener):
             ctx.message(),
             ctx.flowUsage(),
             ctx.successionFlowUsage(),
+            ctx.bindingConnectorAsUsage(),
+            ctx.successionAsUsage(),
             ctx.occurrenceUsage(),
             ctx.individualUsage(),
             ctx.portionUsage(),
@@ -4961,6 +5021,8 @@ class SysMLAstListener(SysMLv2ParserListener):
             or ctx.defaultReferenceUsage()
             or ctx.attributeUsage()
             or ctx.enumerationUsage()
+            or ctx.bindingConnectorAsUsage()
+            or ctx.successionAsUsage()
         )
         if child is not None:
             if self._child(child) is not None:

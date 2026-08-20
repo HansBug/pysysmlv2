@@ -3,13 +3,32 @@
 import ast as python_ast
 import inspect
 import json
+import re
 from dataclasses import fields, is_dataclass
 from pathlib import Path
+from typing import Optional
 
 import pytest
 
-from pysysmlv2 import parse
-from pysysmlv2.syntax import RawElement
+from pysysmlv2 import parse, parse_as_ast_node
+from pysysmlv2.syntax import (
+    BindingConnectorAsUsage,
+    ConnectorEnd,
+    DefinitionBody,
+    DottedQualifiedReference,
+    FeatureSpecialization,
+    FeatureSpecializationPart,
+    Identification,
+    Model,
+    OwnedFeatureTyping,
+    Package,
+    PackageMember,
+    QualifiedReference,
+    RawElement,
+    SuccessionAsUsage,
+    UsageDeclaration,
+    UsagePrefix,
+)
 from pysysmlv2.syntax.listener import SysMLAstListener
 
 pytestmark = pytest.mark.unit
@@ -41,7 +60,7 @@ def _ledger():
 
 
 def test_ledger_is_complete():
-    """Require one reasoned record for every listener raw-store callback."""
+    """Require one auditable record for every listener raw-store callback."""
     entries = _ledger()
     assert len({entry["id"] for entry in entries}) == len(entries)
     source = inspect.getsource(SysMLAstListener)
@@ -61,8 +80,27 @@ def test_ledger_is_complete():
         )
     }
     assert raw_callbacks == {entry["callback"] for entry in entries}
+    grammar = (ROOT / "pysysmlv2" / "syntax" / "generated" / "SysMLv2Parser.g4").read_text(
+        encoding="utf-8"
+    )
+    productions = {
+        match.group(1) for match in re.finditer(r"(?m)^([A-Za-z][A-Za-z0-9_]*)\s*$", grammar)
+    }
+    assert {entry["production"] for entry in entries} <= productions
     assert all(entry["production"] in source for entry in entries)
     assert all(entry["reason"] and entry["follow_up"] and entry["test"] for entry in entries)
+    for entry in entries:
+        test_file, separator, test_name = entry["test"].partition("::")
+        assert separator == "::"
+        test_path = ROOT / test_file
+        assert test_path.is_file(), entry["test"]
+        test_tree = python_ast.parse(test_path.read_text(encoding="utf-8"))
+        test_names = {
+            node.name
+            for node in test_tree.body
+            if isinstance(node, (python_ast.FunctionDef, python_ast.AsyncFunctionDef))
+        }
+        assert test_name in test_names, entry["test"]
 
 
 def test_core_state_paths_are_typed():
@@ -102,6 +140,138 @@ def test_core_package_paths_are_typed():
 def test_core_non_occurrence_paths_are_typed():
     """Supported attribute/reference/enum usage dispatchers stay typed."""
     result = parse("package Demo { attribute a; ref attribute r; enum E { one; } }")
+    assert result.ok, result.diagnostics
+    assert list(_walk(result.ast)) == []
+
+
+def _typed_connector_end(name: str) -> ConnectorEnd:
+    """Build the expected connector-end field for a minimal oracle."""
+    return ConnectorEnd(QualifiedReference([name]))
+
+
+def _named_usage_declaration(name: str, type_name: Optional[str] = None) -> UsageDeclaration:
+    """Build an exact optional declaration used by full connector forms."""
+    specialization = None
+    if type_name is not None:
+        specialization = FeatureSpecializationPart(
+            [
+                FeatureSpecialization(
+                    ":",
+                    [
+                        OwnedFeatureTyping(
+                            DottedQualifiedReference([QualifiedReference([type_name])])
+                        )
+                    ],
+                )
+            ]
+        )
+    return UsageDeclaration(Identification(declared_name=name), specialization)
+
+
+@pytest.mark.parametrize(
+    ("source", "grammar_node", "expected"),
+    [
+        pytest.param(
+            "bind a = b;",
+            "bindingConnectorAsUsage",
+            BindingConnectorAsUsage(
+                UsagePrefix(),
+                _typed_connector_end("a"),
+                _typed_connector_end("b"),
+                DefinitionBody(declaration_only=True),
+            ),
+            id="binding-shorthand",
+        ),
+        pytest.param(
+            "binding ab bind a = b;",
+            "bindingConnectorAsUsage",
+            BindingConnectorAsUsage(
+                UsagePrefix(),
+                _typed_connector_end("a"),
+                _typed_connector_end("b"),
+                DefinitionBody(declaration_only=True),
+                usage_declaration=_named_usage_declaration("ab"),
+                has_binding_keyword=True,
+            ),
+            id="binding-named",
+        ),
+        pytest.param(
+            "binding ab1 : AB bind a = b;",
+            "bindingConnectorAsUsage",
+            BindingConnectorAsUsage(
+                UsagePrefix(),
+                _typed_connector_end("a"),
+                _typed_connector_end("b"),
+                DefinitionBody(declaration_only=True),
+                usage_declaration=_named_usage_declaration("ab1", "AB"),
+                has_binding_keyword=True,
+            ),
+            id="binding-specialized",
+        ),
+        pytest.param(
+            "first a then b;",
+            "successionAsUsage",
+            SuccessionAsUsage(
+                UsagePrefix(),
+                _typed_connector_end("a"),
+                _typed_connector_end("b"),
+                DefinitionBody(declaration_only=True),
+            ),
+            id="succession-shorthand",
+        ),
+        pytest.param(
+            "succession s first a then b;",
+            "successionAsUsage",
+            SuccessionAsUsage(
+                UsagePrefix(),
+                _typed_connector_end("a"),
+                _typed_connector_end("b"),
+                DefinitionBody(declaration_only=True),
+                usage_declaration=_named_usage_declaration("s"),
+                has_succession_keyword=True,
+            ),
+            id="succession-named",
+        ),
+        pytest.param(
+            "succession s1 : AB first a then b;",
+            "successionAsUsage",
+            SuccessionAsUsage(
+                UsagePrefix(),
+                _typed_connector_end("a"),
+                _typed_connector_end("b"),
+                DefinitionBody(declaration_only=True),
+                usage_declaration=_named_usage_declaration("s1", "AB"),
+                has_succession_keyword=True,
+            ),
+            id="succession-specialized",
+        ),
+    ],
+)
+def test_binding_and_succession_are_field_exact_and_round_trip(source, grammar_node, expected):
+    """Assert every field of both connector productions and their dispatch."""
+    fragment = parse_as_ast_node(source, grammar_node=grammar_node)
+    assert fragment == expected
+    assert str(fragment) == source
+    assert parse_as_ast_node(str(fragment), grammar_node=grammar_node) == expected
+
+    result = parse("package Demo { " + source + " }")
+    assert result.ok, result.diagnostics
+    assert result.ast == Model(
+        members=[
+            PackageMember(
+                Package(
+                    identification=Identification(declared_name="Demo"),
+                    members=[PackageMember(expected)],
+                )
+            )
+        ]
+    )
+    assert list(_walk(result.ast)) == []
+
+
+def test_core_definition_paths_are_typed():
+    """Keep common definition dispatchers out of the raw compatibility path."""
+    result = parse("package Demo { item def Vehicle; state def State; }")
     assert result.ok, result.diagnostics
     assert list(_walk(result.ast)) == []
 

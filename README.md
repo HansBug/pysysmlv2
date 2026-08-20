@@ -58,7 +58,7 @@ make package_check
 
 Only `pysysmlv2/syntax/generated/` is generated and must never be edited by hand. Change the pinned grammar submodule and rerun `make antlr_update`; the generated parser artifacts are Ruff-formatted, while the handwritten AST and listener remain ordinary linted and covered source. Public AST nodes have explicit snake_case fields and node-owned round-trip renderers. `make unittest RANGE_DIR=syntax` runs the syntax test subtree and emits `coverage.xml` plus terminal `term-missing` coverage by default; `make unittest RANGE_DIR=workspace` runs the corresponding source subtree.
 
-The private lossless `RawElement` bridge is limited to deferred non-core grammar productions and parser-recovery fragments. Its production-by-production audit, regression tests, and typed-node follow-ups live in `docs/research/raw_element_compatibility_ledger.json`; valid state-machine and other core paths are required to produce typed AST nodes.
+The exported lossless `RawElement` syntax bridge is limited to deferred non-core grammar productions and parser-recovery fragments. It is not a semantic-model node: downstream code must explicitly reject or account for it. Its production-by-production audit, regression tests, and typed-node follow-ups live in `docs/research/raw_element_compatibility_ledger.json`; valid state-machine and other core paths are required to produce typed AST nodes.
 
 ## Documentation
 

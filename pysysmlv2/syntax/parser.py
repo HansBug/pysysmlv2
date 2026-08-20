@@ -305,6 +305,8 @@ def _grammar_entry_rules() -> Dict[str, Callable[..., Any]]:
         "partDefinition": SysMLv2Parser.partDefinition,
         "partUsage": SysMLv2Parser.partUsage,
         "itemUsage": SysMLv2Parser.itemUsage,
+        "bindingConnectorAsUsage": SysMLv2Parser.bindingConnectorAsUsage,
+        "successionAsUsage": SysMLv2Parser.successionAsUsage,
         "endOccurrenceUsageElement": SysMLv2Parser.endOccurrenceUsageElement,
         "actionDefinition": SysMLv2Parser.actionDefinition,
         "actionUsage": SysMLv2Parser.actionUsage,

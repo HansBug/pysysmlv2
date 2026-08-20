@@ -1,3 +1,2 @@
-pysysmlv2/syntax/generated/** linguist-generated=true
-pysysmlv2/syntax/generated/*.g4 text eol=lf
+pysysmlv2/syntax/generated/** text eol=lf linguist-generated=true
 docs/source/api_doc/** linguist-generated=true

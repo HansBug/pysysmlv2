@@ -27,11 +27,12 @@ grammar alternatives that are actually optional.  The listener attaches
 path, so direct construction still allows provenance to be absent without
 weakening required syntax fields.
 
-The private lossless bridge is audited in
+The exported ``RawElement`` lossless compatibility node is audited in
 ``docs/research/raw_element_compatibility_ledger.json``.  Each entry names the
 grammar production, listener callback, regression test, and follow-up typed
-node; it is not a license for a normal expression, action, state, transition,
-import, alias, filter, connection, or interface path to become opaque.
+node.  It is a controlled syntax escape hatch, not a semantic-model API and
+not a license for a normal expression, action, state, transition, import,
+alias, filter, connection, or interface path to become opaque.
 
 The AST is intentionally not the linked SysML semantic model.  Qualified
 names, feature chains, transition endpoints, and action references remain
@@ -40,8 +41,11 @@ keeps source spans meaningful and prevents parser recovery from inventing
 semantic identity.  The listener is the sole assembler and uses explicit
 ``exit<GrammarRule>`` callbacks; generated parser contexts are never converted
 through reflection or a generic text scanner.  ``RawElement`` is restricted
-to an explicit non-state compatibility boundary while coverage is staged; it
-must not appear on ordinary expression, action, transition, or state paths.
+to explicit deferred-production and parser-recovery fragments while coverage
+is staged; it must not appear on ordinary expression, action, transition, or
+state paths.  The class remains importable from ``pysysmlv2.syntax`` so syntax
+clients can recognize and reject this boundary explicitly; semantic code must
+never treat it as a resolved model element.
 
 Every concrete node owns its exporter.  ``str(node)`` and ``to_sysml()`` build
 canonical, parseable SysML text from the node's named fields.  ``source_path``
@@ -380,12 +384,10 @@ class TransitionFeatureKind(str, Enum):
 
 
 class TargetTransitionForm(str, Enum):
-    """Concrete alternatives of ``TargetTransitionUsage``."""
+    """Concrete keyword alternatives of ``TargetTransitionUsage``."""
 
     BARE = "bare"
     TRANSITION = "transition"
-    TRIGGER = "trigger"
-    GUARD = "guard"
 
 
 @dataclass
@@ -2102,15 +2104,17 @@ class CommentExpression(Expression):
 
 @dataclass
 class RawElement(FunctionBodyItem):
-    """Preserve an unsupported non-state grammar element losslessly.
+    """Preserve an unsupported grammar fragment losslessly.
 
-    This is a deliberately narrow compatibility boundary for generic
-    non-state feature/declaration productions that have not yet received a
-    handwritten node.  It may occur in a function body because that grammar
-    admits type-body members, but it is never used for expressions, state
-    bodies, transitions, or action statements.  Unlike the old opaque node it
-    has no grammar-name field: the only retained value is explicitly the
-    parseable source fragment itself.
+    This exported class is a deliberately narrow syntax compatibility
+    boundary for deferred productions and parser-recovery fragments that have
+    not yet received a handwritten node.  It may occur in a function body
+    because that grammar admits type-body members, but it is never a semantic
+    model element and must not be used for expressions, state bodies,
+    transitions, or action statements.  The only retained value is the
+    explicitly parseable source fragment itself; downstream code must
+    recognize this type and reject or account for it rather than silently
+    treating it as typed syntax.
 
     :param source_text: Parseable source fragment for the unsupported element.
     :type source_text: str
@@ -3224,6 +3228,130 @@ class ConnectionUsage(SourceElement):
 
     def __str__(self) -> str:
         """Return canonical connection-usage text."""
+        return self.to_sysml()
+
+
+@dataclass
+class BindingConnectorAsUsage(SourceElement):
+    """Represent the concrete ``bindingConnectorAsUsage`` production.
+
+    The grammar distinguishes the full ``binding`` form from the shorthand
+    ``bind`` form. Both forms retain the required usage prefix, two ordered
+    connector ends, and the usage body as explicit fields; name resolution of
+    the endpoints is deferred to the workspace layer.
+
+    :param usage_prefix: Required generic usage prefix.
+    :type usage_prefix: :class:`pysysmlv2.syntax.ast.UsagePrefix`
+    :param source: First connector end on the left side of ``=``.
+    :type source: :class:`pysysmlv2.syntax.ast.ConnectorEnd`
+    :param target: Second connector end on the right side of ``=``.
+    :type target: :class:`pysysmlv2.syntax.ast.ConnectorEnd`
+    :param usage_body: Required semicolon or brace usage body.
+    :type usage_body: :class:`pysysmlv2.syntax.ast.DefinitionBody`
+    :param usage_declaration: Optional declaration owned by ``binding``.
+    :type usage_declaration: :class:`pysysmlv2.syntax.ast.UsageDeclaration`, optional
+    :param has_binding_keyword: Whether the optional ``binding`` keyword is
+        present, defaults to ``False``.
+    :type has_binding_keyword: bool, optional
+
+    Example::
+
+        >>> binding = BindingConnectorAsUsage(
+        ...     UsagePrefix(),
+        ...     ConnectorEnd(QualifiedReference(["a"])),
+        ...     ConnectorEnd(QualifiedReference(["b"])),
+        ...     DefinitionBody(declaration_only=True),
+        ... )
+        >>> str(binding)
+        'bind a = b;'
+    """
+
+    usage_prefix: UsagePrefix
+    source: ConnectorEnd
+    target: ConnectorEnd
+    usage_body: DefinitionBody
+    usage_declaration: Optional[UsageDeclaration] = None
+    has_binding_keyword: bool = False
+
+    def to_sysml(self) -> str:
+        """Render the binding form, endpoints, and usage body."""
+        prefix = _join(
+            [
+                str(self.usage_prefix),
+                "binding" if self.has_binding_keyword else "",
+                str(self.usage_declaration) if self.usage_declaration else "",
+                "bind",
+                str(self.source),
+                "=",
+                str(self.target),
+            ]
+        )
+        return _append_body(prefix, str(self.usage_body))
+
+    def __str__(self) -> str:
+        """Return canonical binding-connector-usage text."""
+        return self.to_sysml()
+
+
+@dataclass
+class SuccessionAsUsage(SourceElement):
+    """Represent the concrete ``successionAsUsage`` production.
+
+    The full ``succession`` form and the shorthand ``first`` form share the
+    same ordered source/target connector ends. The optional declaration is
+    owned by the full form; the source AST preserves that distinction without
+    resolving either endpoint.
+
+    :param usage_prefix: Required generic usage prefix.
+    :type usage_prefix: :class:`pysysmlv2.syntax.ast.UsagePrefix`
+    :param source: First connector end after ``first``.
+    :type source: :class:`pysysmlv2.syntax.ast.ConnectorEnd`
+    :param target: Second connector end after ``then``.
+    :type target: :class:`pysysmlv2.syntax.ast.ConnectorEnd`
+    :param usage_body: Required semicolon or brace usage body.
+    :type usage_body: :class:`pysysmlv2.syntax.ast.DefinitionBody`
+    :param usage_declaration: Optional declaration owned by ``succession``.
+    :type usage_declaration: :class:`pysysmlv2.syntax.ast.UsageDeclaration`, optional
+    :param has_succession_keyword: Whether the optional ``succession`` keyword
+        is present, defaults to ``False``.
+    :type has_succession_keyword: bool, optional
+
+    Example::
+
+        >>> succession = SuccessionAsUsage(
+        ...     UsagePrefix(),
+        ...     ConnectorEnd(QualifiedReference(["a"])),
+        ...     ConnectorEnd(QualifiedReference(["b"])),
+        ...     DefinitionBody(declaration_only=True),
+        ... )
+        >>> str(succession)
+        'first a then b;'
+    """
+
+    usage_prefix: UsagePrefix
+    source: ConnectorEnd
+    target: ConnectorEnd
+    usage_body: DefinitionBody
+    usage_declaration: Optional[UsageDeclaration] = None
+    has_succession_keyword: bool = False
+
+    def to_sysml(self) -> str:
+        """Render the succession form, endpoints, and usage body."""
+        prefix = _join(
+            [
+                str(self.usage_prefix),
+                "succession" if self.has_succession_keyword else "",
+                str(self.usage_declaration) if self.usage_declaration else "",
+                "first",
+                str(self.source),
+                "then",
+                str(self.target),
+            ]
+        )
+        return _append_body(prefix, str(self.usage_body))
+
+    def __str__(self) -> str:
+        """Return canonical succession-usage text."""
         return self.to_sysml()
 
 
@@ -5626,7 +5754,6 @@ class TransitionUsage(SourceElement):
     action_body: ActionBody
     usage_declaration: Optional[UsageDeclaration] = None
     is_first: bool = False
-    input_parameter_count: int = 0
     trigger_action_member: Optional[TriggerActionMember] = None
     guard_expression_member: Optional[GuardExpressionMember] = None
     effect_behavior_member: Optional[EffectBehaviorMember] = None
@@ -5673,7 +5800,6 @@ class TargetTransitionUsage(SourceElement):
     transition_succession_member: TransitionSuccession
     action_body: ActionBody
     form: TargetTransitionForm = TargetTransitionForm.BARE
-    input_parameter_count: int = 0
     trigger_action_member: Optional[TriggerActionMember] = None
     guard_expression_member: Optional[GuardExpressionMember] = None
     effect_behavior_member: Optional[EffectBehaviorMember] = None
@@ -5989,6 +6115,7 @@ __all__ = [
     "AssignmentNode",
     "BinaryExpression",
     "BinaryConnectorPart",
+    "BindingConnectorAsUsage",
     "BinaryInterfacePart",
     "BodyExpression",
     "CastExpression",
@@ -6136,6 +6263,7 @@ __all__ = [
     "StateUsage",
     "StructureUsageMember",
     "SubclassificationPart",
+    "SuccessionAsUsage",
     "StringLiteral",
     "TargetTransitionForm",
     "TargetTransitionUsage",

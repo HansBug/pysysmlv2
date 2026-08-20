@@ -40,6 +40,13 @@ from typing import Dict, Optional, Sequence, Tuple
 OVERLAY_IDENTIFIER = "pysysmlv2-sysml-state-v2"
 MANIFEST_SCHEMA_VERSION = 1
 
+
+def _write_utf8_lf(path: Path, content: str) -> None:
+    """Write UTF-8 text with deterministic LF endings on every host."""
+    with path.open("w", encoding="utf-8", newline="\n") as stream:
+        stream.write(content)
+
+
 # These notes are emitted into ``grammar-provenance.json`` and are deliberately
 # kept beside the exact replacements below.  The copied G4 is generated output;
 # this table is the review record for every local delta from the pinned upstream
@@ -343,7 +350,7 @@ def apply_overlay(parser_grammar: Path) -> bool:
             "found {} and {}.".format(OVERLAY_IDENTIFIER, rule_name, before_count, after_count)
         )
     if changed:
-        parser_grammar.write_text(source, encoding="utf-8")
+        _write_utf8_lf(parser_grammar, source)
     return changed
 
 
@@ -438,9 +445,9 @@ def write_manifest(
         upstream_parser_sha256,
         effective_parser_sha256,
     )
-    manifest_path.write_text(
+    _write_utf8_lf(
+        manifest_path,
         json.dumps(manifest, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
     )
 
 

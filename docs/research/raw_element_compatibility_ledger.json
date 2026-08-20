@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "purpose": "Audit the private lossless RawElement bridge until the remaining non-core SysML productions receive handwritten AST nodes.",
-  "public_contract": "RawElement is not a semantic model node. It is permitted only for the deferred productions listed here or parser-recovery fragments; downstream semantic code must reject or explicitly account for it.",
+  "purpose": "Audit the exported lossless RawElement syntax bridge until the remaining non-core SysML productions receive handwritten AST nodes.",
+  "public_contract": "RawElement is an exported syntax-compatibility node, not a semantic model node. It is permitted only for the deferred productions listed here or parser-recovery fragments; downstream semantic code must reject or explicitly account for it.",
   "source": "pysysmlv2/syntax/listener.py",
   "entries": [
     {
@@ -90,7 +90,7 @@
       "callback": "exitInterfaceNonOccurrenceUsageElement",
       "scope": "interface body",
       "reason": "The typed reference, attribute, enumeration, binding, and succession alternatives are passed through when assembled; an unassembled child remains lossless during staged coverage.",
-      "test": "test/syntax/test_raw_element_compatibility.py::test_core_interface_paths_are_typed",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_core_connection_and_interface_paths_are_typed",
       "follow_up": "Convert any remaining unassembled interface alternative into a dedicated node and make the fallback unreachable for valid input.",
       "status": "deferred"
     },
@@ -100,7 +100,7 @@
       "callback": "exitInterfaceOccurrenceUsageElement",
       "scope": "interface body",
       "reason": "Default ends, end occurrences, structure usages, and behavior usages are typed when their child callback succeeds; parser recovery or an unimplemented child is retained losslessly.",
-      "test": "test/syntax/test_raw_element_compatibility.py::test_core_interface_paths_are_typed",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_core_connection_and_interface_paths_are_typed",
       "follow_up": "Remove the recovery fallback after all interface occurrence alternatives have explicit callbacks.",
       "status": "deferred"
     },
