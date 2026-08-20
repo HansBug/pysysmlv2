@@ -62,6 +62,25 @@ def _command_path(path: Path) -> str:
         return str(path)
 
 
+def _normalize_lf(path: Path) -> None:
+    """Normalize one generated text file to deterministic LF line endings.
+
+    ANTLR and Ruff can emit the host platform's native line ending.  Generated
+    artifacts are committed as LF (see ``.gitattributes``), so normalize after
+    every external filesystem boundary instead of relying on Git checkout
+    settings or the host's ``newline`` default.
+
+    :param path: Text artifact whose bytes should use LF line endings.
+    :type path: pathlib.Path
+    :return: ``None`` after the file is normalized in place.
+    :rtype: None
+    """
+    data = path.read_bytes()
+    normalized = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    if normalized != data:
+        path.write_bytes(normalized)
+
+
 def _copy_upstream_grammar() -> None:
     """Copy the pinned grammar inputs into the generated-only directory."""
     GENERATED.mkdir(parents=True, exist_ok=True)
@@ -69,6 +88,7 @@ def _copy_upstream_grammar() -> None:
         if not source.is_file():
             raise SystemExit("upstream grammar input is missing: {}".format(source))
         shutil.copyfile(str(source), str(destination))
+        _normalize_lf(destination)
 
 
 def _run_overlay() -> None:
@@ -197,10 +217,13 @@ def build() -> None:
     for source in outputs:
         destination = GENERATED / source.name
         shutil.copyfile(str(source), str(destination))
+        _normalize_lf(destination)
         copied.append(destination)
     _write_generated_init()
     python_outputs = tuple(path for path in copied if path.suffix == ".py")
     _format_generated_python(python_outputs + (GENERATED / "__init__.py",))
+    for path in python_outputs + (GENERATED / "__init__.py",):
+        _normalize_lf(path)
 
 
 def update() -> None:

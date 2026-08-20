@@ -12,9 +12,9 @@ def test_copy_upstream_grammar_copies_only_declared_inputs(tmp_path, monkeypatch
     source_grammar = upstream / "grammar"
     generated = tmp_path / "generated"
     source_grammar.mkdir(parents=True)
-    (upstream / "LICENSE").write_text("license\n", encoding="utf-8")
-    (source_grammar / "SysMLv2Lexer.g4").write_text("lexer\n", encoding="utf-8")
-    (source_grammar / "SysMLv2Parser.g4").write_text("parser\n", encoding="utf-8")
+    (upstream / "LICENSE").write_bytes(b"license\r\n")
+    (source_grammar / "SysMLv2Lexer.g4").write_bytes(b"lexer\r\n")
+    (source_grammar / "SysMLv2Parser.g4").write_bytes(b"parser\r\n")
     copies = (
         (source_grammar / "SysMLv2Lexer.g4", generated / "SysMLv2Lexer.g4"),
         (source_grammar / "SysMLv2Parser.g4", generated / "SysMLv2Parser.g4"),
@@ -31,6 +31,7 @@ def test_copy_upstream_grammar_copies_only_declared_inputs(tmp_path, monkeypatch
         "UPSTREAM_LICENSE.txt",
     ]
     assert (generated / "SysMLv2Parser.g4").read_text(encoding="utf-8") == "parser\n"
+    assert all(b"\r\n" not in path.read_bytes() for path in generated.iterdir())
 
 
 def test_copy_upstream_grammar_reports_missing_input(tmp_path, monkeypatch):
@@ -65,13 +66,13 @@ def test_build_uses_argument_lists_and_replaces_generated_outputs(tmp_path, monk
         commands.append((arguments, cwd))
         if arguments[0] == "java":
             temp.mkdir(parents=True, exist_ok=True)
-            (temp / "SysMLv2Lexer.py").write_text("lexer\n", encoding="utf-8")
-            (temp / "SysMLv2Parser.py").write_text("parser\n", encoding="utf-8")
-            (temp / "SysMLv2ParserListener.py").write_text("listener\n", encoding="utf-8")
-            (temp / "SysMLv2Lexer.tokens").write_text("tokens\n", encoding="utf-8")
-            (temp / "SysMLv2Parser.tokens").write_text("tokens\n", encoding="utf-8")
-            (temp / "SysMLv2Lexer.interp").write_text("interp\n", encoding="utf-8")
-            (temp / "SysMLv2Parser.interp").write_text("interp\n", encoding="utf-8")
+            (temp / "SysMLv2Lexer.py").write_bytes(b"lexer\r\n")
+            (temp / "SysMLv2Parser.py").write_bytes(b"parser\r\n")
+            (temp / "SysMLv2ParserListener.py").write_bytes(b"listener\r\n")
+            (temp / "SysMLv2Lexer.tokens").write_bytes(b"tokens\r\n")
+            (temp / "SysMLv2Parser.tokens").write_bytes(b"tokens\r\n")
+            (temp / "SysMLv2Lexer.interp").write_bytes(b"interp\r\n")
+            (temp / "SysMLv2Parser.interp").write_bytes(b"interp\r\n")
 
     monkeypatch.setattr(antlr_pipeline, "GENERATED", generated)
     monkeypatch.setattr(antlr_pipeline, "ANTLR_TEMP", temp)
@@ -92,6 +93,7 @@ def test_build_uses_argument_lists_and_replaces_generated_outputs(tmp_path, monk
     assert not (generated / "old.py").exists()
     assert not (generated / "manifest.json").exists()
     assert (generated / "SysMLv2Parser.py").read_text(encoding="utf-8") == "parser\n"
+    assert all(b"\r\n" not in path.read_bytes() for path in generated.iterdir())
     assert (
         (generated / "__init__.py")
         .read_text(encoding="utf-8")
