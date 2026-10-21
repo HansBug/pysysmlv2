@@ -1,0 +1,1839 @@
+{
+  "schema_version": 1,
+  "title": "OMG SysML v2.0 Language manual visual ledger: Section 7.17 action examples, printed pages 101-113",
+  "source": {
+    "title": "OMG Systems Modeling Language (SysML) Version 2.0, Part 1: Language Specification",
+    "document_number": "formal/2026-03-02",
+    "url": "https://www.omg.org/spec/SysML/2.0/Language/PDF",
+    "local_pdf": "/tmp/SysML-2.0-Language.pdf",
+    "sha256_local_pdf": "46e6c0476a6f1f34f367d57e039d56659bff75e41d2e4b3d37ca4cadea84a83a",
+    "raw_inventory": "docs/research/omg_sysml2_language_section7_blocks.json"
+  },
+  "review_method": "Rendered physical pages 133-145 were manually and visually inspected. PDF/layout extraction was used only for navigation and token cross-checking; the rendered page determined source-block boundaries, continuation relationships, and contextual/lexical status. Every source_code value below is joined directly from the reviewed raw lines, with no token correction or invented omission.",
+  "scope": {
+    "clauses": [
+      "7.17.3 Control Nodes",
+      "7.17.4 Succession Shorthands",
+      "7.17.5 Conditional Successions",
+      "7.17.6 Perform Action Usages",
+      "7.17.7 Send Action Usages",
+      "7.17.8 Accept Action Usages",
+      "7.17.9 Assignment Action Usages",
+      "7.17.10 Terminate Action Usages",
+      "7.17.11 If Action Usages",
+      "7.17.12 Loop Action Usages"
+    ],
+    "printed_pages": [
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113
+    ],
+    "physical_pages": [
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142,
+      143,
+      144,
+      145
+    ],
+    "first_block": "S7-P101-B11",
+    "last_block": "S7-P113-B05",
+    "raw_block_count": 97,
+    "candidate_count": 38,
+    "fragment_count": 53,
+    "lexical_count": 6,
+    "fixture_eligible_count": 16
+  },
+  "status_vocabulary": {
+    "complete": "Closed source block that parsed independently in the current parser probe; external semantic definitions may still be required.",
+    "context_fragment": "Source or notation fragment requiring an enclosing action, part, or model context.",
+    "continuation_fragment": "A source block that starts or closes a neighboring page/block and cannot be interpreted independently.",
+    "alternative_fragment": "A block that presents equivalent notation alternatives; alternatives are retained exactly but are not promoted as one fixture.",
+    "incomplete_placeholder": "A block with a visible unclosed scope or literal omission marker; omitted source is not invented.",
+    "official_compatibility_difference": "A closed-looking official source form rejected by the current parser; retained as evidence and not normalized or overlaid.",
+    "lexical_fragment": "A grammar/notation legend token sequence, not a complete SysML source block."
+  },
+  "compatibility_gaps": [
+    {
+      "id": "S7-P111-B06",
+      "clause": "7.17.11 If Action Usages",
+      "status": "current_parser_rejected",
+      "evidence": "Read-only local parse probe reported no viable alternative at action test if.",
+      "disposition": "Retain the official source verbatim as an official compatibility difference; do not add a grammar overlay from this ledger."
+    },
+    {
+      "id": "S7-P112-B04",
+      "clause": "7.17.12 Loop Action Usages",
+      "status": "current_parser_rejected",
+      "evidence": "Read-only local parse probe reported no viable alternative at action advance while.",
+      "disposition": "Retain the official source verbatim as an official compatibility difference; do not add a grammar overlay from this ledger."
+    }
+  ],
+  "boundary_notes": [
+    "S7-P101-B11 begins after the previously audited C90 continuation on printed page 101; C90 is intentionally not duplicated here.",
+    "S7-P108-B07 continues into S7-P109-B01, and S7-P110-B07 continues into S7-P111-B01. Both relationships are retained without merging raw records.",
+    "The requested endpoint is S7-P113-B05. Later printed-page-113 blocks are outside this ledger, including any beginning of Section 7.18.",
+    "S7-P113-B05 preserves the official token postion exactly; this is an observed source spelling, not a correction."
+  ],
+  "counts": {
+    "raw_blocks": 97,
+    "entries": 38,
+    "excluded_fragments": 59,
+    "candidate_blocks": 38,
+    "fragment_blocks": 53,
+    "lexical_blocks": 6,
+    "fixture_eligible_entries": 16,
+    "current_grammar_compatibility_gaps": 2
+  },
+  "entries": [
+    {
+      "id": "S7-P101-B11",
+      "clause": "7.17.3 Control Nodes",
+      "printed_pages": [
+        101
+      ],
+      "physical_pages": [
+        133
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "// Both action1 and action2 will proceed concurrently\n// after fork1.\nfork fork1;\nfirst fork1 then action1;\nfirst fork1 then action2;\naction action1;",
+      "completeness": "continuation_fragment",
+      "fixture_eligible": false,
+      "parseability": "contextual_fragment",
+      "disposition": "cross_page_continuation",
+      "notes": "First half of the control-node example; the next declaration (action action2;) is in S7-P102-B01. The rendered source is retained without inventing an enclosing action.",
+      "exclusion_reason": "First half of the control-node example; the next declaration (action action2;) is in S7-P102-B01. The rendered source is retained without inventing an enclosing action."
+    },
+    {
+      "id": "S7-P102-B01",
+      "clause": "7.17.3 Control Nodes",
+      "printed_pages": [
+        102
+      ],
+      "physical_pages": [
+        134
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "action action2;\n// join1 will be performed after both action1\n// and action2 have completed.\nfirst action1 then join1;\nfirst action2 then join1;\njoin join1;\nfirst join1 then decision1;\n// One of action3 or action4 will be chosen\n// (non-deterministically) to be performed after decision1.\ndecide decision1;\nfirst decision1 then action3;\nfirst decision1 then action4;\naction action3;\naction action4;\n// merge1 will be performed after either action3\n// or action4 have completed.\nfirst action3 then merge1;\nfirst action4 then merge1;\nmerge merge1;",
+      "completeness": "continuation_fragment",
+      "fixture_eligible": false,
+      "parseability": "contextual_fragment",
+      "disposition": "cross_page_continuation",
+      "notes": "Continuation of S7-P101-B11: it completes the fork/join/decision/merge control-node example but is not a standalone root model.",
+      "exclusion_reason": "Continuation of S7-P101-B11: it completes the fork/join/decision/merge control-node example but is not a standalone root model."
+    },
+    {
+      "id": "S7-P102-B05",
+      "clause": "7.17.4 Succession Shorthands",
+      "printed_pages": [
+        102
+      ],
+      "physical_pages": [
+        134
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "first action1;\nthen action2;\n// The above two declarations are together\n// equivalent to the following single succession.\nfirst action1 then action2;",
+      "completeness": "alternative_fragment",
+      "fixture_eligible": false,
+      "parseability": "contextual_fragment",
+      "disposition": "equivalent_alternatives",
+      "notes": "The page explicitly presents the first two declarations as equivalent to the third. Both alternatives are retained verbatim in one record; no single executable fixture is selected.",
+      "exclusion_reason": "The page explicitly presents the first two declarations as equivalent to the third. Both alternatives are retained verbatim in one record; no single executable fixture is selected."
+    },
+    {
+      "id": "S7-P102-B07",
+      "clause": "7.17.4 Succession Shorthands",
+      "printed_pages": [
+        102
+      ],
+      "physical_pages": [
+        134
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "first action1;\nthen action action2;\n// The above two declarations are together\n// equivalent to the following.\nfirst action1 then action2;\naction action2;",
+      "completeness": "alternative_fragment",
+      "fixture_eligible": false,
+      "parseability": "contextual_fragment",
+      "disposition": "equivalent_alternatives",
+      "notes": "The page explicitly presents the named then action action2 form as equivalent to the following form. Both alternatives are retained verbatim in one record.",
+      "exclusion_reason": "The page explicitly presents the named then action action2 form as equivalent to the following form. Both alternatives are retained verbatim in one record."
+    },
+    {
+      "id": "S7-P103-B01",
+      "clause": "7.17.4 Succession Shorthands",
+      "printed_pages": [
+        103
+      ],
+      "physical_pages": [
+        135
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "first start;\nthen merge 'loop';\nthen action initialize;\nthen action monitor;\nthen action finalize;\nthen 'loop';",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "contextual_fragment",
+      "disposition": "contextual_source_fragment",
+      "notes": "Succession-shorthand body fragment; it requires an enclosing action or other owner.",
+      "exclusion_reason": "Succession-shorthand body fragment; it requires an enclosing action or other owner."
+    },
+    {
+      "id": "S7-P103-B04",
+      "clause": "7.17.4 Succession Shorthands",
+      "printed_pages": [
+        103
+      ],
+      "physical_pages": [
+        135
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "// The two successions following fork1 both have\n// fork1 as their source.\nfork fork1;\nthen action1;\nthen action2;\naction action1;\nthen join1;\naction action2;\nthen join1;\njoin join1;\n// The two successions following decision1 both have\n// decision1 as their source.\nthen decide decision1;\nthen action3;\nthen action4;\naction action3;\nthen merge1;\naction action4;\nthen merge1;\nmerge merge1;",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "contextual_fragment",
+      "disposition": "contextual_source_fragment",
+      "notes": "Fork/decision shorthand body fragment; it requires an enclosing action or other owner.",
+      "exclusion_reason": "Fork/decision shorthand body fragment; it requires an enclosing action or other owner."
+    },
+    {
+      "id": "S7-P103-B06",
+      "clause": "7.17.5 Conditional Successions",
+      "printed_pages": [
+        103
+      ],
+      "physical_pages": [
+        135
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "succession conditionalOnActive\nfirst initialize if isActive then monitor;",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "contextual_fragment",
+      "disposition": "contextual_source_fragment",
+      "notes": "Conditional succession member fragment; the surrounding action owner is not shown in this block.",
+      "exclusion_reason": "Conditional succession member fragment; the surrounding action owner is not shown in this block."
+    },
+    {
+      "id": "S7-P104-B02",
+      "clause": "7.17.5 Conditional Successions",
+      "printed_pages": [
+        104
+      ],
+      "physical_pages": [
+        136
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "merge 'loop';\naction checkLevel {out level; }\ndecide;\nif level <= refillLevel then refill;\nif level >= maxLevel then drain;\nelse continue;\naction refill;\nthen 'loop';\naction drain;\nthen 'loop';\naction continue;",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "contextual_fragment",
+      "disposition": "contextual_source_fragment",
+      "notes": "Decision/merge control-node body fragment; it requires an enclosing action owner.",
+      "exclusion_reason": "Decision/merge control-node body fragment; it requires an enclosing action owner."
+    },
+    {
+      "id": "S7-P104-B05",
+      "clause": "7.17.6 Perform Action Usages",
+      "printed_pages": [
+        104
+      ],
+      "physical_pages": [
+        136
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "part def Vehicle {\nperform action powerVehicle references VehicleActions::providePower;\nabstract perform action moveVehicle; // Performed action is itself.\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "parseability": "independently_parseable_by_current_parser",
+      "disposition": "fixture_candidate",
+      "notes": "Closed part definition from the Perform Action Usages section. The performed-action references are preserved exactly."
+    },
+    {
+      "id": "S7-P104-B08",
+      "clause": "7.17.6 Perform Action Usages",
+      "printed_pages": [
+        104
+      ],
+      "physical_pages": [
+        136
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "part vehicle : Vehicle {\n// The performed action is VehicleActions::move.\nperform VehicleActions::move :> Vehicle::moveVehicle;\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "parseability": "independently_parseable_by_current_parser",
+      "disposition": "fixture_candidate",
+      "notes": "Closed part usage demonstrating perform ... :>; the explanatory comment is part of the reviewed source."
+    },
+    {
+      "id": "S7-P104-B09",
+      "clause": "7.17.6 Perform Action Usages",
+      "printed_pages": [
+        104
+      ],
+      "physical_pages": [
+        136
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "action initialization {\nin item device;\nperform Utility::startUpCheck {\nin component = device;\nout status;\n}\n...\n}",
+      "completeness": "incomplete_placeholder",
+      "fixture_eligible": false,
+      "parseability": "incomplete_or_unclosed",
+      "disposition": "incomplete_source_block",
+      "notes": "The raw source contains a standalone ... omission marker inside an otherwise closed action. The omitted members are not invented, and the current parser rejects the literal marker.",
+      "exclusion_reason": "The raw source contains a standalone ... omission marker inside an otherwise closed action. The omitted members are not invented, and the current parser rejects the literal marker."
+    },
+    {
+      "id": "S7-P105-B05",
+      "clause": "7.17.7 Send Action Usages",
+      "printed_pages": [
+        105
+      ],
+      "physical_pages": [
+        137
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "part monitor {\naction sendReadingTo {\nin part destination;\nperform getReading {out reading : SensorReading; }\n// Send a reading from the monitor to the destination.\naction sendReading\nsend getReading.reading via monitor to destination;\n// The following send action is equivalent to the\n// one above, but without a name.\nsend getReading.reading via monitor to destination;\n}\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "parseability": "independently_parseable_by_current_parser",
+      "disposition": "fixture_candidate",
+      "notes": "Closed part/action example showing named and unnamed send-action forms and the page's equivalence explanation."
+    },
+    {
+      "id": "S7-P105-B06",
+      "clause": "7.17.7 Send Action Usages",
+      "printed_pages": [
+        105
+      ],
+      "physical_pages": [
+        137
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "part monitor {\naction sendReadingTo {\nin part destination;\nperform getReading {out reading : SensorReading; }\nflow getReading.reading to sendReading.payload;\naction sendReading send {\nin payload;\nin sender = monitor;\nin receiver = destination;\n}\nsend getReading.reading {\n// payload parameter is already bound in the \"send\" declaration.\nin sender = monitor;\nin receiver = destination;\n}\n}\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "parseability": "independently_parseable_by_current_parser",
+      "disposition": "fixture_candidate",
+      "notes": "Closed part/action example showing explicit sender and receiver bindings; comments and quoted terminology are retained."
+    },
+    {
+      "id": "S7-P106-B02",
+      "clause": "7.17.7 Send Action Usages",
+      "printed_pages": [
+        106
+      ],
+      "physical_pages": [
+        138
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "part monitor {\naction sendReadingTo {\nin part destination;\nperform getReading {out reading : SensorReading; }\n// The sender for the following send action is, by default,\n// the sending context, which is the part \"monitor\".\nsend getReading.reading to destination;\n}\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "parseability": "independently_parseable_by_current_parser",
+      "disposition": "fixture_candidate",
+      "notes": "Closed part/action example showing the default sender as the sending part."
+    },
+    {
+      "id": "S7-P106-B03",
+      "clause": "7.17.7 Send Action Usages",
+      "printed_pages": [
+        106
+      ],
+      "physical_pages": [
+        138
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "part monitor {\nref part destination;\nperform action sending {\nperform getReading {out reading : SensorReading; }\n// The sender for the following send action is, by default,\n// the sending context, which is the action \"sending\",\n// not the part \"monitor\".\nsend getReading.reading to destination;\n}\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "parseability": "independently_parseable_by_current_parser",
+      "disposition": "fixture_candidate",
+      "notes": "Closed part/action example showing the default sender as the nested sending action."
+    },
+    {
+      "id": "S7-P106-B06",
+      "clause": "7.17.7 Send Action Usages",
+      "printed_pages": [
+        106
+      ],
+      "physical_pages": [
+        138
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "part def MonitorDevice {\nport readingPort;\naction monitoring {\nperform getReading {out reading : SensorReading; }\nsend getReading.reading via readingPort;\n}\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "parseability": "independently_parseable_by_current_parser",
+      "disposition": "fixture_candidate",
+      "notes": "Closed part definition showing a send action through a port."
+    },
+    {
+      "id": "S7-P107-B04",
+      "clause": "7.17.8 Accept Action Usages",
+      "printed_pages": [
+        107
+      ],
+      "physical_pages": [
+        139
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "part controller {\naction accepting {\n// ...\naction acceptReading\naccept reading : SensorReading via controller;\n// The following accept action is equivalent to the\n// one above, but it does not name the accept action or\n// the payload parameter.\naccept SensorReading via controller;\n// ...\n}\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "parseability": "independently_parseable_by_current_parser",
+      "disposition": "fixture_candidate",
+      "notes": "Closed accept-action example. The // ... lines are literal explanatory comments inside the source and are retained."
+    },
+    {
+      "id": "S7-P107-B05",
+      "clause": "7.17.8 Accept Action Usages",
+      "printed_pages": [
+        107
+      ],
+      "physical_pages": [
+        139
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "part controller {\naction accepting {\n//...\naccept SensorReading {\nin receiver = controller;\n}\n}",
+      "completeness": "incomplete_placeholder",
+      "fixture_eligible": false,
+      "parseability": "incomplete_or_unclosed",
+      "disposition": "incomplete_source_block",
+      "notes": "The raw block closes the nested accept/action scopes but leaves the outer part controller scope open. No missing brace is inferred.",
+      "exclusion_reason": "The raw block closes the nested accept/action scopes but leaves the outer part controller scope open. No missing brace is inferred."
+    },
+    {
+      "id": "S7-P108-B02",
+      "clause": "7.17.8 Accept Action Usages",
+      "printed_pages": [
+        108
+      ],
+      "physical_pages": [
+        140
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "part controller {\nin level : Real;\nattribute threshold : Real;\naction {\n// Both of the following accept actions trigger (once) when the\n// given expression becomes true.\naccept : ChangeSignal = Triggers::triggerWhen({ level > threshold });\naccept when level > threshold;\n// The following accept action triggers at the given date and time.\naccept at Iso8601DateTime(\"2024-02-01T00:00:00Z\");\n// The following accept action triggers 30 seconds after the evaluation\n// of its time trigger.\naccept after 30 [s];\n}\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "parseability": "independently_parseable_by_current_parser",
+      "disposition": "fixture_candidate",
+      "notes": "Closed accept-action example covering change, when, at, and after trigger forms."
+    },
+    {
+      "id": "S7-P108-B04",
+      "clause": "7.17.8 Accept Action Usages",
+      "printed_pages": [
+        108
+      ],
+      "physical_pages": [
+        140
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "part controller {\naction accepting {\n// The receiver for the following accept action is, by default,\n// the accepting context, which is the part \"controller\".\naccept SensorReading;\n// ...\n}\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "parseability": "independently_parseable_by_current_parser",
+      "disposition": "fixture_candidate",
+      "notes": "Closed accept-action example showing the default receiver as the accepting part."
+    },
+    {
+      "id": "S7-P108-B05",
+      "clause": "7.17.8 Accept Action Usages",
+      "printed_pages": [
+        108
+      ],
+      "physical_pages": [
+        140
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "part controller {\nperform action accepting {\n// The receiver for the following accept action is, by default,\n// the accepting context, which is the \"accepting\" action,\n// not the part \"controller\".\naccept reading : SensorReading;\n// ...\n}\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "parseability": "independently_parseable_by_current_parser",
+      "disposition": "fixture_candidate",
+      "notes": "Closed performed-action example showing the default receiver as the accepting action."
+    },
+    {
+      "id": "S7-P108-B07",
+      "clause": "7.17.8 Accept Action Usages",
+      "printed_pages": [
+        108
+      ],
+      "physical_pages": [
+        140
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "part def ControllerDevice {\nport sensorPort;\naction control {\naccept reading : SensorReading via sensorPort;",
+      "completeness": "incomplete_placeholder",
+      "fixture_eligible": false,
+      "parseability": "incomplete_or_unclosed",
+      "disposition": "incomplete_source_block",
+      "notes": "The raw block ends inside nested part/action scopes; the two closing braces are in S7-P109-B01. It is retained as a cross-page continuation, not treated as an independently closed fixture.",
+      "exclusion_reason": "The raw block ends inside nested part/action scopes; the two closing braces are in S7-P109-B01. It is retained as a cross-page continuation, not treated as an independently closed fixture."
+    },
+    {
+      "id": "S7-P109-B05",
+      "clause": "7.17.9 Assignment Action Usages",
+      "printed_pages": [
+        109
+      ],
+      "physical_pages": [
+        141
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "assign\n. :=\naction",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "contextual_fragment",
+      "disposition": "contextual_source_fragment",
+      "notes": "",
+      "exclusion_reason": "The reviewed block is not an independently rooted SysML model; its enclosing action or owner is outside this raw block."
+    },
+    {
+      "id": "S7-P109-B06",
+      "clause": "7.17.9 Assignment Action Usages",
+      "printed_pages": [
+        109
+      ],
+      "physical_pages": [
+        141
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "action def UpdateVehiclePosition {\nin part sim : Simulation;\nin attribute deltaT : TimeDurationValue;\n// The target of the assignment below is \"sim\".\n// The referent feature chain is \"vehicle.position\".\nassign sim.vehicle.position :=\nsim.vehicle.position + sim.vehicle.velocity * deltaT;\n// After the above assignment \"sim.vehicle.position\" has the\n// value of the result of the assigned value expression,\n// evaluated at the time of the assignment.\n}\naction def RecordNames {\nin item record : Record;\nin item entries : Entry[1..*];\n// \"entries.name\" evaluates to the names of all entries.\n// These values are assigned to the \"names\" feature of \"record\".\nassign record.names := entries.name;\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "parseability": "independently_parseable_by_current_parser",
+      "disposition": "fixture_candidate",
+      "notes": "Closed pair of action definitions demonstrating assignment targets, referent feature chains, and collection assignment."
+    },
+    {
+      "id": "S7-P109-B07",
+      "clause": "7.17.9 Assignment Action Usages",
+      "printed_pages": [
+        109
+      ],
+      "physical_pages": [
+        141
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "action counter {\n// This attribute is initialized using a feature value.\nattribute count : Natural := 0;\n// The target of the following assign action usage is\n// implicitly the action \"counter\".\nassign count := count + 1;\n// ...\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "parseability": "independently_parseable_by_current_parser",
+      "disposition": "fixture_candidate",
+      "notes": "Closed action usage demonstrating implicit assignment target and initialization. The // ... placeholder comment is retained."
+    },
+    {
+      "id": "S7-P110-B04",
+      "clause": "7.17.10 Terminate Action Usages",
+      "printed_pages": [
+        110
+      ],
+      "physical_pages": [
+        142
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "part processor {\nprivate ref action process : ProcessWorkflow;\naction startProcessing {\nassign process := new ProcessWorkFlow();\n}\naction terminateProcessing {\n// The following terminate action has the name \"terminate1\".\naction terminate1 terminate process; // Terminates \"process\" action.\n// The following terminate action is unnamed.\nterminate this; // Terminates \"processor\" part.\n}\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "parseability": "independently_parseable_by_current_parser",
+      "disposition": "fixture_candidate",
+      "notes": "Closed part/action example demonstrating named and unnamed terminate actions."
+    },
+    {
+      "id": "S7-P110-B06",
+      "clause": "7.17.10 Terminate Action Usages",
+      "printed_pages": [
+        110
+      ],
+      "physical_pages": [
+        142
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "action def MonitoredActivity {\nmerge continue;\nthen action performCriticalActivity {\nperform action monitorCriticalActivity;\nperform action criticalActivity;\nthen terminate; // Terminates \"performCriticalActivity\" even if\n// \"monitorCriticalActivity\" is still ongoing.\n}\nthen decide;\nif continueActivity() then continue;\nelse stop;\naction stop terminate; // Terminates performance of \"MonitoredActivity\".\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "parseability": "independently_parseable_by_current_parser",
+      "disposition": "fixture_candidate",
+      "notes": "Closed action definition demonstrating terminate dispatch from a performed action and if/else control."
+    },
+    {
+      "id": "S7-P110-B07",
+      "clause": "7.17.10 Terminate Action Usages",
+      "printed_pages": [
+        110
+      ],
+      "physical_pages": [
+        142
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "action def TerminateProcessByID {\nin attribute id : ProcessID;\nperform action getProcessByID {\nin processID = id;",
+      "completeness": "continuation_fragment",
+      "fixture_eligible": false,
+      "parseability": "contextual_fragment",
+      "disposition": "cross_page_continuation",
+      "notes": "First half of the terminate-dispatch example; it continues with out process and closing scopes in S7-P111-B01.",
+      "exclusion_reason": "First half of the terminate-dispatch example; it continues with out process and closing scopes in S7-P111-B01."
+    },
+    {
+      "id": "S7-P111-B01",
+      "clause": "7.17.11 If Action Usages",
+      "printed_pages": [
+        111
+      ],
+      "physical_pages": [
+        143
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "out process;\n}\nflow getProcessByID.process to terminateProcess.terminatedProcess;\naction terminateProccess terminate {\nin terminatedProcess;\n}\n}",
+      "completeness": "continuation_fragment",
+      "fixture_eligible": false,
+      "parseability": "contextual_fragment",
+      "disposition": "cross_page_continuation",
+      "notes": "Continuation of S7-P110-B07. It begins inside getProcessByID, closes prior scopes, and then declares the terminate action; it is not a standalone root.",
+      "exclusion_reason": "Continuation of S7-P110-B07. It begins inside getProcessByID, closes prior scopes, and then declares the terminate action; it is not a standalone root."
+    },
+    {
+      "id": "S7-P111-B06",
+      "clause": "7.17.11 If Action Usages",
+      "printed_pages": [
+        111
+      ],
+      "physical_pages": [
+        143
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "action test if speed < lowerLimit\naction increase : IncreaseSpeed { }\nelse\naction main : MaintainSpeed { }",
+      "completeness": "official_compatibility_difference",
+      "fixture_eligible": false,
+      "parseability": "current_parser_rejected",
+      "disposition": "current_grammar_compatibility_gap",
+      "notes": "Closed-looking official if-action usage, but the current parser probe rejects the action test if ... form. Retain as an official compatibility difference; do not normalize or add an overlay in this ledger-only audit.",
+      "exclusion_reason": "Closed-looking official if-action usage, but the current parser probe rejects the action test if ... form. Retain as an official compatibility difference; do not normalize or add an overlay in this ledger-only audit."
+    },
+    {
+      "id": "S7-P111-B08",
+      "clause": "7.17.11 If Action Usages",
+      "printed_pages": [
+        111
+      ],
+      "physical_pages": [
+        143
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "if selectedSensor != null {\nassign reading := selectedSensor.reading;\n} else {\nassign reading := undefinedValue;\n}",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "contextual_fragment",
+      "disposition": "contextual_source_fragment",
+      "notes": "Structured if/else body fragment; it requires an enclosing action owner.",
+      "exclusion_reason": "Structured if/else body fragment; it requires an enclosing action owner."
+    },
+    {
+      "id": "S7-P111-B09",
+      "clause": "7.17.11 If Action Usages",
+      "printed_pages": [
+        111
+      ],
+      "physical_pages": [
+        143
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "if threat.level == high then {\nperform soundAlarm {in cause = threat;}\n} else if threat.level == medium then {\naction sendNotification {in msg = threat;}\n} else {\naction beginMonitoring {in target = threat;}\n}",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "contextual_fragment",
+      "disposition": "contextual_source_fragment",
+      "notes": "Structured if/else-if/else body fragment; it requires an enclosing action owner.",
+      "exclusion_reason": "Structured if/else-if/else body fragment; it requires an enclosing action owner."
+    },
+    {
+      "id": "S7-P112-B04",
+      "clause": "7.17.12 Loop Action Usages",
+      "printed_pages": [
+        112
+      ],
+      "physical_pages": [
+        144
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "action advance while t < endTime\naction step {\nperform advanceState {\n:>> stateVector = systemState;\n:>> deltaT = dt;\n}\nthen assign t := t + dt;\n} until stateVector.position >= endPosition;",
+      "completeness": "official_compatibility_difference",
+      "fixture_eligible": false,
+      "parseability": "current_parser_rejected",
+      "disposition": "current_grammar_compatibility_gap",
+      "notes": "Closed-looking official while/until action usage, but the current parser probe rejects the action advance while ... form. Retain as an official compatibility difference; do not normalize or add an overlay in this ledger-only audit.",
+      "exclusion_reason": "Closed-looking official while/until action usage, but the current parser probe rejects the action advance while ... form. Retain as an official compatibility difference; do not normalize or add an overlay in this ledger-only audit."
+    },
+    {
+      "id": "S7-P112-B06",
+      "clause": "7.17.12 Loop Action Usages",
+      "printed_pages": [
+        112
+      ],
+      "physical_pages": [
+        144
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "while not ready {\nassign ready := poll(device);\n}",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "contextual_fragment",
+      "disposition": "contextual_source_fragment",
+      "notes": "While-loop body fragment; it requires an enclosing action owner.",
+      "exclusion_reason": "While-loop body fragment; it requires an enclosing action owner."
+    },
+    {
+      "id": "S7-P112-B08",
+      "clause": "7.17.12 Loop Action Usages",
+      "printed_pages": [
+        112
+      ],
+      "physical_pages": [
+        144
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "loop {\nassign charge := MonitorBattery();\nthen if charge < 100 {\naction AddCharge;\n}\n} until charge >= 100;",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "contextual_fragment",
+      "disposition": "contextual_source_fragment",
+      "notes": "Loop/until body fragment; it requires an enclosing action owner.",
+      "exclusion_reason": "Loop/until body fragment; it requires an enclosing action owner."
+    },
+    {
+      "id": "S7-P113-B01",
+      "clause": "7.17.12 Loop Action Usages",
+      "printed_pages": [
+        113
+      ],
+      "physical_pages": [
+        145
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "action dynamicsStep {\nassign position := ComputeDynamics(position, power);\n}",
+      "completeness": "complete",
+      "fixture_eligible": true,
+      "parseability": "independently_parseable_by_current_parser",
+      "disposition": "fixture_candidate",
+      "notes": "Closed action definition used by the following for-loop example."
+    },
+    {
+      "id": "S7-P113-B03",
+      "clause": "7.17.12 Loop Action Usages",
+      "printed_pages": [
+        113
+      ],
+      "physical_pages": [
+        145
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "for power : PowerValue in powerProfile {\nassign position := ComputeDynamics(position, power);\n}",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "contextual_fragment",
+      "disposition": "contextual_source_fragment",
+      "notes": "For-loop body fragment; it requires an enclosing action owner.",
+      "exclusion_reason": "For-loop body fragment; it requires an enclosing action owner."
+    },
+    {
+      "id": "S7-P113-B05",
+      "clause": "7.17.12 Loop Action Usages",
+      "printed_pages": [
+        113
+      ],
+      "physical_pages": [
+        145
+      ],
+      "source_kind": "raw_candidate",
+      "source_code": "for i in 1..scenario->size() {\nassign positionList :=\npositionList->including(scenario.postion#(i));\nassign velocityList :=\nvelocityList->including(scenario.velocity#(i));\n}",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "contextual_fragment",
+      "disposition": "contextual_source_fragment",
+      "notes": "For-loop body fragment retained verbatim. The official source spells postion; this ledger records that token and does not silently correct it.",
+      "exclusion_reason": "For-loop body fragment retained verbatim. The official source spells postion; this ledger records that token and does not silently correct it."
+    }
+  ],
+  "excluded_fragments": [
+    {
+      "id": "S7-P102-B02",
+      "clause": "7.17.3 Control Nodes",
+      "printed_pages": [
+        102
+      ],
+      "physical_pages": [
+        134
+      ],
+      "source_kind": "raw_lexical",
+      "source_code": "start done Actions::Action",
+      "completeness": "lexical_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "lexical_or_legend_fragment",
+      "exclusion_reason": "The rendered page presents grammar/notation legend text rather than an independently parseable SysML source block; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: lexical."
+    },
+    {
+      "id": "S7-P102-B03",
+      "clause": "7.17.3 Control Nodes",
+      "printed_pages": [
+        102
+      ],
+      "physical_pages": [
+        134
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "first",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P102-B04",
+      "clause": "7.17.3 Control Nodes",
+      "printed_pages": [
+        102
+      ],
+      "physical_pages": [
+        134
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "then",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P102-B06",
+      "clause": "7.17.3 Control Nodes",
+      "printed_pages": [
+        102
+      ],
+      "physical_pages": [
+        134
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "then",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P102-B08",
+      "clause": "7.17.4 Succession Shorthands",
+      "printed_pages": [
+        102
+      ],
+      "physical_pages": [
+        134
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "then first",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P103-B02",
+      "clause": "7.17.4 Succession Shorthands",
+      "printed_pages": [
+        103
+      ],
+      "physical_pages": [
+        135
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "then then",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P103-B03",
+      "clause": "7.17.4 Succession Shorthands",
+      "printed_pages": [
+        103
+      ],
+      "physical_pages": [
+        135
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "then\nfork decide",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P103-B05",
+      "clause": "7.17.4 Succession Shorthands",
+      "printed_pages": [
+        103
+      ],
+      "physical_pages": [
+        135
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "if",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P103-B07",
+      "clause": "7.17.5 Conditional Successions",
+      "printed_pages": [
+        103
+      ],
+      "physical_pages": [
+        135
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "DecisionTransitionAction\nActions",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P103-B08",
+      "clause": "7.17.5 Conditional Successions",
+      "printed_pages": [
+        103
+      ],
+      "physical_pages": [
+        135
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "succession",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P103-B09",
+      "clause": "7.17.5 Conditional Successions",
+      "printed_pages": [
+        103
+      ],
+      "physical_pages": [
+        135
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "then else",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P104-B01",
+      "clause": "7.17.5 Conditional Successions",
+      "printed_pages": [
+        104
+      ],
+      "physical_pages": [
+        136
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "decide",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P104-B03",
+      "clause": "7.17.6 Perform Action Usages",
+      "printed_pages": [
+        104
+      ],
+      "physical_pages": [
+        136
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "perform action\naction",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P104-B04",
+      "clause": "7.17.6 Perform Action Usages",
+      "printed_pages": [
+        104
+      ],
+      "physical_pages": [
+        136
+      ],
+      "source_kind": "raw_lexical",
+      "source_code": "references ::>",
+      "completeness": "lexical_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "lexical_or_legend_fragment",
+      "exclusion_reason": "The rendered page presents grammar/notation legend text rather than an independently parseable SysML source block; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: lexical."
+    },
+    {
+      "id": "S7-P104-B06",
+      "clause": "7.17.6 Perform Action Usages",
+      "printed_pages": [
+        104
+      ],
+      "physical_pages": [
+        136
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "perform perform action",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P104-B07",
+      "clause": "7.17.6 Perform Action Usages",
+      "printed_pages": [
+        104
+      ],
+      "physical_pages": [
+        136
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "perform",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P105-B01",
+      "clause": "7.17.7 Send Action Usages",
+      "printed_pages": [
+        105
+      ],
+      "physical_pages": [
+        137
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "ref\nref",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P105-B02",
+      "clause": "7.17.7 Send Action Usages",
+      "printed_pages": [
+        105
+      ],
+      "physical_pages": [
+        137
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "SendAction Actions SendAction",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P105-B03",
+      "clause": "7.17.7 Send Action Usages",
+      "printed_pages": [
+        105
+      ],
+      "physical_pages": [
+        137
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "SendAction",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P105-B04",
+      "clause": "7.17.7 Send Action Usages",
+      "printed_pages": [
+        105
+      ],
+      "physical_pages": [
+        137
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "SendAction\nsend via to\naction",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P105-B07",
+      "clause": "7.17.7 Send Action Usages",
+      "printed_pages": [
+        105
+      ],
+      "physical_pages": [
+        137
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "via to",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P106-B01",
+      "clause": "7.17.7 Send Action Usages",
+      "printed_pages": [
+        106
+      ],
+      "physical_pages": [
+        138
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "via",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P106-B04",
+      "clause": "7.17.7 Send Action Usages",
+      "printed_pages": [
+        106
+      ],
+      "physical_pages": [
+        138
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "via",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P106-B05",
+      "clause": "7.17.7 Send Action Usages",
+      "printed_pages": [
+        106
+      ],
+      "physical_pages": [
+        138
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "to",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P106-B07",
+      "clause": "7.17.7 Send Action Usages",
+      "printed_pages": [
+        106
+      ],
+      "physical_pages": [
+        138
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "entry do exit\neffect",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P106-B08",
+      "clause": "7.17.7 Send Action Usages",
+      "printed_pages": [
+        106
+      ],
+      "physical_pages": [
+        138
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "sendActions Actions\nSendAction",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P106-B09",
+      "clause": "7.17.8 Accept Action Usages",
+      "printed_pages": [
+        106
+      ],
+      "physical_pages": [
+        138
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "AcceptAction Actions AcceptAction",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P107-B01",
+      "clause": "7.17.8 Accept Action Usages",
+      "printed_pages": [
+        107
+      ],
+      "physical_pages": [
+        139
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "AcceptAction",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P107-B02",
+      "clause": "7.17.8 Accept Action Usages",
+      "printed_pages": [
+        107
+      ],
+      "physical_pages": [
+        139
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "accept via\naction",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P107-B03",
+      "clause": "7.17.8 Accept Action Usages",
+      "printed_pages": [
+        107
+      ],
+      "physical_pages": [
+        139
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "ref",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P107-B06",
+      "clause": "7.17.8 Accept Action Usages",
+      "printed_pages": [
+        107
+      ],
+      "physical_pages": [
+        139
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "when\nBoolean ChangeSignal\nObservation\nfalse true true",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P107-B07",
+      "clause": "7.17.8 Accept Action Usages",
+      "printed_pages": [
+        107
+      ],
+      "physical_pages": [
+        139
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "at\nTimeInstantValue\nTimeSignal Trigger\nlocalClock\ndefaultClock TimeInstantValue\nafter\nDurationValue",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P108-B01",
+      "clause": "7.17.8 Accept Action Usages",
+      "printed_pages": [
+        108
+      ],
+      "physical_pages": [
+        140
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "TimeSignal Trigger\nlocalClock\ndefaultClock TimeInstantValue",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P108-B03",
+      "clause": "7.17.8 Accept Action Usages",
+      "printed_pages": [
+        108
+      ],
+      "physical_pages": [
+        140
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "via",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P108-B06",
+      "clause": "7.17.8 Accept Action Usages",
+      "printed_pages": [
+        108
+      ],
+      "physical_pages": [
+        140
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "via",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P109-B01",
+      "clause": "7.17.8 Accept Action Usages",
+      "printed_pages": [
+        109
+      ],
+      "physical_pages": [
+        141
+      ],
+      "source_kind": "raw_lexical",
+      "source_code": "}\n}",
+      "completeness": "continuation_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "cross_page_continuation",
+      "exclusion_reason": "Closing braces for the preceding S7-P108-B07 block; retained as a separate raw block and excluded from independent fixtures.",
+      "notes": "Raw block classification: lexical."
+    },
+    {
+      "id": "S7-P109-B02",
+      "clause": "7.17.8 Accept Action Usages",
+      "printed_pages": [
+        109
+      ],
+      "physical_pages": [
+        141
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "entry do exit\neffect accept",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P109-B03",
+      "clause": "7.17.8 Accept Action Usages",
+      "printed_pages": [
+        109
+      ],
+      "physical_pages": [
+        141
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "acceptActions Actions\nAcceptAction",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P109-B04",
+      "clause": "7.17.8 Accept Action Usages",
+      "printed_pages": [
+        109
+      ],
+      "physical_pages": [
+        141
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "AssignmentAction Actions AssignmentAction",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P110-B01",
+      "clause": "7.17.10 Terminate Action Usages",
+      "printed_pages": [
+        110
+      ],
+      "physical_pages": [
+        142
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "entry do exit\neffect",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P110-B02",
+      "clause": "7.17.10 Terminate Action Usages",
+      "printed_pages": [
+        110
+      ],
+      "physical_pages": [
+        142
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "assignmentActions Actions",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P110-B03",
+      "clause": "7.17.10 Terminate Action Usages",
+      "printed_pages": [
+        110
+      ],
+      "physical_pages": [
+        142
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "TerminateAction Actions TerminateAction\nTerminateAction\nTerminateAction",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P110-B05",
+      "clause": "7.17.10 Terminate Action Usages",
+      "printed_pages": [
+        110
+      ],
+      "physical_pages": [
+        142
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "terminate action",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P111-B02",
+      "clause": "7.17.11 If Action Usages",
+      "printed_pages": [
+        111
+      ],
+      "physical_pages": [
+        143
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "terminateActions Actions\nTerminateAction",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P111-B03",
+      "clause": "7.17.11 If Action Usages",
+      "printed_pages": [
+        111
+      ],
+      "physical_pages": [
+        143
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "IfThenAction\nIfThenElseAction Actions",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P111-B04",
+      "clause": "7.17.11 If Action Usages",
+      "printed_pages": [
+        111
+      ],
+      "physical_pages": [
+        143
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "if\nIfThenElseAction else",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P111-B05",
+      "clause": "7.17.11 If Action Usages",
+      "printed_pages": [
+        111
+      ],
+      "physical_pages": [
+        143
+      ],
+      "source_kind": "raw_lexical",
+      "source_code": "{}",
+      "completeness": "lexical_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "lexical_or_legend_fragment",
+      "exclusion_reason": "The rendered page presents grammar/notation legend text rather than an independently parseable SysML source block; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: lexical."
+    },
+    {
+      "id": "S7-P111-B07",
+      "clause": "7.17.11 If Action Usages",
+      "printed_pages": [
+        111
+      ],
+      "physical_pages": [
+        143
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "action\naction",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P111-B10",
+      "clause": "7.17.12 Loop Action Usages",
+      "printed_pages": [
+        111
+      ],
+      "physical_pages": [
+        143
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "LoopAction Actions",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P112-B01",
+      "clause": "7.17.12 Loop Action Usages",
+      "printed_pages": [
+        112
+      ],
+      "physical_pages": [
+        144
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "LoopAction",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P112-B02",
+      "clause": "7.17.12 Loop Action Usages",
+      "printed_pages": [
+        112
+      ],
+      "physical_pages": [
+        144
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "WhileLoopAction LoopAction\nwhile\nuntil",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P112-B03",
+      "clause": "7.17.12 Loop Action Usages",
+      "printed_pages": [
+        112
+      ],
+      "physical_pages": [
+        144
+      ],
+      "source_kind": "raw_lexical",
+      "source_code": "{}",
+      "completeness": "lexical_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "lexical_or_legend_fragment",
+      "exclusion_reason": "The rendered page presents grammar/notation legend text rather than an independently parseable SysML source block; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: lexical."
+    },
+    {
+      "id": "S7-P112-B05",
+      "clause": "7.17.12 Loop Action Usages",
+      "printed_pages": [
+        112
+      ],
+      "physical_pages": [
+        144
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "action",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P112-B07",
+      "clause": "7.17.12 Loop Action Usages",
+      "printed_pages": [
+        112
+      ],
+      "physical_pages": [
+        144
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "loop while true",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P112-B09",
+      "clause": "7.17.12 Loop Action Usages",
+      "printed_pages": [
+        112
+      ],
+      "physical_pages": [
+        144
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "ForLoopAction LoopAction\nfor\nin",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P112-B10",
+      "clause": "7.17.12 Loop Action Usages",
+      "printed_pages": [
+        112
+      ],
+      "physical_pages": [
+        144
+      ],
+      "source_kind": "raw_lexical",
+      "source_code": "{}",
+      "completeness": "lexical_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "lexical_or_legend_fragment",
+      "exclusion_reason": "The rendered page presents grammar/notation legend text rather than an independently parseable SysML source block; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: lexical."
+    },
+    {
+      "id": "S7-P112-B11",
+      "clause": "7.17.12 Loop Action Usages",
+      "printed_pages": [
+        112
+      ],
+      "physical_pages": [
+        144
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "action dynamicScenario\nfor power : PowerValue in powerProfile",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P113-B02",
+      "clause": "7.17.12 Loop Action Usages",
+      "printed_pages": [
+        113
+      ],
+      "physical_pages": [
+        145
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "action",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    },
+    {
+      "id": "S7-P113-B04",
+      "clause": "7.17.12 Loop Action Usages",
+      "printed_pages": [
+        113
+      ],
+      "physical_pages": [
+        145
+      ],
+      "source_kind": "raw_fragment",
+      "source_code": "..",
+      "completeness": "context_fragment",
+      "fixture_eligible": false,
+      "parseability": "not_independently_parseable",
+      "disposition": "contextual_or_notation_fragment",
+      "exclusion_reason": "The rendered page presents a contextual grammar/notation fragment without a complete owning SysML element; retained verbatim and excluded from fixtures.",
+      "notes": "Raw block classification: fragment."
+    }
+  ]
+}

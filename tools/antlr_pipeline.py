@@ -193,6 +193,13 @@ def build() -> None:
     if missing:
         raise SystemExit("copied grammar input is missing: " + ", ".join(missing))
 
+    # A caller may invoke ``build`` directly after creating or editing the
+    # copied grammar files on a Windows checkout.  Normalize those inputs
+    # before ANTLR consumes them so the generated snapshot is independent of
+    # the host's native newline convention, just like ``update``'s copy step.
+    for path in grammar_files:
+        _normalize_lf(path)
+
     _download_antlr_jar()
     _remove_temp_outputs()
     subprocess.check_call(

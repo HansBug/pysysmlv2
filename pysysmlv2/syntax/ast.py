@@ -89,6 +89,14 @@ traversal/rendering mechanism.
        :class:`ConnectorEnd`, :class:`InterfaceEnd`
      - Explicit connector endpoints, binary/n-ary parts, and interface body
        members; workspace linking is deferred.
+   * - Requirement/case relationships
+     - :class:`SubjectMember`, :class:`ActorMember`,
+       :class:`StakeholderMember`, :class:`RequirementConstraintMember`,
+       :class:`FramedConcernMember`, :class:`RequirementVerificationMember`,
+       :class:`ObjectiveMember`
+     - Requirement and case body relationships retain their concrete
+       grammar alternatives; workspace linking and constraint semantics are
+       deferred.
    * - Document roots
      - :class:`Package`, :class:`Model`, :class:`Comment`,
        :class:`Documentation`
@@ -588,7 +596,7 @@ class DeclaredFeatureTyping(SourceElement):
 
     Example::
 
-        >>> body = RelationshipBody(";")
+        >>> body = RelationshipBody(declaration_only=True)
         >>> str(DeclaredFeatureTyping(
         ...     QualifiedReference(["f"]),
         ...     ":",
@@ -2195,6 +2203,44 @@ class VariantUsage(SourceElement):
 
 
 @dataclass
+class VariantReference(SourceElement):
+    """Represent the concrete ``variantReference`` production.
+
+    A variant reference is a reference-subsetting target followed by zero or
+    more specialization operators and a required usage body.  The reference
+    remains unresolved here; workspace linking owns its target lookup.
+
+    :param reference_subsetting: Unresolved variant target reference.
+    :type reference_subsetting: :class:`pysysmlv2.syntax.ast.Reference`
+    :param usage_body: Required semicolon or brace body.
+    :type usage_body: :class:`pysysmlv2.syntax.ast.DefinitionBody`
+    :param specializations: Ordered specialization alternatives, defaults to
+        an empty list.
+    :type specializations: list[pysysmlv2.syntax.ast.FeatureSpecialization]
+
+    Example::
+
+        >>> str(VariantReference(QualifiedReference(["Engine"]), DefinitionBody(True)))
+        'Engine;'
+    """
+
+    reference_subsetting: Reference
+    usage_body: DefinitionBody
+    specializations: List[FeatureSpecialization] = field(default_factory=list)
+
+    def to_sysml(self) -> str:
+        """Render target, specialization operators, and usage body."""
+        return _append_body(
+            _join([str(self.reference_subsetting), *[str(item) for item in self.specializations]]),
+            str(self.usage_body),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical variant-reference text."""
+        return self.to_sysml()
+
+
+@dataclass
 class DefinitionBody(SourceElement):
     """Represent a generic ``definitionBody`` with ordered child elements."""
 
@@ -3078,6 +3124,53 @@ class EndFeatureUsage(SourceElement):
         return self.to_sysml()
 
 
+@dataclass
+class ExtendedUsage(SourceElement):
+    """Represent the grammar's extension-keyword usage alternative.
+
+    ``extendedUsage`` owns one unextended prefix, one or more extension
+    keywords, and a complete generic :class:`Usage`.  Extension keywords are
+    intentionally retained as source spellings because their declarations are
+    resolved by the workspace/semantic layer rather than by the syntax AST.
+    Recovery parses in the upstream grammar can omit the prefix; ``None`` is
+    retained only for that parser-recovery form so the original source remains
+    round-trippable.
+
+    :param usage: Required generic usage completion.
+    :type usage: :class:`pysysmlv2.syntax.ast.Usage`
+    :param extension_keywords: Ordered extension keyword spellings.
+    :type extension_keywords: list[str]
+    :param unextended_prefix: Basic or ``end`` usage prefix, if present in the
+        parser context.
+    :type unextended_prefix: :class:`pysysmlv2.syntax.ast.SourceElement`, optional
+
+    Example::
+
+        >>> str(ExtendedUsage(Usage(DefinitionBody(True)), ["#cause"]))
+        '#cause;'
+    """
+
+    usage: Usage
+    extension_keywords: List[str]
+    unextended_prefix: Optional[Union[UsagePrefix, EndUsagePrefix]] = None
+
+    def to_sysml(self) -> str:
+        """Render prefix, extension keywords, and generic usage."""
+        return _append_body(
+            _join(
+                [
+                    str(self.unextended_prefix) if self.unextended_prefix else "",
+                    *self.extension_keywords,
+                ]
+            ),
+            str(self.usage),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical extended-usage text."""
+        return self.to_sysml()
+
+
 def _render_connection_end(
     reference: Reference,
     cross_multiplicity: Optional[str],
@@ -3663,6 +3756,360 @@ class RequirementBody(SourceElement):
 
 
 @dataclass
+class SubjectUsage(SourceElement):
+    """Represent a ``subjectUsage`` and its optional extension keywords.
+
+    :param usage: Generic usage declaration and completion owned by the
+        subject relationship.
+    :type usage: :class:`pysysmlv2.syntax.ast.Usage`
+    :param extension_keywords: Ordered model-owned metadata keywords, defaults
+        to an empty list.
+    :type extension_keywords: list[str], optional
+    """
+
+    usage: Usage
+    extension_keywords: List[str] = field(default_factory=list)
+
+    def to_sysml(self) -> str:
+        """Render ``subject`` and its generic usage."""
+        return _append_body(
+            _join(["subject", *self.extension_keywords]),
+            str(self.usage),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical subject-usage text."""
+        return self.to_sysml()
+
+
+@dataclass
+class SubjectMember(SourceElement):
+    """Represent a requirement/case ``subject`` member."""
+
+    subject_usage: SubjectUsage
+    member_prefix: Optional[str] = None
+
+    def to_sysml(self) -> str:
+        """Render visibility and subject usage."""
+        return _join([self.member_prefix or "", str(self.subject_usage)])
+
+    def __str__(self) -> str:
+        """Return canonical subject-member text."""
+        return self.to_sysml()
+
+
+@dataclass
+class ActorUsage(SourceElement):
+    """Represent an ``actorUsage`` relationship."""
+
+    usage: Usage
+    extension_keywords: List[str] = field(default_factory=list)
+
+    def to_sysml(self) -> str:
+        """Render ``actor`` and its generic usage."""
+        return _append_body(
+            _join(["actor", *self.extension_keywords]),
+            str(self.usage),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical actor-usage text."""
+        return self.to_sysml()
+
+
+@dataclass
+class ActorMember(SourceElement):
+    """Represent a requirement/case ``actor`` member."""
+
+    actor_usage: ActorUsage
+    member_prefix: Optional[str] = None
+
+    def to_sysml(self) -> str:
+        """Render visibility and actor usage."""
+        return _join([self.member_prefix or "", str(self.actor_usage)])
+
+    def __str__(self) -> str:
+        """Return canonical actor-member text."""
+        return self.to_sysml()
+
+
+@dataclass
+class StakeholderUsage(SourceElement):
+    """Represent a ``stakeholderUsage`` relationship."""
+
+    usage: Usage
+    extension_keywords: List[str] = field(default_factory=list)
+
+    def to_sysml(self) -> str:
+        """Render ``stakeholder`` and its generic usage."""
+        return _append_body(
+            _join(["stakeholder", *self.extension_keywords]),
+            str(self.usage),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical stakeholder-usage text."""
+        return self.to_sysml()
+
+
+@dataclass
+class StakeholderMember(SourceElement):
+    """Represent a requirement ``stakeholder`` member."""
+
+    stakeholder_usage: StakeholderUsage
+    member_prefix: Optional[str] = None
+
+    def to_sysml(self) -> str:
+        """Render visibility and stakeholder usage."""
+        return _join([self.member_prefix or "", str(self.stakeholder_usage)])
+
+    def __str__(self) -> str:
+        """Return canonical stakeholder-member text."""
+        return self.to_sysml()
+
+
+@dataclass
+class RequirementConstraintUsage(SourceElement):
+    """Marker base for the two normative ``requirementConstraintUsage`` forms."""
+
+
+@dataclass
+class ReferenceRequirementConstraintUsage(RequirementConstraintUsage):
+    """Represent a requirement constraint based on a reference subsetting."""
+
+    reference_subsetting: Reference
+    requirement_body: RequirementBody
+    specialization: Optional[FeatureSpecializationPart] = None
+
+    def to_sysml(self) -> str:
+        """Render reference, optional specialization, and nested body."""
+        return _append_body(
+            _join([str(self.reference_subsetting), str(self.specialization or "")]),
+            str(self.requirement_body),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical reference requirement-constraint text."""
+        return self.to_sysml()
+
+
+@dataclass
+class ConstraintRequirementConstraintUsage(RequirementConstraintUsage):
+    """Represent a requirement constraint with a calculation body."""
+
+    constraint_usage_declaration: ConstraintUsageDeclaration
+    calculation_body: CalculationBody
+    extension_keywords: List[str] = field(default_factory=list)
+    has_constraint_keyword: bool = True
+
+    def to_sysml(self) -> str:
+        """Render extension keywords, optional ``constraint``, and body."""
+        return _append_body(
+            _join(
+                [
+                    *self.extension_keywords,
+                    "constraint" if self.has_constraint_keyword else "",
+                    str(self.constraint_usage_declaration),
+                ]
+            ),
+            str(self.calculation_body),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical calculation requirement-constraint text."""
+        return self.to_sysml()
+
+
+@dataclass
+class RequirementConstraintMember(SourceElement):
+    """Represent an ``assume`` or ``require`` constraint member."""
+
+    kind: str
+    requirement_constraint_usage: RequirementConstraintUsage
+    member_prefix: Optional[str] = None
+
+    def to_sysml(self) -> str:
+        """Render visibility, requirement kind, and its typed usage."""
+        return _join([self.member_prefix or "", self.kind, str(self.requirement_constraint_usage)])
+
+    def __str__(self) -> str:
+        """Return canonical requirement-constraint-member text."""
+        return self.to_sysml()
+
+
+@dataclass
+class FramedConcernUsage(SourceElement):
+    """Marker base for the two normative ``framedConcernUsage`` forms."""
+
+
+@dataclass
+class ReferenceFramedConcernUsage(FramedConcernUsage):
+    """Represent a framed concern based on a reference subsetting."""
+
+    reference_subsetting: Reference
+    requirement_body: RequirementBody
+    specialization: Optional[FeatureSpecializationPart] = None
+
+    def to_sysml(self) -> str:
+        """Render reference, optional specialization, and nested body."""
+        return _append_body(
+            _join([str(self.reference_subsetting), str(self.specialization or "")]),
+            str(self.requirement_body),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical reference framed-concern text."""
+        return self.to_sysml()
+
+
+@dataclass
+class ConcernFramedConcernUsage(FramedConcernUsage):
+    """Represent a framed concern with a requirement body."""
+
+    constraint_usage_declaration: ConstraintUsageDeclaration
+    requirement_body: RequirementBody
+    extension_keywords: List[str] = field(default_factory=list)
+    has_concern_keyword: bool = True
+
+    def to_sysml(self) -> str:
+        """Render extension keywords, optional ``concern``, and body."""
+        return _append_body(
+            _join(
+                [
+                    *self.extension_keywords,
+                    "concern" if self.has_concern_keyword else "",
+                    str(self.constraint_usage_declaration),
+                ]
+            ),
+            str(self.requirement_body),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical concern framed-concern text."""
+        return self.to_sysml()
+
+
+@dataclass
+class FramedConcernMember(SourceElement):
+    """Represent a ``frame`` member with a typed concern usage."""
+
+    framed_concern_usage: FramedConcernUsage
+    member_prefix: Optional[str] = None
+
+    def to_sysml(self) -> str:
+        """Render visibility, ``frame``, and its typed usage."""
+        return _join([self.member_prefix or "", "frame", str(self.framed_concern_usage)])
+
+    def __str__(self) -> str:
+        """Return canonical framed-concern-member text."""
+        return self.to_sysml()
+
+
+@dataclass
+class ObjectiveRequirementUsage(SourceElement):
+    """Represent an ``objectiveRequirementUsage``."""
+
+    constraint_usage_declaration: ConstraintUsageDeclaration
+    requirement_body: RequirementBody
+    extension_keywords: List[str] = field(default_factory=list)
+
+    def to_sysml(self) -> str:
+        """Render extension keywords, declaration, and requirement body."""
+        return _append_body(
+            _join([*self.extension_keywords, str(self.constraint_usage_declaration)]),
+            str(self.requirement_body),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical objective requirement-usage text."""
+        return self.to_sysml()
+
+
+@dataclass
+class ObjectiveMember(SourceElement):
+    """Represent an ``objective`` member in a case body."""
+
+    objective_requirement_usage: ObjectiveRequirementUsage
+    member_prefix: Optional[str] = None
+
+    def to_sysml(self) -> str:
+        """Render visibility, ``objective``, and nested requirement usage."""
+        return _join([self.member_prefix or "", "objective", str(self.objective_requirement_usage)])
+
+    def __str__(self) -> str:
+        """Return canonical objective-member text."""
+        return self.to_sysml()
+
+
+@dataclass
+class RequirementVerificationUsage(SourceElement):
+    """Marker base for the two normative ``requirementVerificationUsage`` forms."""
+
+
+@dataclass
+class ReferenceRequirementVerificationUsage(RequirementVerificationUsage):
+    """Represent a verification relationship based on a reference."""
+
+    reference_subsetting: Reference
+    requirement_body: RequirementBody
+    specializations: List[FeatureSpecialization] = field(default_factory=list)
+
+    def to_sysml(self) -> str:
+        """Render reference, specializations, and nested body."""
+        return _append_body(
+            _join([str(self.reference_subsetting), *map(str, self.specializations)]),
+            str(self.requirement_body),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical reference verification-usage text."""
+        return self.to_sysml()
+
+
+@dataclass
+class RequirementVerificationRequirementUsage(RequirementVerificationUsage):
+    """Represent a verification relationship with a requirement declaration."""
+
+    constraint_usage_declaration: ConstraintUsageDeclaration
+    requirement_body: RequirementBody
+    extension_keywords: List[str] = field(default_factory=list)
+    has_requirement_keyword: bool = True
+
+    def to_sysml(self) -> str:
+        """Render extension keywords, optional ``requirement``, and body."""
+        return _append_body(
+            _join(
+                [
+                    *self.extension_keywords,
+                    "requirement" if self.has_requirement_keyword else "",
+                    str(self.constraint_usage_declaration),
+                ]
+            ),
+            str(self.requirement_body),
+        )
+
+    def __str__(self) -> str:
+        """Return canonical requirement verification-usage text."""
+        return self.to_sysml()
+
+
+@dataclass
+class RequirementVerificationMember(SourceElement):
+    """Represent a ``verify`` member with a typed verification usage."""
+
+    requirement_verification_usage: RequirementVerificationUsage
+    member_prefix: Optional[str] = None
+
+    def to_sysml(self) -> str:
+        """Render visibility, ``verify``, and typed verification usage."""
+        return _join([self.member_prefix or "", "verify", str(self.requirement_verification_usage)])
+
+    def __str__(self) -> str:
+        """Return canonical requirement-verification-member text."""
+        return self.to_sysml()
+
+
+@dataclass
 class ViewDefinitionBody(DefinitionBody):
     """Represent the dedicated ``viewDefinitionBody`` production."""
 
@@ -4093,27 +4540,96 @@ class ViewUsage(SourceElement):
 
 @dataclass
 class ViewRenderingUsage(SourceElement):
-    """Represent a view's ``render`` member target."""
+    """Represent one concrete ``viewRenderingUsage`` grammar alternative.
+
+    The reference form owns an optional feature-specialization part and a
+    usage body.  The usage form owns zero or more extension keywords, an
+    optional ``rendering`` keyword, and a complete usage.  Keeping those
+    grammar choices as fields is necessary for lossless AST round-tripping;
+    the words are model syntax rather than formatter trivia.
+
+    :param body: Required declaration-only or braced usage body.
+    :type body: :class:`pysysmlv2.syntax.ast.DefinitionBody`
+    :param reference: Optional owned reference-subsetting target.
+    :type reference: :class:`pysysmlv2.syntax.ast.Reference`, optional
+    :param specialization: Optional feature-specialization part attached to
+        ``reference``.
+    :type specialization: :class:`pysysmlv2.syntax.ast.FeatureSpecializationPart`, optional
+    :param usage: Optional generic usage in the extension/rendering form.
+    :type usage: :class:`pysysmlv2.syntax.ast.Usage`, optional
+    :param usage_extension_keywords: Ordered usage-extension keyword spellings.
+    :type usage_extension_keywords: list[str], optional
+    :param has_rendering_keyword: Whether the explicit ``rendering`` keyword
+        occurs before ``usage``.  It defaults to ``True`` for compatibility
+        with direct construction of the historical usage form.
+    :type has_rendering_keyword: bool, optional
+    """
 
     body: DefinitionBody
     reference: Optional[Reference] = None
+    specialization: Optional[FeatureSpecializationPart] = None
     usage: Optional[Usage] = None
+    usage_extension_keywords: List[str] = field(default_factory=list)
+    has_rendering_keyword: bool = True
 
     def to_sysml(self) -> str:
-        """Render the selected rendering target and body."""
-        return _append_body(
-            _join(
+        """Render the selected target while preserving grammar alternatives."""
+        if self.reference is not None:
+            return _append_body(
+                _join(
+                    [
+                        str(self.reference),
+                        str(self.specialization) if self.specialization else "",
+                    ]
+                ),
+                str(self.body),
+            )
+        if self.usage is not None:
+            # ``usage`` already owns the grammar's ``usageBody``.  Reusing
+            # ``body`` here would append its semicolon/block a second time.
+            return _join(
                 [
-                    "rendering" if self.usage is not None else "",
-                    str(self.reference) if self.reference else "",
-                    str(self.usage) if self.usage else "",
+                    *self.usage_extension_keywords,
+                    "rendering" if self.has_rendering_keyword else "",
+                    str(self.usage),
                 ]
-            ),
-            str(self.body),
-        )
+            )
+        return str(self.body)
 
     def __str__(self) -> str:
         """Return canonical view-rendering usage text."""
+        return self.to_sysml()
+
+
+@dataclass
+class ViewRenderingMember(SourceElement):
+    """Represent a visible ``render`` member inside a view body."""
+
+    usage: ViewRenderingUsage
+    member_prefix: Optional[str] = None
+
+    def to_sysml(self) -> str:
+        """Render visibility and the nested rendering usage."""
+        return _join([self.member_prefix or "", "render", str(self.usage)])
+
+    def __str__(self) -> str:
+        """Return canonical view-rendering-member text."""
+        return self.to_sysml()
+
+
+@dataclass
+class Expose(SourceElement):
+    """Represent an ``expose`` target and its relationship body."""
+
+    target: ImportDeclaration
+    relationship_body: "RelationshipBody"
+
+    def to_sysml(self) -> str:
+        """Render the expose keyword, target, and terminating body."""
+        return _append_body(_join(["expose", str(self.target)]), str(self.relationship_body))
+
+    def __str__(self) -> str:
+        """Return canonical expose text."""
         return self.to_sysml()
 
 
@@ -4624,13 +5140,37 @@ class ActionNodeMember(Statement):
 
 @dataclass
 class RelationshipBody(SourceElement):
-    """Preserve a structured relationship body outside the state core."""
+    """Represent one grammar-level relationship body.
 
-    source_text: str
+    The grammar has a declaration-only semicolon alternative and two
+    brace-delimited alternatives containing ordered owned related elements or
+    model-owned annotations.  The concrete choice is therefore represented
+    explicitly instead of being hidden in a source-text field.
+
+    :param declaration_only: Whether the body is the required ``;`` form.
+    :type declaration_only: bool
+    :param members: Ordered owned relationship elements or annotations in a
+        brace-delimited body, defaults to an empty list.
+    :type members: list[pysysmlv2.syntax.ast.SourceElement], optional
+    :ivar declaration_only: Whether the semicolon form is selected.
+    :vartype declaration_only: bool
+    :ivar members: Ordered body members.
+    :vartype members: list[pysysmlv2.syntax.ast.SourceElement]
+
+    Example::
+
+        >>> str(RelationshipBody(declaration_only=True))
+        ';'
+        >>> str(RelationshipBody(False, [Documentation(body='/* note */')]))
+        '{\n    doc /* note */\n}'
+    """
+
+    declaration_only: bool
+    members: List[SourceElement] = field(default_factory=list)
 
     def to_sysml(self) -> str:
-        """Render the relationship body's canonical source fragment."""
-        return self.source_text
+        """Render the selected semicolon or brace-delimited body."""
+        return _render_block(self.members, declaration_only=self.declaration_only)
 
     def __str__(self) -> str:
         """Return canonical relationship-body text."""
@@ -6067,6 +6607,50 @@ class Documentation(SourceElement):
 
 
 @dataclass
+class TextualRepresentation(SourceElement):
+    """Represent model-owned ``textualRepresentation`` syntax.
+
+    The language name and opaque body are model data, not ordinary comments;
+    preserving them in a dedicated node keeps textual representations visible
+    to downstream semantic tooling while leaving their embedded language for a
+    later frontend.
+
+    :param language: Quoted language identifier as written in source.
+    :type language: str
+    :param body: Regular-comment body containing the representation text.
+    :type body: str
+    :param identification: Optional representation name.
+    :type identification: :class:`pysysmlv2.syntax.ast.Identification`, optional
+
+    Example::
+
+        >>> str(TextualRepresentation('"ocl"', '/* self.x > 0 */'))
+        'language "ocl" /* self.x > 0 */'
+    """
+
+    language: str
+    body: str
+    identification: Optional[Identification] = None
+    is_rep: bool = False
+
+    def to_sysml(self) -> str:
+        """Render optional ``rep`` marker, language, and embedded body."""
+        return _join(
+            [
+                "rep" if self.is_rep else "",
+                str(self.identification) if self.identification else "",
+                "language",
+                self.language,
+                _relative_source(self.body),
+            ]
+        )
+
+    def __str__(self) -> str:
+        """Return canonical textual-representation text."""
+        return self.to_sysml()
+
+
+@dataclass
 class Model(SourceElement):
     """Represent one complete SysML source document."""
 
@@ -6105,6 +6689,8 @@ __all__ = [
     "ActionNodeUsageDeclaration",
     "ActionUsage",
     "ActionUsageDeclaration",
+    "ActorMember",
+    "ActorUsage",
     "AllExpression",
     "AttributeDefinition",
     "AttributeUsage",
@@ -6121,11 +6707,13 @@ __all__ = [
     "CastExpression",
     "Comment",
     "CommentExpression",
+    "ConcernFramedConcernUsage",
     "ConjugatedPortTyping",
     "ConnectionDefinition",
     "ConnectionUsage",
     "ConnectorEnd",
     "ConnectorPart",
+    "ConstraintRequirementConstraintUsage",
     "ControlNode",
     "ControlNodePrefix",
     "ConditionalExpression",
@@ -6150,6 +6738,8 @@ __all__ = [
     "EndOccurrenceUsageElement",
     "EndFeatureUsage",
     "EndUsagePrefix",
+    "ExtendedUsage",
+    "Expose",
     "ExhibitStateUsage",
     "FeatureChain",
     "FeatureChainExpression",
@@ -6159,6 +6749,8 @@ __all__ = [
     "FeatureReferenceExpression",
     "FeatureSpecialization",
     "FeatureSpecializationPart",
+    "FramedConcernMember",
+    "FramedConcernUsage",
     "ConjugationPart",
     "ChainingPart",
     "InvertingPart",
@@ -6216,6 +6808,8 @@ __all__ = [
     "OccurrenceDefinitionPrefix",
     "OccurrenceUsage",
     "OccurrenceUsagePrefix",
+    "ObjectiveMember",
+    "ObjectiveRequirementUsage",
     "OwnedCrossFeature",
     "OwnedFeatureTyping",
     "Package",
@@ -6236,8 +6830,17 @@ __all__ = [
     "DottedQualifiedReference",
     "ElementFilterMember",
     "RawElement",
+    "ReferenceFramedConcernUsage",
+    "ReferenceRequirementConstraintUsage",
+    "ReferenceRequirementVerificationUsage",
     "RealLiteral",
     "RelationshipBody",
+    "RequirementBody",
+    "RequirementConstraintMember",
+    "RequirementConstraintUsage",
+    "RequirementVerificationMember",
+    "RequirementVerificationRequirementUsage",
+    "RequirementVerificationUsage",
     "ImportDeclaration",
     "MembershipImport",
     "NamespaceImport",
@@ -6261,9 +6864,13 @@ __all__ = [
     "StateSubactionMembership",
     "StateUsageBody",
     "StateUsage",
+    "StakeholderMember",
+    "StakeholderUsage",
     "StructureUsageMember",
     "SubclassificationPart",
     "SuccessionAsUsage",
+    "SubjectMember",
+    "SubjectUsage",
     "StringLiteral",
     "TargetTransitionForm",
     "TargetTransitionUsage",
@@ -6282,6 +6889,10 @@ __all__ = [
     "UsagePrefix",
     "ValuePart",
     "VariantUsage",
+    "VariantReference",
+    "VariantUsageMember",
+    "ViewRenderingMember",
+    "TextualRepresentation",
     "DoActionMember",
     "ExitActionMember",
     "GuardExpressionMember",
@@ -6302,5 +6913,54 @@ __all__ = [
     "NodeParameter",
     "Usage",
     "BooleanLiteral",
+    "AllocationDefinition",
+    "AllocationUsage",
+    "AllocationUsageDeclaration",
+    "AnalysisCaseDefinition",
+    "AnalysisCaseUsage",
+    "AssertConstraintUsage",
+    "CalculationBody",
+    "CalculationDefinition",
+    "CalculationUsage",
+    "CaseBody",
+    "CaseDefinition",
+    "CaseUsage",
+    "ConcernDefinition",
+    "ConcernUsage",
+    "ConstraintDefinition",
+    "ConstraintUsage",
+    "ConstraintUsageDeclaration",
+    "Dependency",
+    "EnumeratedValue",
+    "EnumerationBody",
+    "EnumerationDefinition",
+    "EnumerationUsage",
+    "EnumerationUsageMember",
+    "ExtendedDefinition",
+    "FlowDeclaration",
+    "FlowDefinition",
+    "FlowUsage",
+    "IncludeUseCaseUsage",
+    "Message",
+    "MessageDeclaration",
+    "MetadataDefinition",
+    "RenderingDefinition",
+    "RenderingUsage",
+    "RequirementDefinition",
+    "RequirementUsage",
+    "ReturnParameterMember",
+    "SatisfyRequirementUsage",
+    "SuccessionFlowUsage",
+    "UseCaseDefinition",
+    "UseCaseUsage",
+    "VerificationCaseDefinition",
+    "VerificationCaseUsage",
+    "ViewBody",
+    "ViewDefinition",
+    "ViewDefinitionBody",
+    "ViewRenderingUsage",
+    "ViewUsage",
+    "ViewpointDefinition",
+    "ViewpointUsage",
     "structural_text",
 ]

@@ -49,40 +49,40 @@
       "production": "caseBodyItem",
       "callback": "exitCaseBodyItem",
       "scope": "case body",
-      "reason": "subjectMember, actorMember, objectiveMember, and related requirement vocabulary are outside the current typed AST slice.",
+      "reason": "subjectMember, actorMember, and objectiveMember now have explicit typed nodes; the raw branch is retained only for malformed or newly introduced recovery alternatives.",
       "test": "test/syntax/test_raw_element_compatibility.py::test_ledger_is_complete",
-      "follow_up": "Model each case-member relationship explicitly and preserve its source mapping.",
-      "status": "deferred"
+      "follow_up": "Keep the recovery branch until malformed case-body diagnostics have a structured error-node contract.",
+      "status": "recovery-only"
     },
     {
       "id": "requirement-body-item",
       "production": "requirementBodyItem",
       "callback": "exitRequirementBodyItem",
       "scope": "requirement body",
-      "reason": "Requirement-specific constraint, concern, verification, actor, and stakeholder members are not yet part of the source AST contract.",
+      "reason": "Subject, constraint, framed-concern, verification, actor, and stakeholder members now have explicit typed nodes; the raw branch is retained only for malformed or newly introduced recovery alternatives.",
       "test": "test/syntax/test_raw_element_compatibility.py::test_ledger_is_complete",
-      "follow_up": "Introduce explicit requirement relationship nodes before exposing requirement members to semantic analysis.",
-      "status": "deferred"
+      "follow_up": "Keep the recovery branch until malformed requirement-body diagnostics have a structured error-node contract.",
+      "status": "recovery-only"
     },
     {
       "id": "view-definition-body-item",
       "production": "viewDefinitionBodyItem",
       "callback": "exitViewDefinitionBodyItem",
       "scope": "view definition body",
-      "reason": "viewRenderingMember is not yet typed; retaining the complete fragment protects round-trip behavior.",
-      "test": "test/syntax/test_raw_element_compatibility.py::test_ledger_is_complete",
-      "follow_up": "Add typed view-rendering and filter relationship nodes.",
-      "status": "deferred"
+      "reason": "View rendering and element-filter alternatives now have explicit nodes; this branch is retained only when parser recovery leaves an unassembled child.",
+      "test": "test/syntax/test_ast.py::test_view_rendering_usage_preserves_every_grammar_field",
+      "follow_up": "Replace the recovery bridge with a structured syntax-error node once malformed view-body input has an explicit recovery contract.",
+      "status": "recovery-only"
     },
     {
       "id": "view-body-item",
       "production": "viewBodyItem",
       "callback": "exitViewBodyItem",
       "scope": "view usage body",
-      "reason": "expose and viewRenderingMember alternatives are not yet typed in the public source AST.",
-      "test": "test/syntax/test_raw_element_compatibility.py::test_ledger_is_complete",
-      "follow_up": "Model expose and rendering members with explicit fields and source spans.",
-      "status": "deferred"
+      "reason": "Expose, view rendering, and element-filter alternatives are explicitly typed; the raw branch is limited to parser recovery or an unassembled malformed child.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_core_view_paths_are_typed",
+      "follow_up": "Add a structured recovery node for malformed view-body input and remove this lossless branch.",
+      "status": "recovery-only"
     },
     {
       "id": "interface-non-occurrence-usage-element",
@@ -129,9 +129,9 @@
       "production": "variantUsageElement",
       "callback": "exitVariantUsageElement",
       "scope": "variant usage dispatcher",
-      "reason": "variantReference and any child whose explicit callback is not yet assembled remain lossless; ordinary typed variant children are passed through.",
+      "reason": "variantReference and ordinary variant members are typed; the raw branch is retained only for an unassembled production or parser recovery.",
       "test": "test/syntax/test_raw_element_compatibility.py::test_core_state_paths_are_typed",
-      "follow_up": "Add the missing variant-reference and relationship nodes.",
+      "follow_up": "Keep the recovery branch until every pinned variant alternative has an explicit callback and independent oracle.",
       "status": "deferred"
     },
     {
@@ -149,10 +149,10 @@
       "production": "annotatingElement",
       "callback": "exitAnnotatingElement",
       "scope": "model-owned annotation elements",
-      "reason": "Comment, documentation, and metadataFeature are typed; textualRepresentation is intentionally deferred and must not be confused with ordinary trivia.",
+      "reason": "Comment, documentation, metadataFeature, and textualRepresentation are typed; the raw branch is recovery-only.",
       "test": "test/syntax/test_raw_element_compatibility.py::test_model_owned_annotations_are_typed",
-      "follow_up": "Add a typed TextualRepresentation node with its model-owned fields.",
-      "status": "deferred"
+      "follow_up": "Keep the recovery branch until malformed annotation input has a structured error-node contract.",
+      "status": "recovery-only"
     },
     {
       "id": "definition-element",
@@ -169,9 +169,9 @@
       "production": "nonOccurrenceUsageElement",
       "callback": "exitNonOccurrenceUsageElement",
       "scope": "non-occurrence usage dispatcher",
-      "reason": "Reference, end feature, default reference, attribute, and enumeration usages are passed through; extendedUsage remains outside the current typed slice.",
+      "reason": "Reference, end feature, default reference, attribute, enumeration, binding, succession, and extended usages are passed through; the raw branch remains for unsupported/recovered alternatives.",
       "test": "test/syntax/test_raw_element_compatibility.py::test_core_non_occurrence_paths_are_typed",
-      "follow_up": "Add typed extended-usage support and remove the dispatcher fallback.",
+      "follow_up": "Add explicit nodes for any future non-occurrence alternative before exposing it to semantic consumers.",
       "status": "deferred"
     },
     {
@@ -202,6 +202,16 @@
       "reason": "Valid package members, filters, aliases, and imports are passed through; the raw branch is reached only when ANTLR recovery leaves an incomplete dispatcher child.",
       "test": "test/syntax/test_raw_element_compatibility.py::test_core_package_paths_are_typed",
       "follow_up": "Keep until malformed-input recovery has a structured error node/diagnostic contract.",
+      "status": "recovery-only"
+    },
+    {
+      "id": "expose",
+      "production": "expose",
+      "callback": "exitExpose",
+      "scope": "view expose relationship",
+      "reason": "Membership and namespace expose targets, including typed filter expressions, are modeled explicitly. The fallback retains only a parser-recovered expose whose target or relationship body was not assembled.",
+      "test": "test/syntax/test_raw_element_compatibility.py::test_core_view_paths_are_typed",
+      "follow_up": "Add a structured recovery node for malformed expose/filter input and remove this lossless branch.",
       "status": "recovery-only"
     }
   ]

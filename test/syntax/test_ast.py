@@ -323,7 +323,7 @@ def test_ast_concrete_exporters_cover_optional_and_prefix_alternatives():
         ref("feature"),
         ":",
         ref("Type"),
-        a.RelationshipBody(";"),
+        a.RelationshipBody(declaration_only=True),
         is_specialization=True,
         identification=a.Identification(declared_name="typingRelation"),
     )
@@ -461,6 +461,43 @@ def test_view_rendering_usage_round_trips_reference_target():
     )
     assert node.usage is None
     assert str(node) == "View;"
+    assert str(ast_module.ViewRenderingUsage(ast_module.DefinitionBody(True))) == ";"
+
+
+def test_view_rendering_usage_does_not_duplicate_nested_usage_body():
+    """Render the ``rendering`` usage alternative exactly once."""
+    usage = ast_module.Usage(
+        body=ast_module.DefinitionBody(declaration_only=True),
+        declaration=ast_module.UsageDeclaration(
+            identification=ast_module.Identification(declared_name="r")
+        ),
+    )
+    node = ast_module.ViewRenderingUsage(
+        body=usage.body,
+        usage=usage,
+    )
+    assert str(node) == "rendering r;"
+
+
+@pytest.mark.parametrize(
+    ("source", "extension_keywords", "has_rendering_keyword", "has_specialization"),
+    (
+        ("render #A r;", ["#A"], False, False),
+        ("render #A rendering r;", ["#A"], True, False),
+        ("render A :> B;", [], False, True),
+    ),
+)
+def test_view_rendering_usage_preserves_every_grammar_field(
+    source, extension_keywords, has_rendering_keyword, has_specialization
+):
+    """Keep usage extensions, the rendering keyword, and specialization typed."""
+    result = parse("package P { view V { " + source + " } }")
+    assert result.ok, result.diagnostics
+    usage = result.ast.members[0].element.members[0].element.view_body.items[0].usage
+    assert usage.usage_extension_keywords == extension_keywords
+    assert usage.has_rendering_keyword is has_rendering_keyword
+    assert (usage.specialization is not None) is has_specialization
+    assert source in str(result.ast)
 
 
 def test_expression_precedence_handles_conditional_and_coalesce_nodes():
@@ -469,6 +506,66 @@ def test_expression_precedence_handles_conditional_and_coalesce_nodes():
     reference = a.FeatureReferenceExpression(a.QualifiedReference(["value"]))
     assert a._expression_precedence(a.CoalesceExpression(reference, reference)) == 2
     assert a._expression_precedence(a.ConditionalExpression(reference, reference, reference)) == 1
+
+
+def test_ast_renderers_cover_optional_usage_and_relationship_forms():
+    """Exercise concrete renderers for optional grammar alternatives."""
+    a = ast_module
+    ref = a.QualifiedReference(["Target"])
+    empty = a.DefinitionBody(declaration_only=True)
+    usage = a.Usage(body=empty, declaration=a.UsageDeclaration(a.Identification(declared_name="u")))
+
+    assert str(a.VariantReference(ref, empty)) == "Target;"
+    assert str(a.IndividualUsage(a.UsagePrefix(), usage)) == "individual u;"
+    assert str(a.EventOccurrenceUsage(a.OccurrenceUsagePrefix(), usage)) == "event u;"
+    assert str(a.EventOccurrenceUsage(a.OccurrenceUsagePrefix(), usage, ref)) == "event Target u;"
+    assert str(a.ReferenceUsage(a.UsagePrefix(), usage, has_ref_keyword=False)) == "u;"
+    assert str(a.EnumeratedValue(usage)) == "u;"
+    assert str(a.EnumerationUsageMember(a.EnumeratedValue(usage), "public", ["#Meta"])) == (
+        "#Meta public u;"
+    )
+
+    message = a.MessageDeclaration(
+        usage_declaration=a.UsageDeclaration(a.Identification(declared_name="m")),
+        payload_feature=a.PayloadFeature(identification=a.Identification(declared_name="p")),
+        source_event=ref,
+        target_event=a.QualifiedReference(["Sink"]),
+    )
+    assert "m of p" in str(message)
+    assert "from Target to Sink" in str(message)
+    assert (
+        str(
+            a.AllocationUsageDeclaration(
+                connector_part=a.RawElement("a = b"), has_allocation_keyword=False
+            )
+        )
+        == "allocate a = b"
+    )
+
+    view = a.ViewUsage(a.OccurrenceUsagePrefix(), a.ViewBody(declaration_only=True))
+    assert str(view) == "view;"
+    rendering = a.ViewRenderingUsage(empty, reference=ref)
+    assert str(a.ViewRenderingMember(rendering, "public")) == "public render Target;"
+    assert str(
+        a.Expose(a.RawElement("P::*"), a.RelationshipBody(declaration_only=True))
+    ).startswith("expose")
+    assert str(a.TextualRepresentation('"ocl"', "/* x */")) == 'language "ocl" /* x */'
+
+
+def test_ast_wildcard_export_contains_every_declared_public_symbol():
+    """The AST module's own wildcard contract exposes every named symbol."""
+    namespace = {}
+    exec("from pysysmlv2.syntax.ast import *", namespace)
+
+    assert set(ast_module.__all__) <= set(namespace)
+    for name in (
+        "CalculationBody",
+        "Dependency",
+        "EnumerationBody",
+        "ReturnParameterMember",
+        "ViewBody",
+    ):
+        assert namespace[name] is getattr(ast_module, name)
 
 
 def test_new_usage_nodes_cover_optional_prefix_and_completion_rendering():

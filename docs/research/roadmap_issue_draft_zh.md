@@ -12,6 +12,8 @@
 
 当前 pinned grammar submodule 是 `daltskin/sysml-v2-grammar` 的 `v2026.05.0`，commit 为 `7292dc39983a6d263d14f8f6689de0f3b35db5eb`；本项目使用 ANTLR 4.13.2 生成 Python lexer/parser，并把生成代码随 wheel 发布，因此安装运行时不需要 Java。`pysysmlv2/syntax/generated/` 是 generated-only 目录，grammar 只能通过 submodule、外层 overlay 和 `make antlr_update`/`make antlr_build` 变更。
 
+上游 `sysml-v2-grammar` PR #10 的 canonical review comment（评论 ID `5351833338`）和 PR #11 的当前正文（head `16951ec8466e95c6ab582c9c09889edf611d0a56`）已在远端核对；仓库中原先的 `PR10_COMMENT.md` 与 `PR11_BODY.md` 是旧快照，已从本项目 PR 移除。它们属于独立的上游交付物，不作为 `pysysmlv2` 产品或测试输入；canonical 证据仍由远端评论和 PR 保留。
+
 # 范围边界
 
 本仓库当前只承诺 SysML v2 textual language frontend；KerML 文档、KerML-only grammar extension 和 KerML 独立 frontend 不属于当前 parser contract，不能因为共享 OMG 语言基础就隐式加入。AST 是带 concrete-syntax 选择和 provenance 的 source AST，不等同于 OMG normative abstract semantic model；workspace、semantic model 和下游 checker 才负责 identity、namespace、membership、resolved reference、derived relationship 和诊断归属。
@@ -22,7 +24,7 @@
 
 规范基线必须区分 OMG 正式 PDF、OMG Release 仓库的 informative KEBNF、官方 Pilot 参考实现、daltskin ANTLR grammar 和本地 compatibility overlay，不能把其中一个来源的版本或性质误写成另一个来源。主要证据包括 [OMG SysML 2.0 Language PDF](https://www.omg.org/spec/SysML/2.0/Language/PDF)、[OMG 2026-05 KEBNF](https://github.com/Systems-Modeling/SysML-v2-Release/blob/de1070ae8e79c21532b8004fc663d47b35d0e9fa/bnf/SysML-textual-bnf.kebnf)、[pinned daltskin parser grammar](https://github.com/daltskin/sysml-v2-grammar/blob/7292dc39983a6d263d14f8f6689de0f3b35db5eb/grammar/SysMLv2Parser.g4)、[official Pilot 2026-05](https://github.com/Systems-Modeling/SysML-v2-Pilot-Implementation/blob/fa709f28dfd49dfdb7ee83e4e19da2f57e0eb3aa/org.omg.sysml.xtext/src/org/omg/sysml/xtext/SysML.xtext#L1866-L1882) 和 [official Intro textual notation PDF](https://github.com/Systems-Modeling/SysML-v2-Release/blob/de1070ae8e79c21532b8004fc663d47b35d0e9fa/doc/Intro%20to%20the%20SysML%20v2%20Language-Textual%20Notation.pdf)。PDF 例子必须由人工逐页核对后复制到本地 test fixture，测试时不能直接依赖网络、PDF 自动提取结果或 upstream checkout。
 
-target transition 的规范结论已经收紧并固定：`TargetTransitionUsage` 只允许 trigger 后跟可选 guard，或者 guard-only；本项目已撤销错误添加的 target guard-before-trigger overlay、对应 provenance 和 listener/AST 分支。正式 OnOff5 是 `accept ... if ... then ...` 的 target shorthand；OnOff4 的 `transition ... if ... accept ... then ...` 是完整 `TransitionUsage`，完整 transition 的 `guard_before_trigger` 支持必须保留。该更正不影响其他独立调查项，例如完整 transition 的 guard-first、历史 effect semicolon 兼容和 terminate dispatch；这些项必须分别记录证据和版本状态，不能混为一个 target 规则。
+target transition 的规范结论已经收紧并固定：`TargetTransitionUsage` 只允许 trigger 后跟可选 guard，或者 guard-only；此前误加的 target guard-before-trigger 兼容分支、对应 provenance 和 listener/AST 分支均已撤销。正式 OnOff5 是 `accept ... if ... then ...` 的 target shorthand；OnOff4 的 `transition ... if ... accept ... then ...` 是完整 `TransitionUsage`，完整 transition 的 `guard_before_trigger` 支持必须保留。该更正不影响其他独立调查项，例如完整 transition 的 guard-first、历史 effect semicolon 兼容和 terminate dispatch；这些项必须分别记录证据和版本状态，不能混为一个 target 规则。
 
 # 已完成的初始化交付
 
@@ -30,8 +32,8 @@ target transition 的规范结论已经收紧并固定：`TargetTransitionUsage`
 - 提供结构化 lexer/parser diagnostics、`parse()`、`parse_as_ast_node()`、可指定 grammar entry 的局部解析、source-aware `SourceSpan`、手写 `SysMLAstListener`、显式 source AST 和 canonical `str(node)` round-trip。
 - 提供 package、documentation、comment、state、state subaction、transition、expression、statement、action/control 节点的当前 AST slice，以及 workspace、semantic、formatter、query 和 Click CLI 的边界 placeholder。
 - 建立严格源码镜像测试目录、英文 reStructuredText docstring、详细 module/init roadmap、双语 Sphinx、`rst_auto`、Makefile help、ANTLR/build/package smoke 和 `AGENTS.md -> CLAUDE.md` 真实 symlink。
-- 本地保留 2026-03-02 人工复核的 OMG SysML 2.0 Language PDF inventory，共 275 个可执行 source entries 和 147 个明确排除记录；保留 Intro textual notation PDF 的 167 个 slide 资产及页面解说注释；复制 OMG 2026-05 Release 中 251 个 `.sysml` 官方模型到 `test/testfile`，测试不直接读取 upstream。
-- Section 7.18 当前有 22 个提交的 parser-derived AST snapshot，其中 11 个状态/动作样例另有独立手写字段级 oracle；Section 8.4 的 8 个纳入样例具备独立字段级 AST/round-trip 回归，其他人工 ledger fixture 目前主要提供 source-preservation 与 fixed-point 回归。AST 和 listener 的专门 branch coverage 门禁要求 100%。这些数字代表当前已固化的本地资产，不代表完整 SysML 语义模型已经完成。
+- 本地保留 2026-03-02 人工复核的 OMG SysML 2.0 Language PDF inventory，共 371 个可执行 source entries 和 282 个明确排除记录（653 条 reviewed records）；其中 printed pages 101--113 的 16 个 fixture、81 个 verbatim fragment/exclusion 记录保留在 `manual_pdf_review/section_7_17_p101_113_visual_ledger.json`，printed pages 409--450 的 59 个 fixture、31 个排除记录保留在 `manual_pdf_review/section_8_4_7_8_4_17_visual_ledger.json`；保留 Intro textual notation PDF 的 167 个 slide 资产及页面解说注释；复制 OMG 2026-05 Release 中 251 个 `.sysml` 官方模型到 `test/testfile`，测试不直接读取 upstream。
+- Section 7.18 当前有 22 个提交的 parser-derived AST snapshot，其中 11 个状态/动作样例另有独立手写字段级 oracle；Section 8.4 的 eligible fixture 具有完整 AST/round-trip 回归，当前已有一组独立字段级 AST/round-trip 回归，其他人工 ledger fixture 目前主要提供 source-preservation 与 fixed-point 回归。AST 和 listener 的专门 branch coverage 门禁要求 100%。这些数字代表当前已固化的本地资产，不代表完整 SysML 语义模型已经完成。
 - 导出的 `RawElement` 语法兼容节点已登记在 `docs/research/raw_element_compatibility_ledger.json`，每条记录包含 production、listener callback、保留理由、回归测试和后续 typed-node 任务；它不是语义模型节点，核心 state/action/transition/expression/import/alias/filter/connection/interface 路径有专门回归，不能把该兼容桥接当成语义模型。
 
 # 目标架构
@@ -72,7 +74,7 @@ target transition 的规范结论已经收紧并固定：`TargetTransitionUsage`
 - `make help` 完整列出安装、ANTLR、RST、docs、测试、doctest、format、lint、package 和 clean 工作流；`make test` 是 `make unittest` alias，`make unittest RANGE_DIR=...` 能对源码镜像目录执行局部测试并输出 `coverage.xml` 与 terminal `term-missing`。
 - `make format_check`、`make lint`、`make unittest`、`make doctest`、`make test`、`make rst_auto_check`、`make docs_check`、`make antlr_check`、`make package_check` 全部通过；AST 和 listener 专门 branch coverage 为 100%，生成目录不进入 Ruff 和 coverage，但 ANTLR build 后生成 Python 文件必须经过 Ruff format。
 - 所有公开 AST/listener/parser API 使用英文 pyfcstm 风格 reST docstring，module/init docstring 是详细 roadmap，文档生成不靠手写重复 API 页面；README 保持英文，规划 issue 使用中文且不做人为硬换行。
-- Linux、Windows、macOS 上的 CPython 3.7-3.14 全矩阵继续运行 runtime/test；同时补充至少一个 Windows/macOS 的 wheel build/install/import smoke，使“跨平台支持”不只由纯 pytest 运行证明。ANTLR regeneration、docs 和 package check 可保留单独的维护者 Linux job，但必须明确其覆盖边界。
+- Linux、Windows、macOS 上的 CPython 3.7-3.14 全矩阵继续运行 runtime/test；另有三平台 Python 3.12 的 wheel build/install/import smoke，使“跨平台支持”不只由纯 pytest 运行证明。ANTLR regeneration、docs 和 package check 可保留单独的维护者 Linux job，但必须明确其覆盖边界。
 - wheel 安装后不需要 Java，generated parser/provenance/license/package data 完整；submodule revision、ANTLR version、grammar effective hash 和 overlay evidence 可由 `make antlr_check` 复核。
 - 官方来源资产全部复制到 `test/testfile` 或明确的本地 research ledger，测试 collection 不访问网络、upstream checkout 或外部 PDF；每个排除项都有可复核原因，每个纳入项都有来源页/条款/fixture 映射。
 - TargetTransitionUsage 严格保持 trigger-before-guard 或 guard-only；完整 TransitionUsage 的 guard-first 仍可解析和 round-trip；非规范 target guard-first 不被项目有意接受，相关测试和文档不得重新引入错误 provenance。
@@ -80,9 +82,9 @@ target transition 的规范结论已经收紧并固定：`TargetTransitionUsage`
 
 # 当前已知限制与风险
 
-当前 `pysysmlv2/syntax/listener.py` 仍有面向未完成 production 的 `_raw_store`/`RawElement` 兼容路径；`RawElement` 虽从语法包导出以便调用方明确识别和拒绝，但不是语义模型 API。CLAUDE 中的“最终不得依赖 opaque fallback”是目标纪律，不应被当前 fixed-point round-trip 误解为已完成的全量 typed AST。当前官方 251 文件测试证明的是本地复制资产可被 parser 接受并达到 AST round-trip fixed point，不等价于每个文件都有独立的语义正确性 oracle；当前 275/147 manual inventory 也区分了可执行完整例子和上下文/图形/历史记录，不能把排除记录宣称为 parser 已支持。
+当前 `pysysmlv2/syntax/listener.py` 仍有面向未完成 production 的 `_raw_store`/`RawElement` 兼容路径；`RawElement` 虽从语法包导出以便调用方明确识别和拒绝，但不是语义模型 API。CLAUDE 中的“最终不得依赖 opaque fallback”是目标纪律，不应被当前 fixed-point round-trip 误解为已完成的全量 typed AST。当前官方 251 文件测试证明的是本地复制资产可被 parser 接受并达到 AST round-trip fixed point，不等价于每个文件都有独立的语义正确性 oracle；当前 371/282 manual inventory 也区分了可执行完整例子和上下文/图形/历史记录，不能把排除记录宣称为 parser 已支持。
 
-当前 GitHub Actions 的 runtime/test matrix 是 3 个 host 乘 8 个 Python line，共 24 个跨平台 test job；quality/generated、docs、package smoke 和 Codecov upload 只在 Ubuntu 22.04/Python 3.12 执行，且 Codecov action 配置为 `fail_ci_if_error: true`。这证明现有 CI 已覆盖运行时兼容性和主流程，但尚不足以证明三个平台都能 build/install wheel、运行 docs 或重生成 ANTLR；后续验收必须保留这一事实边界。
+当前 GitHub Actions 的 runtime/test matrix 是 3 个 host 乘 8 个 Python line，共 24 个跨平台 test job；quality/generated、docs 和 Codecov upload 仍在 Ubuntu 22.04/Python 3.12 执行，另有 Ubuntu、Windows、macOS 三平台的 Python 3.12 wheel build/install/import smoke。这样可以证明三个平台都能安装运行 wheel，但不把 docs、完整 quality 或 ANTLR regeneration 的覆盖范围误写成跨平台；Codecov action 配置为 `fail_ci_if_error: true`。
 
 SysML 2.0 PDF、2026-05 Beta 1 release、KEBNF、Pilot 和 daltskin grammar 可能存在版本差异或历史示例/grammar 矛盾；每次采用 overlay 都必须给出固定 commit、条款/行号、输入探针、规则差异、AST 影响和测试证据。不得把 informative KEBNF、历史 issue 或第三方实现单独升级为当前 normative standard；不得向 OMG 或 daltskin 重复提交已被核实为本地错误分类的 target guard-first 问题。
 

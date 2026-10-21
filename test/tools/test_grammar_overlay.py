@@ -107,7 +107,7 @@ def test_target_transition_rule_remains_upstream_without_guard_first_overlay():
 
     root = Path(grammar_overlay.__file__).parents[1]
     generated = (root / "pysysmlv2/syntax/generated/SysMLv2Parser.g4").read_text(encoding="utf-8")
-    upstream = (root / "upstream/sysml-v2-grammar/grammar/SysMLv2Parser.g4").read_text(
+    upstream = (root / "test/testfile/grammar/upstream_target_transition_usage.g4").read_text(
         encoding="utf-8"
     )
 

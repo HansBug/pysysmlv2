@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER_ROOT = ROOT / "docs" / "research" / "manual_pdf_review"
@@ -124,8 +124,10 @@ def build_inventory() -> Dict[str, Any]:
     for entry in entries:
         item = dict(entry)
         if item["fixture_eligible"]:
-            item["fixture_name"] = item.get("legacy_fixture_name") or (
-                "{}.sysml".format(_slug(item["id"]))
+            item["fixture_name"] = (
+                item.get("legacy_fixture_name")
+                or item.get("fixture_name")
+                or "{}.sysml".format(_slug(item["id"]))
             )
             item.pop("legacy_fixture_name", None)
             result.append(item)
@@ -157,17 +159,40 @@ def materialize(inventory: Mapping[str, Any], destination: Optional[Path] = None
     """Write all manually reviewed examples to the local fixture directory."""
     output = destination or FIXTURE_ROOT
     output.mkdir(parents=True, exist_ok=True)
-    expected_names = {entry["fixture_name"] for entry in inventory["entries"]}
-    for stale_path in output.glob("*.sysml"):
-        if stale_path.name not in expected_names:
+    output = output.resolve()
+    expected_paths = {
+        _fixture_path(output, entry["fixture_name"])[0] for entry in inventory["entries"]
+    }
+    for stale_path in output.rglob("*.sysml"):
+        if stale_path.resolve() not in expected_paths:
             stale_path.unlink()
     count = 0
     for entry in inventory["entries"]:
-        (output / entry["fixture_name"]).write_text(
-            entry["source_code"].rstrip() + "\n", encoding="utf-8"
-        )
+        fixture_path, _ = _fixture_path(output, entry["fixture_name"])
+        fixture_path.parent.mkdir(parents=True, exist_ok=True)
+        fixture_path.write_text(entry["source_code"].rstrip() + "\n", encoding="utf-8")
         count += 1
     return count
+
+
+def _fixture_path(output: Path, fixture_name: Any) -> Tuple[Path, Path]:
+    """Validate and resolve one repository-owned fixture path.
+
+    Manual ledgers are data, but their names become write targets.  Reject
+    absolute names, parent traversal, and symlink escapes before stale-file
+    cleanup or materialization can mutate anything outside ``output``.
+    """
+    if not isinstance(fixture_name, str) or not fixture_name.strip():
+        raise ValueError("fixture_name must be a non-empty relative path")
+    relative = Path(fixture_name)
+    if relative.is_absolute() or ".." in relative.parts:
+        raise ValueError("fixture_name must not be absolute or contain '..'")
+    candidate = (output / relative).resolve()
+    try:
+        candidate.relative_to(output)
+    except ValueError as error:
+        raise ValueError("fixture_name resolves outside the destination") from error
+    return candidate, relative
 
 
 def main(arguments: Optional[Sequence[str]] = None) -> int:

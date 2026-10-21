@@ -17,10 +17,12 @@ from __future__ import annotations
 import argparse
 import json
 from concurrent.futures import ProcessPoolExecutor
+from dataclasses import fields, is_dataclass
 from pathlib import Path
-from typing import Dict, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from pysysmlv2 import parse
+from pysysmlv2.syntax import RawElement
 
 
 def _corpus_root() -> Path:
@@ -43,7 +45,7 @@ def _model_paths(root: Path) -> Tuple[Path, ...]:
     return tuple(sorted(root.rglob("*.sysml")))
 
 
-def _failure(category: str, path: Path, root: Path, detail: str) -> Dict[str, str]:
+def _failure(category: str, path: Path, root: Path, detail: str) -> Dict[str, object]:
     """Build one JSON-serializable report row for a failed corpus entry.
 
     :param category: Stable result category.
@@ -64,7 +66,107 @@ def _failure(category: str, path: Path, root: Path, detail: str) -> Dict[str, st
     }
 
 
-def inspect_model(path_text: str, root_text: str) -> Dict[str, str]:
+def _raw_element_texts(value: object) -> Tuple[str, ...]:
+    """Return lossless compatibility fragments nested in one AST.
+
+    :param value: AST value to inspect recursively.
+    :type value: object
+    :return: Raw-element source fragments in traversal order.
+    :rtype: tuple[str, ...]
+    """
+    if isinstance(value, RawElement):
+        return (value.source_text,)
+    if is_dataclass(value):
+        result = []
+        for item in fields(value):
+            if item.name != "span":
+                result.extend(_raw_element_texts(getattr(value, item.name)))
+        return tuple(result)
+    if isinstance(value, (list, tuple)):
+        result = []
+        for item in value:
+            result.extend(_raw_element_texts(item))
+        return tuple(result)
+    return ()
+
+
+def _line_offsets(source_text: str) -> Tuple[int, ...]:
+    """Return zero-based offsets for each one-based source line."""
+    offsets: List[int] = []
+    offset = 0
+    for line in source_text.splitlines(keepends=True):
+        offsets.append(offset)
+        offset += len(line)
+    return tuple(offsets)
+
+
+def _context_ranges(parse_tree: object) -> Dict[Tuple[int, int], Tuple[str, ...]]:
+    """Index parser-context source ranges by their concrete grammar rule."""
+    ranges: Dict[Tuple[int, int], List[str]] = {}
+
+    def visit(context: object) -> None:
+        start_token = getattr(context, "start", None)
+        stop_token = getattr(context, "stop", None)
+        start = getattr(start_token, "start", None)
+        stop = getattr(stop_token, "stop", None)
+        if isinstance(start, int) and isinstance(stop, int) and start >= 0 and stop >= start:
+            name = type(context).__name__
+            if name.endswith("Context"):
+                name = name[: -len("Context")]
+            if name:
+                name = name[0].lower() + name[1:]
+            ranges.setdefault((start, stop + 1), []).append(name)
+        for child in getattr(context, "getChildren", lambda: ())():
+            if hasattr(child, "getChildren"):
+                visit(child)
+
+    visit(parse_tree)
+    return {key: tuple(value) for key, value in ranges.items()}
+
+
+def _raw_records(value: object, source_text: str, parse_tree: object) -> List[Dict[str, object]]:
+    """Describe nested RawElement fragments with their exact grammar production."""
+    offsets = _line_offsets(source_text)
+    ranges = _context_ranges(parse_tree)
+    records: List[Dict[str, object]] = []
+    for raw in _walk_raw_elements(value):
+        span = raw.span
+        if span is None or span.line < 1 or span.end_line < 1:
+            production = None
+        else:
+            try:
+                start = offsets[span.line - 1] + span.column - 1
+                end = offsets[span.end_line - 1] + span.end_column - 1
+            except IndexError:
+                production = None
+            else:
+                names = ranges.get((start, end), ())
+                production = names[-1] if names else None
+        records.append(
+            {
+                "production": production,
+                "source_text": raw.source_text,
+                "line": span.line if span else None,
+            }
+        )
+    return records
+
+
+def _walk_raw_elements(value: object):
+    """Yield nested RawElement nodes without relying on AST reflection helpers."""
+    if isinstance(value, RawElement):
+        yield value
+        return
+    if is_dataclass(value):
+        for item in fields(value):
+            if item.name != "span":
+                yield from _walk_raw_elements(getattr(value, item.name))
+    elif isinstance(value, (list, tuple)):
+        for item in value:
+            yield from _walk_raw_elements(item)
+
+
+def inspect_model(path_text: str, root_text: str) -> Dict[str, object]:
     """Classify parser, AST, and canonical round-trip behavior for one file.
 
     :param path_text: Absolute fixture path supplied to a worker process.
@@ -107,6 +209,22 @@ def inspect_model(path_text: str, root_text: str) -> Dict[str, str]:
         )
     if str(second.ast) != exported:
         return _failure("roundtrip_mismatch", path, root, "canonical export is not idempotent")
+    raw_records = _raw_records(first.ast, path.read_text(encoding="utf-8"), first.parse_tree)
+    if raw_records:
+        sample = " | ".join(
+            str(record["source_text"]).replace("\n", " ").strip() for record in raw_records[:2]
+        )
+        productions = ", ".join(str(record["production"]) for record in raw_records)
+        result = _failure(
+            "raw_element",
+            path,
+            root,
+            "{} deferred/recovery RawElement fragment(s) [{}]: {}".format(
+                len(raw_records), productions, sample
+            ),
+        )
+        result["raw_elements"] = raw_records
+        return result
     return _failure("passed", path, root, "")
 
 
@@ -158,7 +276,7 @@ def build_report(
     }
 
 
-def _inspect_argument(argument: Tuple[str, str]) -> Dict[str, str]:
+def _inspect_argument(argument: Tuple[str, str]) -> Dict[str, object]:
     """Adapt an executor argument pair to :func:`inspect_model`.
 
     :param argument: File and corpus-root path pair.

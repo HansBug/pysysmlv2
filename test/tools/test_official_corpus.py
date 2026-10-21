@@ -33,6 +33,14 @@ def test_every_official_fixture_parses_and_reaches_a_round_trip_fixed_point(path
     }
 
 
+def test_official_corpus_report_has_no_raw_elements():
+    """Require every complete official model to use typed AST nodes."""
+    root = get_testfile("omg_release_2026_05")
+    for path in official_model_files():
+        result = inspect_model(str(path), str(root))
+        assert result["category"] == "passed", result
+
+
 def test_build_report_classifies_a_canonical_local_model(tmp_path):
     model = tmp_path / "demo.sysml"
     model.write_text("package Demo { }", encoding="utf-8")

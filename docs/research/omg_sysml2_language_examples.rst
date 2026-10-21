@@ -82,8 +82,8 @@ the ``TargetTransitionUsage`` shorthand with the trigger before its guard;
 that target form is accepted by the pinned upstream grammar and is not a
 local grammar extension. OnOff5's closed transition effects are the separate
 legacy semicolon compatibility case. OnOff6 exercises the corresponding
-terminate action shorthand. The OnOff4, OnOff5, and OnOff6 fixtures all parse
-successfully. Their
+terminate action shorthand. OnOff4, OnOff5, and OnOff6 all parse successfully.
+Their
 parser-derived snapshots are compared field-for-field by the official corpus
 tests, while the handwritten state-oracle suite independently checks the
 concrete fields for OnOff1--OnOff6. No target guard-first alternative is
@@ -109,8 +109,17 @@ The merge manifest keeps two disjoint sets:
   and an explicit reason whenever a block is lexical/contextual, incomplete,
   visibly mistyped, or incompatible with the current normative grammar.
 
-The merged manual ledger currently has 422 reviewed textual records: 275
-executable fixtures and 147 retained exclusions.  In particular, the formal
+The merged manual ledger currently has 653 reviewed textual records: 371
+executable fixtures and 282 retained exclusions.  The newly closed visual
+ledger for printed pages 101--113 contributes 16 executable fixtures and 81
+verbatim contextual, lexical, continuation, placeholder, or compatibility
+records; it is stored in
+``manual_pdf_review/section_7_17_p101_113_visual_ledger.json``.  The newly
+closed visual ledger for printed pages 409--450 contributes 59 executable
+fixtures and 31 retained KerML, placeholder, or historical-compatibility
+records; it is stored in
+``manual_pdf_review/section_8_4_7_8_4_17_visual_ledger.json``.  In particular,
+the formal
 PDF's legacy ``action def setX(c : C, newX : Real)`` form is preserved as an
 ``official_compatibility_difference``.  The current official BNF, pilot
 implementation, Spec42, sysmlpy, and copied release examples use body ``in``
@@ -130,6 +139,27 @@ round-trip fixed point.  They are committed regression snapshots, not
 independent semantic oracles.  Independent hand-authored AST oracles for the
 state-machine examples live in ``test_official_ast_oracles.py`` and the
 Section 8.4 semantic fixtures have their own field-level oracles.
+The 251-file release-corpus report records any deferred or parser-recovery
+``RawElement`` explicitly as ``raw_element`` instead of silently reporting it
+as a fully typed pass.  The current checked-in corpus has no such rows; the
+production ledger remains the authoritative list of the recovery boundaries
+that are still possible for malformed or future grammar input.
+
+Section 8.4.7--8.4.17: SysML semantic examples
+-----------------------------------------------
+
+The visual ledger
+``manual_pdf_review/section_8_4_7_8_4_17_visual_ledger.json`` covers every
+closed SysML source panel identified on printed pages 409--450 (physical pages
+441--482), including the final Requirement and Concern panels on printed pages
+447--450.  The corresponding local fixtures live beneath
+``test/testfile/omg_sysml2_language/manual/section_8_4``.  Each eligible panel
+is checked by the same full AST equality and canonical round-trip test as the
+other manual fixtures.  Panels explicitly introduced as KerML, panels with a
+literal ``...`` omission marker, and historical spellings rejected by the
+pinned 2026-05 grammar remain verbatim exclusions with page provenance and an
+explanation; they are not silently repaired or promoted to a local grammar
+extension.
 
 The raw extraction used for the whole section is retained in
 ``omg_sysml2_language_section7_blocks.json``.  It contains the physical page,
@@ -139,12 +169,13 @@ directory: unreviewed OCR/layout fragments are intentionally not fed to the
 parser as tests.  The smaller ``omg_sysml2_language_examples.json`` file is
 the durable, reviewed summary and contains manually cleaned state examples.
 
-Annex A currently has one additional visually reviewed closed source panel:
-the complete ``part def Vehicle`` block from printed page 637 (physical page
-669), recorded in ``manual_pdf_review/annex_a_3_vehicle_definition.json`` and
-checked by an independent field-level oracle.  The remaining Annex A panels
-and later semantic examples are tracked as open coverage work rather than
-being represented by parser-derived claims.
+Annex A now has visually reviewed closed source panels for clauses A.3--A.13,
+recorded in ``manual_pdf_review/annex_a_3_vehicle_definition.json`` and
+``manual_pdf_review/annex_a_4_a_13_visual_ledger.json``.  Their eligible
+fixtures are copied into ``test/testfile/omg_sysml2_language/manual/annex_a``
+and checked by the manual-inventory round-trip suite.  KerML-only panels,
+incomplete diagrams, and external-language bodies remain explicit exclusions;
+they are not represented by parser-derived conformance claims.
 
 Status vocabulary
 -----------------

@@ -19,7 +19,13 @@ MIN_COVERAGE ?=
 WORKERS ?=
 COV_REPORT_ARGS := $(foreach type,$(COV_TYPES),--cov-report=$(type))
 
-.PHONY: help install install-dev antlr_update antlr_build antlr_check rst_auto rst_auto_check unittest doctest test format format_check lint docs docs_en docs_zh docs_check package package_check clean
+ifeq ($(RANGE_DIR),.)
+AST_LISTENER_COVERAGE_CHECK := $(PYTHON) -m coverage report --include="$(SRC_DIR)/syntax/ast.py,$(SRC_DIR)/syntax/listener.py" --fail-under=100
+else
+AST_LISTENER_COVERAGE_CHECK :=
+endif
+
+.PHONY: help install install-dev antlr_update antlr_build antlr_check rst_auto rst_auto_check unittest doctest test format format_check lint docs docs_en docs_zh docs_check package package_smoke package_check clean
 
 help:
 	@echo "pysysmlv2 build system"
@@ -33,6 +39,7 @@ help:
 	@echo "  make install                     Install the package in editable mode"
 	@echo "  make install-dev                 Install development, test, docs, and tooling extras"
 	@echo "  make package                     Build sdist and wheel into dist/"
+	@echo "  make package_smoke               Install the single wheel in an isolated venv"
 	@echo "  make package_check               Check VERSION and generated package data"
 	@echo "  make clean                       Remove build, dist, and egg-info output"
 	@echo ""
@@ -88,16 +95,12 @@ rst_auto_check:
 	$(PYTHON) -m tools.auto_rst_top_index --check
 
 unittest:
-	UNITTEST=1 $(PYTHON) -m pytest "$(RANGE_TEST_DIR)" -s -v -m unit \
-		--junitxml=junit.xml -o junit_family=legacy \
-		--cov-branch $(COV_REPORT_ARGS) --cov="$(RANGE_SRC_DIR)" \
-		$(if $(MIN_COVERAGE),--cov-fail-under=$(MIN_COVERAGE),) \
-		$(if $(WORKERS),-n $(WORKERS),)
-	@if [ "$(RANGE_DIR)" = "." ]; then \
-		$(PYTHON) -m coverage report \
-			--include="$(SRC_DIR)/syntax/ast.py,$(SRC_DIR)/syntax/listener.py" \
-			--fail-under=100; \
-	fi
+	$(PYTHON) -m pytest "$(RANGE_TEST_DIR)" -s -v -m unit \
+			--junitxml=junit.xml -o junit_family=legacy \
+			--cov-branch $(COV_REPORT_ARGS) --cov="$(RANGE_SRC_DIR)" \
+			$(if $(MIN_COVERAGE),--cov-fail-under=$(MIN_COVERAGE),) \
+			$(if $(WORKERS),-n $(WORKERS),)
+	$(AST_LISTENER_COVERAGE_CHECK)
 
 test: unittest
 
@@ -130,8 +133,11 @@ docs_check:
 package:
 	$(PYTHON) -m build --sdist --wheel --outdir dist
 
+package_smoke:
+	$(PYTHON) -m tools.package_smoke --dist-dir dist
+
 package_check:
 	$(PYTHON) -m tools.package_check
 
 clean:
-	rm -rf build dist *.egg-info
+	$(PYTHON) -m tools.package_check --clean

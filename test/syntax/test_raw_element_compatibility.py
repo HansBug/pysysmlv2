@@ -12,20 +12,43 @@ import pytest
 
 from pysysmlv2 import parse, parse_as_ast_node
 from pysysmlv2.syntax import (
+    ActorMember,
+    ActorUsage,
     BindingConnectorAsUsage,
+    BooleanLiteral,
+    CalculationBody,
+    ConcernFramedConcernUsage,
     ConnectorEnd,
+    ConstraintRequirementConstraintUsage,
+    ConstraintUsageDeclaration,
     DefinitionBody,
     DottedQualifiedReference,
     FeatureSpecialization,
     FeatureSpecializationPart,
+    FramedConcernMember,
     Identification,
     Model,
+    ObjectiveMember,
+    ObjectiveRequirementUsage,
     OwnedFeatureTyping,
     Package,
     PackageMember,
     QualifiedReference,
     RawElement,
+    ReferenceFramedConcernUsage,
+    ReferenceRequirementConstraintUsage,
+    ReferenceRequirementVerificationUsage,
+    RequirementBody,
+    RequirementConstraintMember,
+    RequirementVerificationMember,
+    RequirementVerificationRequirementUsage,
+    ResultExpressionMember,
+    StakeholderMember,
+    StakeholderUsage,
+    SubjectMember,
+    SubjectUsage,
     SuccessionAsUsage,
+    Usage,
     UsageDeclaration,
     UsagePrefix,
 )
@@ -137,11 +160,285 @@ def test_core_package_paths_are_typed():
     assert list(_walk(result.ast)) == []
 
 
+def test_core_view_paths_are_typed():
+    """View expose, rendering, and filter alternatives stay structured."""
+    result = parse(
+        "package Demo { view V { expose A::**; render asTreeDiagram; expose A::**[@Safety]; } }"
+    )
+    assert result.ok, result.diagnostics
+    assert list(_walk(result.ast)) == []
+
+
 def test_core_non_occurrence_paths_are_typed():
     """Supported attribute/reference/enum usage dispatchers stay typed."""
     result = parse("package Demo { attribute a; ref attribute r; enum E { one; } }")
     assert result.ok, result.diagnostics
     assert list(_walk(result.ast)) == []
+
+
+@pytest.mark.parametrize(
+    ("source", "grammar_node", "expected"),
+    [
+        pytest.param(
+            "subject s;",
+            "subjectMember",
+            SubjectMember(
+                SubjectUsage(
+                    Usage(
+                        body=DefinitionBody(declaration_only=True),
+                        declaration=UsageDeclaration(Identification(declared_name="s")),
+                    )
+                )
+            ),
+            id="subject",
+        ),
+        pytest.param(
+            "subject;",
+            "subjectMember",
+            SubjectMember(
+                SubjectUsage(
+                    Usage(body=DefinitionBody(declaration_only=True)),
+                )
+            ),
+            id="subject-bare",
+        ),
+        pytest.param(
+            "actor a;",
+            "actorMember",
+            ActorMember(
+                ActorUsage(
+                    Usage(
+                        body=DefinitionBody(declaration_only=True),
+                        declaration=UsageDeclaration(Identification(declared_name="a")),
+                    )
+                )
+            ),
+            id="actor",
+        ),
+        pytest.param(
+            "actor;",
+            "actorMember",
+            ActorMember(
+                ActorUsage(
+                    Usage(body=DefinitionBody(declaration_only=True)),
+                ),
+            ),
+            id="actor-bare",
+        ),
+        pytest.param(
+            "stakeholder h;",
+            "stakeholderMember",
+            StakeholderMember(
+                StakeholderUsage(
+                    Usage(
+                        body=DefinitionBody(declaration_only=True),
+                        declaration=UsageDeclaration(Identification(declared_name="h")),
+                    )
+                )
+            ),
+            id="stakeholder",
+        ),
+        pytest.param(
+            "stakeholder;",
+            "stakeholderMember",
+            StakeholderMember(
+                StakeholderUsage(
+                    Usage(body=DefinitionBody(declaration_only=True)),
+                )
+            ),
+            id="stakeholder-bare",
+        ),
+        pytest.param(
+            "assume constraint { }",
+            "requirementConstraintMember",
+            RequirementConstraintMember(
+                kind="assume",
+                requirement_constraint_usage=ConstraintRequirementConstraintUsage(
+                    constraint_usage_declaration=ConstraintUsageDeclaration(),
+                    calculation_body=CalculationBody(),
+                ),
+            ),
+            id="assume-constraint",
+        ),
+        pytest.param(
+            "frame concern C { }",
+            "framedConcernMember",
+            FramedConcernMember(
+                framed_concern_usage=ConcernFramedConcernUsage(
+                    constraint_usage_declaration=ConstraintUsageDeclaration(
+                        usage_declaration=UsageDeclaration(
+                            identification=Identification(declared_name="C")
+                        )
+                    ),
+                    requirement_body=RequirementBody(),
+                )
+            ),
+            id="frame-concern",
+        ),
+        pytest.param(
+            "objective O { }",
+            "objectiveMember",
+            ObjectiveMember(
+                objective_requirement_usage=ObjectiveRequirementUsage(
+                    constraint_usage_declaration=ConstraintUsageDeclaration(
+                        usage_declaration=UsageDeclaration(
+                            identification=Identification(declared_name="O")
+                        )
+                    ),
+                    requirement_body=RequirementBody(),
+                )
+            ),
+            id="objective",
+        ),
+        pytest.param(
+            "verify requirement V { }",
+            "requirementVerificationMember",
+            RequirementVerificationMember(
+                requirement_verification_usage=RequirementVerificationRequirementUsage(
+                    constraint_usage_declaration=ConstraintUsageDeclaration(
+                        usage_declaration=UsageDeclaration(
+                            identification=Identification(declared_name="V")
+                        )
+                    ),
+                    requirement_body=RequirementBody(),
+                )
+            ),
+            id="verify-requirement",
+        ),
+        pytest.param(
+            "public subject #Meta s;",
+            "subjectMember",
+            SubjectMember(
+                SubjectUsage(
+                    Usage(
+                        body=DefinitionBody(declaration_only=True),
+                        declaration=UsageDeclaration(Identification(declared_name="s")),
+                    ),
+                    extension_keywords=["#Meta"],
+                ),
+                member_prefix="public",
+            ),
+            id="subject-extension-and-visibility",
+        ),
+        pytest.param(
+            "assume x :> Y { }",
+            "requirementConstraintMember",
+            RequirementConstraintMember(
+                kind="assume",
+                requirement_constraint_usage=ReferenceRequirementConstraintUsage(
+                    reference_subsetting=QualifiedReference(["x"]),
+                    specialization=FeatureSpecializationPart(
+                        [FeatureSpecialization(":>", [QualifiedReference(["Y"])])]
+                    ),
+                    requirement_body=RequirementBody(),
+                ),
+            ),
+            id="assume-reference",
+        ),
+        pytest.param(
+            "assume #Meta x { }",
+            "requirementConstraintMember",
+            RequirementConstraintMember(
+                kind="assume",
+                requirement_constraint_usage=ConstraintRequirementConstraintUsage(
+                    constraint_usage_declaration=ConstraintUsageDeclaration(
+                        usage_declaration=UsageDeclaration(
+                            identification=Identification(declared_name="x")
+                        )
+                    ),
+                    calculation_body=CalculationBody(),
+                    extension_keywords=["#Meta"],
+                    has_constraint_keyword=False,
+                ),
+            ),
+            id="assume-extension",
+        ),
+        pytest.param(
+            "frame x :> Y { }",
+            "framedConcernMember",
+            FramedConcernMember(
+                framed_concern_usage=ReferenceFramedConcernUsage(
+                    reference_subsetting=QualifiedReference(["x"]),
+                    specialization=FeatureSpecializationPart(
+                        [FeatureSpecialization(":>", [QualifiedReference(["Y"])])]
+                    ),
+                    requirement_body=RequirementBody(),
+                )
+            ),
+            id="frame-reference",
+        ),
+        pytest.param(
+            "frame #Meta C { }",
+            "framedConcernMember",
+            FramedConcernMember(
+                framed_concern_usage=ConcernFramedConcernUsage(
+                    constraint_usage_declaration=ConstraintUsageDeclaration(
+                        usage_declaration=UsageDeclaration(
+                            identification=Identification(declared_name="C")
+                        )
+                    ),
+                    requirement_body=RequirementBody(),
+                    extension_keywords=["#Meta"],
+                    has_concern_keyword=False,
+                )
+            ),
+            id="frame-extension",
+        ),
+        pytest.param(
+            "objective #Meta O { }",
+            "objectiveMember",
+            ObjectiveMember(
+                objective_requirement_usage=ObjectiveRequirementUsage(
+                    constraint_usage_declaration=ConstraintUsageDeclaration(
+                        usage_declaration=UsageDeclaration(
+                            identification=Identification(declared_name="O")
+                        )
+                    ),
+                    requirement_body=RequirementBody(),
+                    extension_keywords=["#Meta"],
+                )
+            ),
+            id="objective-extension",
+        ),
+        pytest.param(
+            "verify x :> Y { }",
+            "requirementVerificationMember",
+            RequirementVerificationMember(
+                requirement_verification_usage=ReferenceRequirementVerificationUsage(
+                    reference_subsetting=QualifiedReference(["x"]),
+                    specializations=[FeatureSpecialization(":>", [QualifiedReference(["Y"])])],
+                    requirement_body=RequirementBody(),
+                )
+            ),
+            id="verify-reference",
+        ),
+        pytest.param(
+            "verify #Meta V { }",
+            "requirementVerificationMember",
+            RequirementVerificationMember(
+                requirement_verification_usage=RequirementVerificationRequirementUsage(
+                    constraint_usage_declaration=ConstraintUsageDeclaration(
+                        usage_declaration=UsageDeclaration(
+                            identification=Identification(declared_name="V")
+                        )
+                    ),
+                    requirement_body=RequirementBody(),
+                    extension_keywords=["#Meta"],
+                    has_requirement_keyword=False,
+                )
+            ),
+            id="verify-extension",
+        ),
+    ],
+)
+def test_requirement_relationship_nodes_are_field_exact_and_round_trip(
+    source, grammar_node, expected
+):
+    """Assert relationship productions are typed without a raw fallback."""
+    fragment = parse_as_ast_node(source, grammar_node=grammar_node)
+    assert fragment == expected
+    assert str(fragment) == source
+    assert parse_as_ast_node(str(fragment), grammar_node=grammar_node) == expected
 
 
 def _typed_connector_end(name: str) -> ConnectorEnd:
@@ -282,3 +579,13 @@ def test_ledger_does_not_claim_target_guard_first_support():
     removed_overlay = "target-" + "transition-" + "trigger-guard-order"
     assert removed_overlay not in text
     assert "guard_before_trigger" not in text
+
+
+def test_requirement_ast_bodies_render_each_optional_form():
+    """Keep body and result-expression rendering parseable in isolation."""
+    assert str(CalculationBody(declaration_only=True)) == ";"
+    result_body = CalculationBody(
+        result_expression_member=ResultExpressionMember(BooleanLiteral("true"))
+    )
+    assert str(result_body) == "{\n    true\n}"
+    assert parse_as_ast_node(str(result_body), grammar_node="calculationBody") == result_body

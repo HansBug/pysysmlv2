@@ -14,4 +14,8 @@ source-mirrored unit-test scopes.
      - Verify generated artifacts are reproducible and tracked.
    * - :mod:`tools.auto_rst`
      - Generate API RST pages from package modules.
+   * - :mod:`tools.package_check`
+     - Validate package metadata and clean generated build output.
+   * - :mod:`tools.package_smoke`
+     - Exercise wheel installation and import in a platform-neutral venv.
 """

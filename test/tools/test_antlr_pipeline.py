@@ -53,8 +53,11 @@ def test_build_uses_argument_lists_and_replaces_generated_outputs(tmp_path, monk
     temp = tmp_path / "antlr-temp"
     jar = tmp_path / "antlr.jar"
     generated.mkdir()
-    (generated / "SysMLv2Lexer.g4").write_text("lexer\n", encoding="utf-8")
-    (generated / "SysMLv2Parser.g4").write_text("parser\n", encoding="utf-8")
+    # Keep the regression deterministic on every host.  Windows translates
+    # ``Path.write_text`` newlines by default; explicit CRLF bytes exercise
+    # the direct-build normalization path on Linux and macOS as well.
+    (generated / "SysMLv2Lexer.g4").write_bytes(b"lexer\r\n")
+    (generated / "SysMLv2Parser.g4").write_bytes(b"parser\r\n")
     (generated / "old.py").write_text("old\n", encoding="utf-8")
     (generated / "old.tokens").write_text("old\n", encoding="utf-8")
     (generated / "old.interp").write_text("old\n", encoding="utf-8")

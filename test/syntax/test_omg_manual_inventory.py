@@ -33,6 +33,9 @@ MID_LEDGER = (
     / "manual_pdf_review"
     / "manual_sysml_v2_clause_7_6_7_12_7_15_ledger.json"
 )
+SECTION_8_4_7_17_LEDGER = (
+    ROOT / "docs" / "research" / "manual_pdf_review" / "section_8_4_7_8_4_17_visual_ledger.json"
+)
 EARLY_PREFIXES = ("S72-", "S73-", "S74-", "S75-")
 EARLY_EXCLUDED_IDS = {
     "S72-02",
@@ -208,6 +211,32 @@ def test_manual_inventory_preserves_the_clause_7_6_to_7_15_visual_ledger():
         inventory_records[identifier]["fixture_eligible"] is False
         for identifier in excluded_records
     )
+
+
+def test_manual_inventory_preserves_the_section_8_4_7_to_8_4_17_visual_ledger():
+    """Retain every visually reviewed SysML semantic panel from pages 409-450."""
+    ledger = json.loads(SECTION_8_4_7_17_LEDGER.read_text(encoding="utf-8"))
+    source_records = {entry["id"]: entry for entry in ledger["entries"]}
+    excluded_records = {entry["id"]: entry for entry in ledger["excluded_fragments"]}
+    inventory_records = {
+        entry["id"]: entry
+        for entry in (*ENTRIES, *EXCLUDED_ENTRIES)
+        if entry["id"] in source_records or entry["id"] in excluded_records
+    }
+
+    assert ledger["scope"]["printed_pages"] == [409, 450]
+    assert ledger["scope"]["physical_pages"] == [441, 482]
+    assert len(source_records) == 77
+    assert len(excluded_records) == 13
+    assert set(inventory_records) == set(source_records) | set(excluded_records)
+    assert all(
+        inventory_records[identifier]["review_ledger"].endswith(SECTION_8_4_7_17_LEDGER.name)
+        for identifier in inventory_records
+    )
+    assert sum(entry["fixture_eligible"] for entry in source_records.values()) == 59
+    assert sum(not entry["fixture_eligible"] for entry in source_records.values()) == 18
+    assert all(not entry["fixture_eligible"] for entry in excluded_records.values())
+    assert all(entry["exclusion_reason"] for entry in excluded_records.values())
 
 
 def test_manual_inventory_retains_every_record_from_every_json_ledger():

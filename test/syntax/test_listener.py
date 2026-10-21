@@ -178,7 +178,7 @@ def test_listener_specialization_and_declared_feature_typing_contexts():
     typed_feature = _FakeContext()
     general_type = _FakeContext()
     body = _FakeContext()
-    relationship = RelationshipBody(";")
+    relationship = RelationshipBody(declaration_only=True)
     listener = _fake_listener(
         (typed_feature, _node("feature", "qualifiedName")),
         (general_type, _node("Type", "qualifiedName")),
@@ -1819,7 +1819,7 @@ def test_listener_namespace_import_and_definition_dispatch_guards():
     target_context = _FakeContext()
     body_context = _FakeContext()
     listener.nodes[target_context] = ast.QualifiedReference(["Target"])
-    listener.nodes[body_context] = ast.RelationshipBody(";")
+    listener.nodes[body_context] = ast.RelationshipBody(declaration_only=True)
     alias_context = _FakeContext(
         name=[],
         LT=None,
@@ -1830,7 +1830,7 @@ def test_listener_namespace_import_and_definition_dispatch_guards():
     listener.exitAliasMember(alias_context)
     assert listener.node_for(alias_context) == ast.AliasMember(
         target=ast.QualifiedReference(["Target"]),
-        relationship_body=ast.RelationshipBody(";"),
+        relationship_body=ast.RelationshipBody(declaration_only=True),
     )
 
     # Every required child guard is explicit instead of silently creating a
@@ -2249,12 +2249,12 @@ def test_listener_connection_interface_and_feature_defensive_paths():
     )
     alias_child = _FakeContext()
     listener.nodes[alias_child] = ast.AliasMember(
-        target=reference, relationship_body=ast.RelationshipBody(";")
+        target=reference, relationship_body=ast.RelationshipBody(declaration_only=True)
     )
     import_child = _FakeContext()
     listener.nodes[import_child] = ast.ImportRule(
         import_declaration=ast.NamespaceImport(reference),
-        relationship_body=ast.RelationshipBody(";"),
+        relationship_body=ast.RelationshipBody(declaration_only=True),
     )
     for key, child in (("aliasMember", alias_child), ("importRule", import_child)):
         listener.exitInterfaceBodyItem(
@@ -2659,6 +2659,29 @@ def test_listener_relation_and_body_error_paths_are_explicitly_covered():
 
     listener = _fake_listener()
     bad = mapped(listener, ast.RawElement("bad"))
+    _error("exitRelationshipOwnedElement", _FakeContext())
+    assembled_related_child = _FakeContext()
+    related_context = _FakeContext(
+        nonFeatureElement=assembled_related_child,
+        featureElement=None,
+    )
+    listener = _fake_listener((assembled_related_child, ast.RawElement("related")))
+    listener.exitOwnedRelatedElement(related_context)
+    assert listener.node_for(related_context) == ast.RawElement("related")
+    _error(
+        "exitOwnedRelatedElement",
+        _FakeContext(nonFeatureElement=None, featureElement=None),
+    )
+    _error("exitOwnedAnnotation", _FakeContext())
+    unassembled_relationship_member = _FakeContext()
+    _error(
+        "exitRelationshipBody",
+        _FakeContext(
+            SEMI=None,
+            relationshipOwnedElement=[unassembled_relationship_member],
+            ownedAnnotation=[],
+        ),
+    )
     _error(
         "exitConjugationPart",
         _FakeContext(ownedConjugation=bad),
@@ -2727,8 +2750,46 @@ def test_listener_relation_and_body_error_paths_are_explicitly_covered():
     listener.exitCalculationBodyItem(raw_calculation_item)
     assert isinstance(listener.node_for(raw_calculation_item), ast.RawElement)
 
+    # Keep the empty-body path covered with an explicit calculation-body part.
+    class _EmptyCalculationBodyPart:
+        def calculationBodyItem(self):
+            return []
+
+        def resultExpressionMember(self):
+            return None
+
+    class _CalculationWithEmptyPart:
+        start = None
+        stop = None
+
+        def SEMI(self):
+            return None
+
+        def calculationBodyPart(self):
+            return _EmptyCalculationBodyPart()
+
+    calculation_with_empty_part = _CalculationWithEmptyPart()
+    listener.exitCalculationBody(calculation_with_empty_part)
+    assert listener.node_for(calculation_with_empty_part) == ast.CalculationBody()
+
+    class _CalculationWithRecoveredMissingPart(_CalculationWithEmptyPart):
+        def calculationBodyPart(self):
+            return None
+
+    calculation_with_recovered_missing_part = _CalculationWithRecoveredMissingPart()
+    listener.exitCalculationBody(calculation_with_recovered_missing_part)
+    assert listener.node_for(calculation_with_recovered_missing_part) == ast.CalculationBody()
+
     _error("exitCaseBodyItem", _FakeContext())
+    raw_case_item = _FakeContext(actionBodyItem=_FakeContext())
+    listener.exitCaseBodyItem(raw_case_item)
+    assert isinstance(listener.node_for(raw_case_item), ast.RawElement)
+
     _error("exitRequirementBodyItem", _FakeContext())
+    raw_requirement_item = _FakeContext(definitionBodyItem=_FakeContext())
+    listener.exitRequirementBodyItem(raw_requirement_item)
+    assert isinstance(listener.node_for(raw_requirement_item), ast.RawElement)
+
     _error("exitViewDefinitionBodyItem", _FakeContext())
     _error("exitViewBodyItem", _FakeContext())
 
@@ -2748,6 +2809,290 @@ def test_listener_relation_and_body_error_paths_are_explicitly_covered():
     )
 
 
+def test_listener_recovery_and_prefix_guards_are_explicitly_covered():
+    """Exercise listener recovery branches that valid models do not select."""
+    _error("exitExtendedUsage", _FakeContext(usage=None))
+
+    usage_context = _FakeContext()
+    usage = ast.Usage(ast.DefinitionBody(declaration_only=True))
+    end_context = _FakeContext()
+    end_prefix = ast.EndUsagePrefix(ast.OwnedCrossFeature())
+    prefix_context = _FakeContext(endUsagePrefix=end_context, basicUsagePrefix=None)
+    listener = _fake_listener((usage_context, usage), (end_context, end_prefix))
+    extended_context = _FakeContext(
+        usage=usage_context,
+        unextendedUsagePrefix=prefix_context,
+        usageExtensionKeyword=[],
+    )
+    listener.exitExtendedUsage(extended_context)
+    assert listener.node_for(extended_context).unextended_prefix == end_prefix
+
+    # A recovered end prefix can be present without a typed child; the listener
+    # keeps the extension usage structured and leaves that prefix absent.
+    recovered_end_context = _FakeContext()
+    recovered_prefix_context = _FakeContext(
+        endUsagePrefix=recovered_end_context,
+        basicUsagePrefix=None,
+    )
+    listener = _fake_listener(
+        (usage_context, usage),
+        (recovered_end_context, ast.ASTNode()),
+    )
+    recovered_extended_context = _FakeContext(
+        usage=usage_context,
+        unextendedUsagePrefix=recovered_prefix_context,
+        usageExtensionKeyword=[],
+    )
+    listener.exitExtendedUsage(recovered_extended_context)
+    assert listener.node_for(recovered_extended_context).unextended_prefix is None
+
+    class _BarePrefixContext:
+        """Provide source text for the basic-prefix recovery conversion."""
+
+        start = None
+        stop = None
+
+        def getText(self):
+            """Return the prefix spelling."""
+            return "extension"
+
+    basic_prefix_context = _BarePrefixContext()
+    basic_wrapper = _FakeContext(endUsagePrefix=None, basicUsagePrefix=basic_prefix_context)
+    listener = _fake_listener((usage_context, usage))
+    basic_extended_context = _FakeContext(
+        usage=usage_context,
+        unextendedUsagePrefix=basic_wrapper,
+        usageExtensionKeyword=[],
+    )
+    listener.exitExtendedUsage(basic_extended_context)
+    assert listener.node_for(basic_extended_context).unextended_prefix.extension_keywords == [
+        "extension"
+    ]
+
+    no_prefix_wrapper = _FakeContext(endUsagePrefix=None, basicUsagePrefix=None)
+    listener = _fake_listener((usage_context, usage))
+    no_prefix_extended_context = _FakeContext(
+        usage=usage_context,
+        unextendedUsagePrefix=no_prefix_wrapper,
+        usageExtensionKeyword=[],
+    )
+    listener.exitExtendedUsage(no_prefix_extended_context)
+    assert listener.node_for(no_prefix_extended_context).unextended_prefix is None
+
+    absent_prefix_extended_context = _FakeContext(
+        usage=usage_context,
+        unextendedUsagePrefix=None,
+        usageExtensionKeyword=[],
+    )
+    listener.exitExtendedUsage(absent_prefix_extended_context)
+    assert listener.node_for(absent_prefix_extended_context).unextended_prefix is None
+
+    definition_child = _FakeContext()
+    raw_view_definition_item = _FakeContext(definitionBodyItem=definition_child)
+    listener = _fake_listener()
+    listener.exitViewDefinitionBodyItem(raw_view_definition_item)
+    assert isinstance(listener.node_for(raw_view_definition_item), ast.RawElement)
+
+    raw_view_body_item = _FakeContext(definitionBodyItem=_FakeContext())
+    listener.exitViewBodyItem(raw_view_body_item)
+    assert isinstance(listener.node_for(raw_view_body_item), ast.RawElement)
+
+    bad_render_context = _FakeContext()
+    _error(
+        "exitViewRenderingMember",
+        _FakeContext(viewRenderingUsage=bad_render_context),
+        (bad_render_context, ast.ASTNode()),
+    )
+
+    expose_target = _FakeContext()
+    expose_body = _FakeContext()
+    listener = _fake_listener(
+        (expose_target, ast.RawElement("unsupported expose target")),
+        (expose_body, ast.RelationshipBody(declaration_only=True)),
+    )
+    expose_context = _FakeContext(
+        membershipExpose=expose_target,
+        namespaceExpose=None,
+        relationshipBody=expose_body,
+    )
+    listener.exitExpose(expose_context)
+    assert isinstance(listener.node_for(expose_context), ast.RawElement)
+
+    variant_reference = _FakeContext()
+    variant_body = _FakeContext()
+    variant_specialization = _FakeContext()
+    typed_reference = ast.QualifiedReference(["Variant"])
+    typed_body = ast.DefinitionBody(declaration_only=True)
+    _error(
+        "exitVariantReference",
+        _FakeContext(
+            ownedReferenceSubsetting=variant_reference,
+            usageBody=variant_body,
+            featureSpecialization=[],
+        ),
+        (variant_reference, ast.RawElement("bad reference")),
+        (variant_body, typed_body),
+    )
+    _error(
+        "exitVariantReference",
+        _FakeContext(
+            ownedReferenceSubsetting=variant_reference,
+            usageBody=variant_body,
+            featureSpecialization=[],
+        ),
+        (variant_reference, typed_reference),
+        (variant_body, ast.RawElement("bad body")),
+    )
+    _error(
+        "exitVariantReference",
+        _FakeContext(
+            ownedReferenceSubsetting=variant_reference,
+            usageBody=variant_body,
+            featureSpecialization=[variant_specialization],
+        ),
+        (variant_reference, typed_reference),
+        (variant_body, typed_body),
+        (variant_specialization, ast.RawElement("bad specialization")),
+    )
+
+    _error(
+        "exitTextualRepresentation",
+        _FakeContext(DOUBLE_STRING=None, REGULAR_COMMENT=None),
+    )
+
+    listener = _fake_listener()
+    raw_non_occurrence = _FakeContext()
+    listener.exitNonOccurrenceUsageElement(raw_non_occurrence)
+    assert isinstance(listener.node_for(raw_non_occurrence), ast.RawElement)
+
+    _error("exitVariantUsageMember", _FakeContext(variantUsageElement=None))
+    bad_variant_element = _FakeContext()
+    _error(
+        "exitVariantUsageMember",
+        _FakeContext(variantUsageElement=bad_variant_element),
+        (bad_variant_element, ast.ASTNode()),
+    )
+
+
+def test_listener_requirement_relationship_error_paths_are_explicitly_covered():
+    """Cover required-child guards for requirement/case relationship nodes."""
+    requirement_body = _FakeContext()
+    declaration = _FakeContext()
+    calculation_body = _FakeContext()
+    reference = _FakeContext()
+    specialization = _FakeContext()
+    usage = _FakeContext()
+    kind = _FakeContext()
+
+    _error("exitSubjectUsage", _FakeContext(usage=None))
+    _error("exitSubjectMember", _FakeContext(subjectUsage=None))
+    _error("exitActorUsage", _FakeContext(usage=None))
+    _error("exitActorMember", _FakeContext(actorUsage=None))
+    _error("exitStakeholderUsage", _FakeContext(usage=None))
+    _error("exitStakeholderMember", _FakeContext(stakeholderUsage=None))
+
+    _error(
+        "exitRequirementConstraintUsage",
+        _FakeContext(
+            ownedReferenceSubsetting=reference,
+            featureSpecializationPart=None,
+            requirementBody=requirement_body,
+        ),
+        (reference, ast.RawElement("bad reference")),
+        (requirement_body, ast.RequirementBody()),
+    )
+    _error(
+        "exitRequirementConstraintUsage",
+        _FakeContext(
+            ownedReferenceSubsetting=None,
+            constraintUsageDeclaration=declaration,
+            calculationBody=calculation_body,
+            usageExtensionKeyword=[],
+            CONSTRAINT=None,
+        ),
+        (declaration, ast.RawElement("bad declaration")),
+        (calculation_body, ast.CalculationBody()),
+    )
+    _error(
+        "exitRequirementConstraintUsage",
+        _FakeContext(
+            ownedReferenceSubsetting=None,
+            constraintUsageDeclaration=declaration,
+            calculationBody=calculation_body,
+            usageExtensionKeyword=[],
+            CONSTRAINT=None,
+        ),
+        (declaration, ast.ConstraintUsageDeclaration()),
+        (calculation_body, ast.RawElement("bad body")),
+    )
+    _error(
+        "exitRequirementConstraintMember",
+        _FakeContext(requirementConstraintUsage=usage, requirementKind=kind, memberPrefix=None),
+        (usage, ast.RawElement("bad usage")),
+    )
+
+    _error(
+        "exitFramedConcernUsage",
+        _FakeContext(
+            ownedReferenceSubsetting=reference,
+            featureSpecializationPart=specialization,
+            requirementBody=requirement_body,
+        ),
+        (reference, ast.RawElement("bad reference")),
+        (requirement_body, ast.RequirementBody()),
+        (specialization, ast.FeatureSpecializationPart()),
+    )
+    _error(
+        "exitFramedConcernUsage",
+        _FakeContext(
+            ownedReferenceSubsetting=None,
+            constraintUsageDeclaration=declaration,
+            requirementBody=requirement_body,
+            usageExtensionKeyword=[],
+            CONCERN=None,
+        ),
+        (declaration, ast.RawElement("bad declaration")),
+        (requirement_body, ast.RequirementBody()),
+    )
+    _error("exitFramedConcernMember", _FakeContext(framedConcernUsage=None))
+
+    _error(
+        "exitObjectiveRequirementUsage",
+        _FakeContext(
+            constraintUsageDeclaration=declaration,
+            requirementBody=requirement_body,
+            usageExtensionKeyword=[],
+        ),
+        (declaration, ast.RawElement("bad declaration")),
+        (requirement_body, ast.RequirementBody()),
+    )
+    _error("exitObjectiveMember", _FakeContext(objectiveRequirementUsage=None))
+
+    _error(
+        "exitRequirementVerificationUsage",
+        _FakeContext(
+            ownedReferenceSubsetting=reference,
+            featureSpecialization=[],
+            requirementBody=requirement_body,
+        ),
+        (reference, ast.RawElement("bad reference")),
+        (requirement_body, ast.RequirementBody()),
+    )
+    _error(
+        "exitRequirementVerificationUsage",
+        _FakeContext(
+            ownedReferenceSubsetting=None,
+            constraintUsageDeclaration=declaration,
+            requirementBody=requirement_body,
+            usageExtensionKeyword=[],
+            REQUIREMENT=None,
+        ),
+        (declaration, ast.RawElement("bad declaration")),
+        (requirement_body, ast.RequirementBody()),
+    )
+    _error("exitRequirementVerificationMember", _FakeContext(requirementVerificationUsage=None))
+
+
 def test_listener_dependency_and_definition_validation_paths():
     """Cover dependency endpoint splitting and typed definition guards."""
 
@@ -2764,7 +3109,13 @@ def test_listener_dependency_and_definition_validation_paths():
         qualifiedName=[first, second],
         identification=identification,
     )
-    body = mapped(listener, ast.RelationshipBody("connect A to B"))
+    body = mapped(
+        listener,
+        ast.RelationshipBody(
+            declaration_only=False,
+            members=[ast.RawElement("connect A to B")],
+        ),
+    )
     dependency = _FakeContext(
         qualifiedName=[],
         dependencyDeclaration=declaration,
@@ -2790,7 +3141,10 @@ def test_listener_dependency_and_definition_validation_paths():
     listener.exitDependency(dependency_without_identification)
     assert isinstance(listener.node_for(dependency_without_identification), ast.Dependency)
 
-    no_target_body = mapped(listener, ast.RelationshipBody("A to B"))
+    no_target_body = mapped(
+        listener,
+        ast.RelationshipBody(declaration_only=False, members=[ast.RawElement("A to B")]),
+    )
     no_target_dependency = _FakeContext(
         qualifiedName=[],
         dependencyDeclaration=None,

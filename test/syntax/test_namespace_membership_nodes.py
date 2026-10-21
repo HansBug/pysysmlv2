@@ -35,7 +35,7 @@ def _package_member(source):
             "package P { alias A for B; }",
             AliasMember(
                 target=QualifiedReference(["B"]),
-                relationship_body=RelationshipBody(";"),
+                relationship_body=RelationshipBody(declaration_only=True),
                 identification=Identification(declared_name="A"),
             ),
         ),
@@ -43,7 +43,7 @@ def _package_member(source):
             "package P { alias <Short> Long for A::B { } }",
             AliasMember(
                 target=QualifiedReference(["A", "B"]),
-                relationship_body=RelationshipBody("{ }"),
+                relationship_body=RelationshipBody(declaration_only=False),
                 identification=Identification(short_name="Short", declared_name="Long"),
             ),
         ),

@@ -69,6 +69,8 @@ from .ast import (
     ActionUsage,
     ActionUsageDeclaration,
     ActionUsageNode,
+    ActorMember,
+    ActorUsage,
     AliasMember,
     AllExpression,
     AllocationDefinition,
@@ -104,6 +106,7 @@ from .ast import (
     Comment,
     CommentExpression,
     ConcernDefinition,
+    ConcernFramedConcernUsage,
     ConcernUsage,
     ConditionalExpression,
     ConjugatedPortTyping,
@@ -113,6 +116,7 @@ from .ast import (
     ConnectorEnd,
     ConnectorPart,
     ConstraintDefinition,
+    ConstraintRequirementConstraintUsage,
     ConstraintUsage,
     ConstraintUsageDeclaration,
     ConstructorExpression,
@@ -148,8 +152,10 @@ from .ast import (
     EventOccurrenceUsage,
     ExhibitStateUsage,
     ExitActionMember,
+    Expose,
     Expression,
     ExtendedDefinition,
+    ExtendedUsage,
     FeatureChain,
     FeatureChainExpression,
     FeatureDeclaration,
@@ -164,6 +170,8 @@ from .ast import (
     FlowUsage,
     ForkNode,
     ForLoopNode,
+    FramedConcernMember,
+    FramedConcernUsage,
     FunctionBodyItem,
     FunctionOperationExpression,
     GuardedSuccession,
@@ -216,6 +224,8 @@ from .ast import (
     NonFeatureMember,
     NonOccurrenceUsageMember,
     NullExpression,
+    ObjectiveMember,
+    ObjectiveRequirementUsage,
     OccurrenceDefinition,
     OccurrenceDefinitionPrefix,
     OccurrenceUsage,
@@ -238,13 +248,21 @@ from .ast import (
     RawElement,
     RealLiteral,
     Reference,
+    ReferenceFramedConcernUsage,
+    ReferenceRequirementConstraintUsage,
+    ReferenceRequirementVerificationUsage,
     ReferenceUsage,
     RelationshipBody,
     RenderingDefinition,
     RenderingUsage,
     RequirementBody,
+    RequirementConstraintMember,
+    RequirementConstraintUsage,
     RequirementDefinition,
     RequirementUsage,
+    RequirementVerificationMember,
+    RequirementVerificationRequirementUsage,
+    RequirementVerificationUsage,
     ResultExpressionMember,
     ReturnFeatureMember,
     ReturnParameterMember,
@@ -259,6 +277,8 @@ from .ast import (
     SourceElement,
     SourceSpan,
     SourceSuccession,
+    StakeholderMember,
+    StakeholderUsage,
     StateDefBody,
     StateDefinition,
     StatePerformActionUsage,
@@ -267,6 +287,8 @@ from .ast import (
     StringLiteral,
     StructureUsageMember,
     SubclassificationPart,
+    SubjectMember,
+    SubjectUsage,
     SuccessionAsUsage,
     SuccessionFlowUsage,
     TargetSuccession,
@@ -274,6 +296,7 @@ from .ast import (
     TargetTransitionUsage,
     TargetTransitionUsageMember,
     TerminateNode,
+    TextualRepresentation,
     TransitionPerformActionUsage,
     TransitionSuccession,
     TransitionUsage,
@@ -290,7 +313,9 @@ from .ast import (
     UseCaseDefinition,
     UseCaseUsage,
     ValuePart,
+    VariantReference,
     VariantUsage,
+    VariantUsageMember,
     VerificationCaseDefinition,
     VerificationCaseUsage,
     ViewBody,
@@ -298,6 +323,7 @@ from .ast import (
     ViewDefinitionBody,
     ViewpointDefinition,
     ViewpointUsage,
+    ViewRenderingMember,
     ViewRenderingUsage,
     ViewUsage,
     WhileLoopNode,
@@ -780,6 +806,32 @@ class SysMLAstListener(SysMLv2ParserListener):
         if not isinstance(completion, Usage):
             raise ValueError("endFeatureUsage requires usage completion")
         self._store(ctx, EndFeatureUsage(prefix, declaration, completion))
+
+    def exitExtendedUsage(self, ctx: SysMLv2Parser.ExtendedUsageContext) -> None:
+        """Assemble extension keywords around a generic usage completion."""
+        usage = self._child(ctx.usage())
+        if not isinstance(usage, Usage):
+            raise ValueError("extendedUsage requires Usage")
+        prefix_context = ctx.unextendedUsagePrefix()
+        prefix = None
+        if prefix_context is not None:
+            end_prefix = prefix_context.endUsagePrefix()
+            basic_prefix = prefix_context.basicUsagePrefix()
+            if end_prefix is not None:
+                candidate = self._child(end_prefix)
+                prefix = candidate if isinstance(candidate, EndUsagePrefix) else None
+            elif basic_prefix is not None:
+                prefix = self._usage_prefix_from_ref_prefix(basic_prefix)
+        self._store(
+            ctx,
+            ExtendedUsage(
+                usage=usage,
+                extension_keywords=[
+                    self._text(item).strip() for item in ctx.usageExtensionKeyword()
+                ],
+                unextended_prefix=prefix,
+            ),
+        )
 
     def exitAliasMember(self, ctx: SysMLv2Parser.AliasMemberContext) -> None:
         """Assemble an alias member with its explicit names and target."""
@@ -1843,21 +1895,262 @@ class SysMLAstListener(SysMLv2ParserListener):
         else:
             self._pass(ctx, child)
 
-    def _calculation_body(self, ctx: Any, body_type: Any) -> None:
-        """Build calculation/case bodies from their explicit child rules."""
+    def _usage_extension_keywords(self, ctx: Any) -> List[str]:
+        """Return ordered extension-keyword spellings owned by ``ctx``."""
+        return [self._text(item).strip() for item in ctx.usageExtensionKeyword()]
+
+    def _relationship_member_prefix(self, ctx: Any) -> Optional[str]:
+        """Return the visibility prefix owned by a relationship member."""
+        return self._member_prefix(ctx.memberPrefix())
+
+    def exitSubjectUsage(self, ctx: SysMLv2Parser.SubjectUsageContext) -> None:
+        """Assemble the typed ``subject`` usage relationship."""
+        usage = self._child(ctx.usage())
+        if not isinstance(usage, Usage):
+            raise ValueError("subjectUsage requires usage")
+        self._store(ctx, SubjectUsage(usage, self._usage_extension_keywords(ctx)))
+
+    def exitSubjectMember(self, ctx: SysMLv2Parser.SubjectMemberContext) -> None:
+        """Assemble a visible subject member."""
+        subject = self._child(ctx.subjectUsage())
+        if not isinstance(subject, SubjectUsage):
+            raise ValueError("subjectMember requires subjectUsage")
+        self._store(ctx, SubjectMember(subject, self._relationship_member_prefix(ctx)))
+
+    def exitActorUsage(self, ctx: SysMLv2Parser.ActorUsageContext) -> None:
+        """Assemble the typed ``actor`` usage relationship."""
+        usage = self._child(ctx.usage())
+        if not isinstance(usage, Usage):
+            raise ValueError("actorUsage requires usage")
+        self._store(ctx, ActorUsage(usage, self._usage_extension_keywords(ctx)))
+
+    def exitActorMember(self, ctx: SysMLv2Parser.ActorMemberContext) -> None:
+        """Assemble a visible actor member."""
+        actor = self._child(ctx.actorUsage())
+        if not isinstance(actor, ActorUsage):
+            raise ValueError("actorMember requires actorUsage")
+        self._store(ctx, ActorMember(actor, self._relationship_member_prefix(ctx)))
+
+    def exitStakeholderUsage(self, ctx: SysMLv2Parser.StakeholderUsageContext) -> None:
+        """Assemble the typed ``stakeholder`` usage relationship."""
+        usage = self._child(ctx.usage())
+        if not isinstance(usage, Usage):
+            raise ValueError("stakeholderUsage requires usage")
+        self._store(ctx, StakeholderUsage(usage, self._usage_extension_keywords(ctx)))
+
+    def exitStakeholderMember(self, ctx: SysMLv2Parser.StakeholderMemberContext) -> None:
+        """Assemble a visible stakeholder member."""
+        stakeholder = self._child(ctx.stakeholderUsage())
+        if not isinstance(stakeholder, StakeholderUsage):
+            raise ValueError("stakeholderMember requires stakeholderUsage")
+        self._store(ctx, StakeholderMember(stakeholder, self._relationship_member_prefix(ctx)))
+
+    def exitRequirementKind(self, ctx: SysMLv2Parser.RequirementKindContext) -> None:
+        """Record the ``assume`` or ``require`` relationship keyword."""
+        self.values[ctx] = self._text(ctx).strip()
+
+    def exitRequirementConstraintUsage(
+        self, ctx: SysMLv2Parser.RequirementConstraintUsageContext
+    ) -> None:
+        """Assemble either reference-based or calculation-based constraints."""
+        reference_ctx = ctx.ownedReferenceSubsetting()
+        if reference_ctx is not None:
+            reference = self._child(reference_ctx)
+            body = self._child(ctx.requirementBody())
+            specialization = (
+                self._child(ctx.featureSpecializationPart())
+                if ctx.featureSpecializationPart()
+                else None
+            )
+            if not self._is_reference(reference) or not isinstance(body, RequirementBody):
+                raise ValueError("reference requirement constraint is incomplete")
+            self._store(
+                ctx,
+                ReferenceRequirementConstraintUsage(
+                    reference_subsetting=reference,
+                    requirement_body=body,
+                    specialization=(
+                        specialization
+                        if isinstance(specialization, FeatureSpecializationPart)
+                        else None
+                    ),
+                ),
+            )
+            return
+        declaration = self._child(ctx.constraintUsageDeclaration())
+        body = self._child(ctx.calculationBody())
+        if not isinstance(declaration, ConstraintUsageDeclaration) or not isinstance(
+            body, CalculationBody
+        ):
+            raise ValueError("calculation requirement constraint is incomplete")
+        self._store(
+            ctx,
+            ConstraintRequirementConstraintUsage(
+                constraint_usage_declaration=declaration,
+                calculation_body=body,
+                extension_keywords=self._usage_extension_keywords(ctx),
+                has_constraint_keyword=ctx.CONSTRAINT() is not None,
+            ),
+        )
+
+    def exitRequirementConstraintMember(
+        self, ctx: SysMLv2Parser.RequirementConstraintMemberContext
+    ) -> None:
+        """Assemble an ``assume`` or ``require`` member."""
+        usage = self._child(ctx.requirementConstraintUsage())
+        kind = self.values.get(ctx.requirementKind())
+        if not isinstance(usage, RequirementConstraintUsage) or not isinstance(kind, str):
+            raise ValueError("requirementConstraintMember is incomplete")
+        self._store(
+            ctx,
+            RequirementConstraintMember(
+                kind=kind,
+                requirement_constraint_usage=usage,
+                member_prefix=self._relationship_member_prefix(ctx),
+            ),
+        )
+
+    def exitFramedConcernUsage(self, ctx: SysMLv2Parser.FramedConcernUsageContext) -> None:
+        """Assemble either reference-based or named framed concern usage."""
+        reference_ctx = ctx.ownedReferenceSubsetting()
+        if reference_ctx is not None:
+            reference = self._child(reference_ctx)
+            body = self._child(ctx.requirementBody())
+            specialization = (
+                self._child(ctx.featureSpecializationPart())
+                if ctx.featureSpecializationPart()
+                else None
+            )
+            if not self._is_reference(reference) or not isinstance(body, RequirementBody):
+                raise ValueError("reference framed concern is incomplete")
+            self._store(
+                ctx,
+                ReferenceFramedConcernUsage(
+                    reference_subsetting=reference,
+                    requirement_body=body,
+                    specialization=(
+                        specialization
+                        if isinstance(specialization, FeatureSpecializationPart)
+                        else None
+                    ),
+                ),
+            )
+            return
+        declaration = self._child(ctx.constraintUsageDeclaration())
+        body = self._child(ctx.requirementBody())
+        if not isinstance(declaration, ConstraintUsageDeclaration) or not isinstance(
+            body, RequirementBody
+        ):
+            raise ValueError("named framed concern is incomplete")
+        self._store(
+            ctx,
+            ConcernFramedConcernUsage(
+                constraint_usage_declaration=declaration,
+                requirement_body=body,
+                extension_keywords=self._usage_extension_keywords(ctx),
+                has_concern_keyword=ctx.CONCERN() is not None,
+            ),
+        )
+
+    def exitFramedConcernMember(self, ctx: SysMLv2Parser.FramedConcernMemberContext) -> None:
+        """Assemble a visible ``frame`` member."""
+        usage = self._child(ctx.framedConcernUsage())
+        if not isinstance(usage, FramedConcernUsage):
+            raise ValueError("framedConcernMember requires framedConcernUsage")
+        self._store(
+            ctx,
+            FramedConcernMember(usage, self._relationship_member_prefix(ctx)),
+        )
+
+    def exitObjectiveRequirementUsage(
+        self, ctx: SysMLv2Parser.ObjectiveRequirementUsageContext
+    ) -> None:
+        """Assemble an objective's typed requirement usage."""
+        declaration = self._child(ctx.constraintUsageDeclaration())
+        body = self._child(ctx.requirementBody())
+        if not isinstance(declaration, ConstraintUsageDeclaration) or not isinstance(
+            body, RequirementBody
+        ):
+            raise ValueError("objective requirement usage is incomplete")
+        self._store(
+            ctx,
+            ObjectiveRequirementUsage(
+                constraint_usage_declaration=declaration,
+                requirement_body=body,
+                extension_keywords=self._usage_extension_keywords(ctx),
+            ),
+        )
+
+    def exitObjectiveMember(self, ctx: SysMLv2Parser.ObjectiveMemberContext) -> None:
+        """Assemble a visible ``objective`` member."""
+        usage = self._child(ctx.objectiveRequirementUsage())
+        if not isinstance(usage, ObjectiveRequirementUsage):
+            raise ValueError("objectiveMember requires objectiveRequirementUsage")
+        self._store(ctx, ObjectiveMember(usage, self._relationship_member_prefix(ctx)))
+
+    def exitRequirementVerificationUsage(
+        self, ctx: SysMLv2Parser.RequirementVerificationUsageContext
+    ) -> None:
+        """Assemble either reference-based or named verification usage."""
+        reference_ctx = ctx.ownedReferenceSubsetting()
+        if reference_ctx is not None:
+            reference = self._child(reference_ctx)
+            body = self._child(ctx.requirementBody())
+            specializations = [self._child(item) for item in ctx.featureSpecialization()]
+            if not self._is_reference(reference) or not isinstance(body, RequirementBody):
+                raise ValueError("reference requirement verification is incomplete")
+            self._store(
+                ctx,
+                ReferenceRequirementVerificationUsage(
+                    reference_subsetting=reference,
+                    requirement_body=body,
+                    specializations=[
+                        item for item in specializations if isinstance(item, FeatureSpecialization)
+                    ],
+                ),
+            )
+            return
+        declaration = self._child(ctx.constraintUsageDeclaration())
+        body = self._child(ctx.requirementBody())
+        if not isinstance(declaration, ConstraintUsageDeclaration) or not isinstance(
+            body, RequirementBody
+        ):
+            raise ValueError("named requirement verification is incomplete")
+        self._store(
+            ctx,
+            RequirementVerificationRequirementUsage(
+                constraint_usage_declaration=declaration,
+                requirement_body=body,
+                extension_keywords=self._usage_extension_keywords(ctx),
+                has_requirement_keyword=ctx.REQUIREMENT() is not None,
+            ),
+        )
+
+    def exitRequirementVerificationMember(
+        self, ctx: SysMLv2Parser.RequirementVerificationMemberContext
+    ) -> None:
+        """Assemble a visible ``verify`` member."""
+        usage = self._child(ctx.requirementVerificationUsage())
+        if not isinstance(usage, RequirementVerificationUsage):
+            raise ValueError("requirementVerificationMember requires typed usage")
+        self._store(
+            ctx,
+            RequirementVerificationMember(usage, self._relationship_member_prefix(ctx)),
+        )
+
+    def _calculation_body(
+        self,
+        ctx: Any,
+        body_type: Any,
+        item_contexts: List[Any],
+        result_context: Any,
+    ) -> None:
+        """Build a calculation/case body from explicit child contexts."""
         if ctx.SEMI() is not None:
             self._store(ctx, body_type(declaration_only=True))
             return
-        part = ctx.calculationBodyPart() if hasattr(ctx, "calculationBodyPart") else None
-        items = []
-        result = None
-        if part is not None:
-            items = [self._child(item) for item in part.calculationBodyItem()]
-            result = (
-                self._child(part.resultExpressionMember())
-                if part.resultExpressionMember()
-                else None
-            )
+        items = [self._child(item) for item in item_contexts]
+        result = self._child(result_context) if result_context is not None else None
         self._store(
             ctx,
             body_type(
@@ -1870,11 +2163,27 @@ class SysMLAstListener(SysMLv2ParserListener):
 
     def exitCalculationBody(self, ctx: SysMLv2Parser.CalculationBodyContext) -> None:
         """Assemble a calculation body."""
-        self._calculation_body(ctx, CalculationBody)
+        part = ctx.calculationBodyPart()
+        if part is None:
+            self._calculation_body(ctx, CalculationBody, [], None)
+            return
+        self._calculation_body(
+            ctx,
+            CalculationBody,
+            part.calculationBodyItem(),
+            part.resultExpressionMember(),
+        )
 
     def exitCaseBody(self, ctx: SysMLv2Parser.CaseBodyContext) -> None:
         """Assemble a case body."""
-        self._calculation_body(ctx, CaseBody)
+        items = ctx.caseBodyItem()
+        result = ctx.resultExpressionMember()
+        self._calculation_body(
+            ctx,
+            CaseBody,
+            items or [],
+            result,
+        )
 
     def exitCaseBodyItem(self, ctx: SysMLv2Parser.CaseBodyItemContext) -> None:
         """Pass case action/return members or retain a typed fragment."""
@@ -2346,13 +2655,47 @@ class SysMLAstListener(SysMLv2ParserListener):
             raise ValueError("actionNode has no alternative")
         self._pass(ctx, child)
 
+    def exitRelationshipOwnedElement(
+        self, ctx: SysMLv2Parser.RelationshipOwnedElementContext
+    ) -> None:
+        """Pass one related element or model-owned annotation in a body."""
+        child = ctx.ownedRelatedElement() or ctx.ownedAnnotation()
+        if child is None:
+            raise ValueError("relationshipOwnedElement has no alternative")
+        self._pass(ctx, child)
+
+    def exitOwnedRelatedElement(self, ctx: SysMLv2Parser.OwnedRelatedElementContext) -> None:
+        """Pass the non-feature or feature alternative of a body member."""
+        child = ctx.nonFeatureElement() or ctx.featureElement()
+        if child is None:
+            raise ValueError("ownedRelatedElement has no alternative")
+        self._pass(ctx, child)
+
+    def exitOwnedAnnotation(self, ctx: SysMLv2Parser.OwnedAnnotationContext) -> None:
+        """Pass a model-owned comment, documentation, or annotation node."""
+        child = ctx.annotatingElement()
+        if child is None:
+            raise ValueError("ownedAnnotation has no annotatingElement")
+        self._pass(ctx, child)
+
     def exitRelationshipBody(self, ctx: SysMLv2Parser.RelationshipBodyContext) -> None:
-        """Preserve relationship-body syntax as an explicit non-state node."""
-        # The enclosing AST node owns indentation when it renders a nested
-        # body.  Retaining absolute source indentation here would make a
-        # second parse of canonical output change this field and break AST
-        # equality for otherwise identical models.
-        self._store(ctx, RelationshipBody(_relative_source(self._text(ctx))))
+        """Assemble the semicolon or ordered brace-delimited body form."""
+        if ctx.SEMI() is not None:
+            self._store(ctx, RelationshipBody(declaration_only=True))
+            return
+        contexts = list(ctx.relationshipOwnedElement())
+        if not contexts:
+            contexts = list(ctx.ownedAnnotation())
+        members = [self._child(item) for item in contexts]
+        if not all(isinstance(item, SourceElement) for item in members):
+            raise ValueError("relationshipBody contains an unassembled member")
+        self._store(
+            ctx,
+            RelationshipBody(
+                declaration_only=False,
+                members=[item for item in members if isinstance(item, SourceElement)],
+            ),
+        )
 
     def exitInitialNodeMember(self, ctx: SysMLv2Parser.InitialNodeMemberContext) -> None:
         """Assemble an action body's initial ``first`` node member."""
@@ -4084,6 +4427,11 @@ class SysMLAstListener(SysMLv2ParserListener):
         reference = (
             self._child(ctx.ownedReferenceSubsetting()) if ctx.ownedReferenceSubsetting() else None
         )
+        specialization = (
+            self._child(ctx.featureSpecializationPart())
+            if ctx.featureSpecializationPart()
+            else None
+        )
         usage = self._child(ctx.usage()) if ctx.usage() else None
         body = self._child(ctx.usageBody()) if ctx.usageBody() else None
         if body is None and isinstance(usage, Usage):
@@ -4097,9 +4445,53 @@ class SysMLAstListener(SysMLv2ParserListener):
                 reference=reference
                 if isinstance(reference, (QualifiedReference, DottedQualifiedReference))
                 else None,
+                specialization=(
+                    specialization
+                    if isinstance(specialization, FeatureSpecializationPart)
+                    else None
+                ),
                 usage=usage if isinstance(usage, Usage) else None,
+                usage_extension_keywords=[
+                    self._text(item).strip() for item in ctx.usageExtensionKeyword()
+                ],
+                has_rendering_keyword=ctx.RENDERING() is not None,
             ),
         )
+
+    def exitViewRenderingMember(self, ctx: SysMLv2Parser.ViewRenderingMemberContext) -> None:
+        """Assemble a visible ``render`` member."""
+        usage = self._child(ctx.viewRenderingUsage())
+        if not isinstance(usage, ViewRenderingUsage):
+            raise ValueError("viewRenderingMember requires ViewRenderingUsage")
+        self._store(
+            ctx,
+            ViewRenderingMember(
+                usage=usage,
+                member_prefix=self._member_prefix(ctx.memberPrefix()),
+            ),
+        )
+
+    def exitMembershipExpose(self, ctx: SysMLv2Parser.MembershipExposeContext) -> None:
+        """Pass a membership expose target through its wrapper."""
+        self._pass(ctx, ctx.membershipImport())
+
+    def exitNamespaceExpose(self, ctx: SysMLv2Parser.NamespaceExposeContext) -> None:
+        """Pass a namespace expose target through its wrapper."""
+        self._pass(ctx, ctx.namespaceImport())
+
+    def exitExpose(self, ctx: SysMLv2Parser.ExposeContext) -> None:
+        """Assemble an expose target and relationship body."""
+        target_ctx = ctx.membershipExpose() or ctx.namespaceExpose()
+        target = self._child(target_ctx)
+        body = self._child(ctx.relationshipBody())
+        if not isinstance(target, ImportDeclaration) or not isinstance(body, RelationshipBody):
+            # ``not (@Name)`` filters are accepted by the pinned grammar but
+            # still lack a complete expression callback in this foundation
+            # slice. Preserve that valid source as an audited compatibility
+            # fragment until the filter expression production is complete.
+            self._raw_store(ctx)
+            return
+        self._store(ctx, Expose(target=target, relationship_body=body))
 
     def exitRenderingUsage(self, ctx: SysMLv2Parser.RenderingUsageContext) -> None:
         """Assemble a ``rendering`` usage."""
@@ -4296,6 +4688,7 @@ class SysMLAstListener(SysMLv2ParserListener):
     def exitVariantUsageElement(self, ctx: SysMLv2Parser.VariantUsageElementContext) -> None:
         """Pass a typed variant usage or retain an unimplemented non-state choice."""
         children = (
+            ctx.variantReference(),
             ctx.attributeUsage(),
             ctx.itemUsage(),
             ctx.partUsage(),
@@ -4321,6 +4714,28 @@ class SysMLAstListener(SysMLv2ParserListener):
                 self._pass(ctx, child)
                 return
         self._raw_store(ctx)
+
+    def exitVariantReference(self, ctx: SysMLv2Parser.VariantReferenceContext) -> None:
+        """Assemble a reference-subsetting variant usage."""
+        reference = self._child(ctx.ownedReferenceSubsetting())
+        body = self._child(ctx.usageBody())
+        specializations = [self._child(item) for item in ctx.featureSpecialization()]
+        if not isinstance(reference, (QualifiedReference, DottedQualifiedReference)):
+            raise ValueError("variantReference requires ownedReferenceSubsetting")
+        if not isinstance(body, DefinitionBody):
+            raise ValueError("variantReference requires usageBody")
+        if not all(isinstance(item, FeatureSpecialization) for item in specializations):
+            raise ValueError("variantReference specialization was not assembled")
+        self._store(
+            ctx,
+            VariantReference(
+                reference_subsetting=reference,
+                usage_body=body,
+                specializations=[
+                    item for item in specializations if isinstance(item, FeatureSpecialization)
+                ],
+            ),
+        )
 
     def exitNonOccurrenceUsageMember(
         self, ctx: SysMLv2Parser.NonOccurrenceUsageMemberContext
@@ -4964,9 +5379,33 @@ class SysMLAstListener(SysMLv2ParserListener):
             ),
         )
 
+    def exitTextualRepresentation(self, ctx: SysMLv2Parser.TextualRepresentationContext) -> None:
+        """Assemble model-owned textual representation metadata."""
+        identification = self._child(ctx.identification()) if ctx.identification() else None
+        language = self._text(ctx.DOUBLE_STRING()).strip() if ctx.DOUBLE_STRING() else ""
+        body = self._text(ctx.REGULAR_COMMENT()) if ctx.REGULAR_COMMENT() else ""
+        if not language or not body:
+            raise ValueError("textualRepresentation requires language and body")
+        self._store(
+            ctx,
+            TextualRepresentation(
+                language=language,
+                body=_relative_source(body),
+                identification=(
+                    identification if isinstance(identification, Identification) else None
+                ),
+                is_rep=ctx.REP() is not None,
+            ),
+        )
+
     def exitAnnotatingElement(self, ctx: SysMLv2Parser.AnnotatingElementContext) -> None:
         """Pass comment/documentation annotations or retain unrelated metadata."""
-        child = ctx.comment() or ctx.documentation() or ctx.metadataFeature()
+        child = (
+            ctx.comment()
+            or ctx.documentation()
+            or ctx.textualRepresentation()
+            or ctx.metadataFeature()
+        )
         if child is not None:
             self._pass(ctx, child)
         else:
@@ -5023,6 +5462,7 @@ class SysMLAstListener(SysMLv2ParserListener):
             or ctx.enumerationUsage()
             or ctx.bindingConnectorAsUsage()
             or ctx.successionAsUsage()
+            or ctx.extendedUsage()
         )
         if child is not None:
             if self._child(child) is not None:
@@ -5072,8 +5512,23 @@ class SysMLAstListener(SysMLv2ParserListener):
             self._pass(ctx, ctx.structureUsageMember())
         elif ctx.nonOccurrenceUsageMember():
             self._pass(ctx, ctx.nonOccurrenceUsageMember())
+        elif ctx.variantUsageMember():
+            self._pass(ctx, ctx.variantUsageMember())
         else:
             self._raw_store(ctx)
+
+    def exitVariantUsageMember(self, ctx: SysMLv2Parser.VariantUsageMemberContext) -> None:
+        """Pass a variant usage element through its visibility wrapper."""
+        child = self._child(ctx.variantUsageElement())
+        if not isinstance(child, SourceElement):
+            raise ValueError("variantUsageMember requires variantUsageElement")
+        self._store(
+            ctx,
+            VariantUsageMember(
+                element=child,
+                member_prefix=self._member_prefix(ctx.memberPrefix()),
+            ),
+        )
 
     def exitPackageMember(self, ctx: SysMLv2Parser.PackageMemberContext) -> None:
         """Assemble a package member without mutating its child node."""
